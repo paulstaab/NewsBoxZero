@@ -48,25 +48,25 @@
 
 ### Tests (write first)
 
-- [ ] T019 [P] [US1] Write Vitest specs for login validation and session persistence in `tests/unit/hooks/useAuth.test.ts`, covering remember-device gating and HTTPS enforcement.
-- [ ] T020 [P] [US1] Add Vitest coverage for `/items` fetch defaults, client-side unread aggregation, and exponential backoff in `tests/unit/lib/items.fetcher.test.ts` using MSW fixtures.
-- [ ] T021 [P] [US1] Create Playwright flow `tests/e2e/us1-login-timeline.spec.ts` that exercises login, Unread↔All toggle, infinite scroll, and offline indicator behavior (fails pre-impl).
+- [X] T019 [P] [US1] Write Vitest specs for login validation and session persistence in `tests/unit/hooks/useAuth.test.ts`, covering remember-device gating and HTTPS enforcement.
+- [X] T020 [P] [US1] Add Vitest coverage for `/items` fetch defaults, client-side unread aggregation, and exponential backoff in `tests/unit/lib/items.fetcher.test.ts` using MSW fixtures.
+- [X] T021 [P] [US1] Create Playwright flow `tests/e2e/us1-login-timeline.spec.ts` that exercises login, Unread↔All toggle, infinite scroll, and offline indicator behavior (fails pre-impl).
 
 ### Experience & Performance Checks
 
-- [ ] T022 [P] [US1] Capture responsive snapshots for onboarding + timeline (320/768/1024/1440px) in `tests/visual/us1-login-timeline.spec.ts` and baseline the layouts.
-- [ ] T023 [US1] Document bundle metrics for the MVP timeline in `docs/metrics/bundle.md` after `npm run build`.
-- [ ] T024 [US1] Record static export evidence (asset sizes, HTML count) in `docs/releases/us1-export.md` after `npm run build && npm run export`.
+- [X] T022 [P] [US1] Capture responsive snapshots for onboarding + timeline (320/768/1024/1440px) in `tests/visual/us1-login-timeline.spec.ts` and baseline the layouts.
+- [X] T023 [US1] Document bundle metrics for the MVP timeline in `docs/metrics/bundle.md` after `npm run build`.
+- [X] T024 [US1] Record static export evidence (asset sizes, HTML count) in `docs/releases/us1-export.md` after `npm run build && npm run export`.
 
 ### Implementation
 
-- [ ] T025 [P] [US1] Implement the multi-step login wizard with URL/credential validation, handshake progress, and remember-device toggle in `src/app/login/page.tsx` (FR-001).
-- [ ] T026 [P] [US1] Build the `useAuth` context + provider in `src/hooks/useAuth.tsx` that pings `/feeds` for validation, encodes Basic auth, and stores credentials only after success.
-- [ ] T027 [P] [US1] Create timeline data hooks (`src/hooks/useItems.ts`, `src/lib/utils/prefetchManager.ts`) handling batch fetch, infinite scroll offsets, 75% prefetch, and offline short-circuiting.
-- [ ] T028 [P] [US1] Develop timeline primitives in `src/components/timeline/ArticleCard.tsx`, `src/components/timeline/TimelineList.tsx`, and `src/components/timeline/EmptyState.tsx` with lazy-loaded body content and collapsed large enclosures.
-- [ ] T029 [P] [US1] Render aggregate unread summaries + badges using `src/components/timeline/UnreadSummary.tsx`, wiring `unreadAggregator` outputs to the UI.
-- [ ] T030 [US1] Compose the timeline route in `src/app/timeline/page.tsx`, wiring Unread/All toggle, infinite scroll, empty state, and offline-friendly guardrails.
-- [ ] T031 [US1] Surface exponential backoff + retry affordances via `src/components/ui/RequestStateToast.tsx`, ensuring FR-012 copy appears during throttling.
+- [X] T025 [P] [US1] Implement the multi-step login wizard with URL/credential validation, handshake progress, and remember-device toggle in `src/app/login/page.tsx` (FR-001).
+- [X] T026 [P] [US1] Build the `useAuth` context + provider in `src/hooks/useAuth.tsx` that pings `/feeds` for validation, encodes Basic auth, and stores credentials only after success.
+- [X] T027 [P] [US1] Create timeline data hooks (`src/hooks/useItems.ts`, `src/lib/utils/prefetchManager.ts`) handling batch fetch, infinite scroll offsets, 75% prefetch, and offline short-circuiting.
+- [X] T028 [P] [US1] Develop timeline primitives in `src/components/timeline/ArticleCard.tsx`, `src/components/timeline/TimelineList.tsx`, and `src/components/timeline/EmptyState.tsx` with lazy-loaded body content and collapsed large enclosures.
+- [X] T029 [P] [US1] Render aggregate unread summaries + badges using `src/components/timeline/UnreadSummary.tsx`, wiring `unreadAggregator` outputs to the UI.
+- [X] T030 [US1] Compose the timeline route in `src/app/timeline/page.tsx`, wiring Unread/All toggle, infinite scroll, empty state, and offline-friendly guardrails.
+- [X] T031 [US1] Surface exponential backoff + retry affordances via `src/components/ui/RequestStateToast.tsx`, ensuring FR-012 copy appears during throttling.
 
 **Checkpoint**: US1 delivers a static MVP—login plus aggregated timeline with evidence captured.
 

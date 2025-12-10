@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import '../styles/globals.css';
 import { SWRProvider } from '@/lib/swr/provider';
+import { AuthProvider } from '@/hooks/useAuth';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
@@ -30,15 +31,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen bg-[hsl(var(--color-surface))] text-[hsl(var(--color-text))] antialiased">
         <SkipLink href="#main-content">Skip to main content</SkipLink>
-        <SWRProvider>
-          <div className="flex min-h-screen flex-col">
-            {/* Main content area */}
-            <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-              {children}
-            </main>
-          </div>
-          <OfflineBanner />
-        </SWRProvider>
+        <AuthProvider>
+          <SWRProvider>
+            <div className="flex min-h-screen flex-col">
+              {/* Main content area */}
+              <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </main>
+            </div>
+            <OfflineBanner />
+          </SWRProvider>
+        </AuthProvider>
         <ServiceWorkerRegistration />
       </body>
     </html>
