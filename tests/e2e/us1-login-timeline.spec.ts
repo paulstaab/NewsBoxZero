@@ -344,7 +344,10 @@ test.describe('US1: Login and Timeline', () => {
       });
 
       // Offline banner should disappear - wait for it to be hidden
-      await page.getByText(/you are currently offline/i).first().waitFor({ state: 'hidden', timeout: 5000 });
+      await page
+        .getByText(/you are currently offline/i)
+        .first()
+        .waitFor({ state: 'hidden', timeout: 5000 });
     });
   });
 });
