@@ -30,7 +30,10 @@ interface UseItemsResult {
   hasMore: boolean;
   loadMore: () => void;
   refresh: () => Promise<void>;
-  mutate: (data?: Article[] | Promise<Article[]>, shouldRevalidate?: boolean) => Promise<Article[] | undefined>;
+  mutate: (
+    data?: Article[] | Promise<Article[]>,
+    shouldRevalidate?: boolean,
+  ) => Promise<Article[] | undefined>;
 }
 
 const DEFAULT_BATCH_SIZE = 50;
@@ -38,7 +41,7 @@ const DEFAULT_PREFETCH_THRESHOLD = 0.75;
 
 /**
  * Hook for fetching and managing timeline items with pagination
- * 
+ *
  * Features:
  * - Batch fetching with configurable size
  * - Infinite scroll support with automatic prefetch
@@ -54,20 +57,21 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     oldestFirst = false,
     batchSize = DEFAULT_BATCH_SIZE,
   } = options;
-  
+
   const [offset, setOffset] = useState(0);
   const [allItems, setAllItems] = useState<Article[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  
+
   // Build SWR key
-  const key = isAuthenticated && session
-    ? ['items', session.baseUrl, type, id, getRead, oldestFirst, offset, batchSize]
-    : null;
-  
+  const key =
+    isAuthenticated && session
+      ? ['items', session.baseUrl, type, id, getRead, oldestFirst, offset, batchSize]
+      : null;
+
   // Fetcher function
   const fetcher = useCallback(async () => {
     if (!session) throw new Error('Not authenticated');
-    
+
     const items = await getItems({
       type,
       id,
@@ -76,10 +80,10 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
       batchSize,
       offset,
     });
-    
+
     return items;
   }, [session, type, id, getRead, oldestFirst, batchSize, offset]);
-  
+
   // SWR configuration with offline support
   const swrConfig: SWRConfiguration = {
     revalidateOnFocus: false, // Don't auto-revalidate on focus for timeline
@@ -89,16 +93,18 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     onErrorRetry: (error, _key, _config, revalidate, { retryCount }) => {
       // Exponential backoff: 1s, 2s, 4s
       const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-      setTimeout(() => { void revalidate({ retryCount }); }, delay);
+      setTimeout(() => {
+        void revalidate({ retryCount });
+      }, delay);
     },
   };
-  
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<Article[], Error>(
     key,
     fetcher,
-    swrConfig
+    swrConfig,
   );
-  
+
   // Accumulate items for infinite scroll
   useEffect(() => {
     if (data) {
@@ -107,34 +113,34 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
         setAllItems(data);
       } else {
         // Subsequent pages - append items
-        setAllItems(prev => [...prev, ...data]);
+        setAllItems((prev) => [...prev, ...data]);
       }
-      
+
       // Check if there are more items to load
       setHasMore(data.length === batchSize);
     }
   }, [data, offset, batchSize]);
-  
+
   // Reset when filter parameters change
   useEffect(() => {
     setOffset(0);
     setAllItems([]);
     setHasMore(true);
   }, [type, id, getRead, oldestFirst]);
-  
+
   const loadMore = useCallback(() => {
     if (!isLoading && !isValidating && hasMore) {
-      setOffset(prev => prev + batchSize);
+      setOffset((prev) => prev + batchSize);
     }
   }, [isLoading, isValidating, hasMore, batchSize]);
-  
+
   const refresh = useCallback(async () => {
     setOffset(0);
     setAllItems([]);
     setHasMore(true);
     await mutate();
   }, [mutate]);
-  
+
   return {
     items: allItems,
     isLoading,
@@ -143,38 +149,43 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     hasMore,
     loadMore,
     refresh,
-    mutate: mutate as (data?: Article[] | Promise<Article[]>, shouldRevalidate?: boolean) => Promise<Article[] | undefined>,
+    mutate: mutate as (
+      data?: Article[] | Promise<Article[]>,
+      shouldRevalidate?: boolean,
+    ) => Promise<Article[] | undefined>,
   };
 }
 
 /**
  * Hook for detecting when to trigger prefetch based on scroll position
- * 
+ *
  * Triggers loadMore when user scrolls past the prefetch threshold
  */
 export function useInfiniteScrollTrigger(
   hasMore: boolean,
   loadMore: () => void,
-  threshold = DEFAULT_PREFETCH_THRESHOLD
+  threshold = DEFAULT_PREFETCH_THRESHOLD,
 ) {
   useEffect(() => {
     if (!hasMore) return;
-    
+
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
-      
+
       const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-      
+
       // Trigger prefetch when scrolled past threshold (default 75%)
       if (scrollPercentage >= threshold) {
         loadMore();
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => { window.removeEventListener('scroll', handleScroll); };
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [hasMore, loadMore, threshold]);
 }

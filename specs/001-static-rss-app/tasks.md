@@ -72,7 +72,28 @@
 
 ---
 
-## Phase 4: User Story 2 – Organize & Update Read State (Priority: P2)
+## Phase 3b: Enhanced Connection Validation (FR-001 Refinement)
+
+**Goal**: Add pre-credential connectivity check using the `/version` endpoint to validate server reachability before asking for username/password, improving the login wizard UX per FR-001.
+
+**Independent Test**: From login wizard, enter only a base URL, verify the client calls `/index.php/apps/news/api/v1-3/version` (no auth required), and provides feedback on connectivity before showing credential fields.
+
+### Tests (write first)
+
+- [X] T031b [P] [US1] Add Vitest specs for version endpoint connectivity check in `tests/unit/lib/api/version.test.ts`, covering network timeouts, invalid URLs, and successful version responses.
+- [X] T031c [P] [US1] Extend Playwright login flow in `tests/e2e/us1-login-timeline.spec.ts` to validate URL-first validation step, including error states for unreachable servers.
+
+### Implementation
+
+- [X] T031d [P] [US1] Create version API wrapper in `src/lib/api/version.ts` that calls `GET /index.php/apps/news/api/v1-3/version` without authentication headers and returns version info or connectivity error.
+- [X] T031e [US1] Update login wizard in `src/app/login/page.tsx` to add a URL validation step that calls the version endpoint before enabling the credential input fields, showing spinner/success/error states.
+- [X] T031f [P] [US1] Add MSW handler for `/version` endpoint in `tests/mocks/handlers.ts` returning mock version data for test scenarios.
+
+**Checkpoint**: Login wizard validates server connectivity before credentials, improving error messaging per FR-001.
+
+---
+
+## Phase 5: User Story 2 – Organize & Update Read State (Priority: P2)
 
 **Goal**: Provide folder/feed navigation, filtering, view preferences, unread counters, and optimistic read/star mutations (single + bulk, including mark-all) synchronized with Nextcloud.
 
@@ -104,7 +125,7 @@
 
 ---
 
-## Phase 5: User Story 3 – Manage Subscriptions (Priority: P3)
+## Phase 6: User Story 3 – Manage Subscriptions (Priority: P3)
 
 **Goal**: Allow users to add/move/rename/delete feeds and folders, enforce cascade rules, and surface diagnostics data without leaving the static UI.
 
@@ -135,7 +156,7 @@
 
 ---
 
-## Phase 6: Polish & Cross-Cutting Concerns
+## Phase 7: Polish & Cross-Cutting Concerns
 
 **Purpose**: Final documentation, accessibility, performance, and release readiness applied across the feature.
 
@@ -147,11 +168,12 @@
 
 ## Dependencies & Execution Order
 
-- **Graph**: `Setup (Phase 1) → Foundational (Phase 2) → US1 (Phase 3) → {US2 (Phase 4), US3 (Phase 5)} → Polish (Phase 6)`
+- **Graph**: `Setup (Phase 1) → Foundational (Phase 2) → US1 (Phase 3) → Version Check (Phase 3b) → {US2 (Phase 5), US3 (Phase 6)} → Polish (Phase 7)`
 - Phase 1 is prerequisite for tooling, enabling Phase 2 to build shared libs.
 - Phase 2 delivers API client, storage, SWR, offline shell, and mocks that every story consumes; no user story work may start before T007–T018 complete.
-- US1 is the MVP slice; US2 relies on US1’s timeline scaffolding for filters, and US3 depends on the sidebar components + SWR cache behavior established earlier.
-- Polish runs only after all desired user stories land so evidence, accessibility, and release notes reflect the final state.
+- US1 (Phase 3) is the MVP slice; Phase 3b enhances login wizard validation and can be done immediately after Phase 3 or in parallel.
+- US2 (Phase 5) relies on US1's timeline scaffolding for filters, and US3 (Phase 6) depends on the sidebar components + SWR cache behavior established earlier.
+- Polish (Phase 7) runs only after all desired user stories land so evidence, accessibility, and release notes reflect the final state.
 
 ---
 

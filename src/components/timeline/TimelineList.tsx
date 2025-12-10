@@ -15,7 +15,7 @@ interface TimelineListProps {
 
 /**
  * Timeline list component with infinite scroll
- * 
+ *
  * Features:
  * - Virtualization-ready article list
  * - Intersection Observer for load more trigger
@@ -31,11 +31,11 @@ export function TimelineList({
   onToggleStar,
 }: TimelineListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  
+
   // Set up Intersection Observer for infinite scroll
   useEffect(() => {
     if (!hasMore || !onLoadMore) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
@@ -43,25 +43,25 @@ export function TimelineList({
           onLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
-    
+
     const currentRef = loadMoreRef.current;
     if (currentRef) {
       observer.observe(currentRef);
     }
-    
+
     return () => {
       if (currentRef) {
         observer.unobserve(currentRef);
       }
     };
   }, [hasMore, onLoadMore]);
-  
+
   if (items.length === 0 && !isLoading) {
     return null; // Empty state handled by parent
   }
-  
+
   return (
     <div className="space-y-4">
       {items.map((article) => (
@@ -72,7 +72,7 @@ export function TimelineList({
           onToggleStar={onToggleStar}
         />
       ))}
-      
+
       {/* Load more trigger */}
       {hasMore && (
         <div ref={loadMoreRef} className="py-8 text-center">
@@ -82,21 +82,16 @@ export function TimelineList({
               <span>Loading more articles...</span>
             </div>
           ) : (
-            <button
-              onClick={onLoadMore}
-              className="text-blue-600 hover:underline font-medium"
-            >
+            <button onClick={onLoadMore} className="text-blue-600 hover:underline font-medium">
               Load more
             </button>
           )}
         </div>
       )}
-      
+
       {/* End of list indicator */}
       {!hasMore && items.length > 0 && (
-        <div className="py-8 text-center text-gray-500 text-sm">
-          You&apos;ve reached the end
-        </div>
+        <div className="py-8 text-center text-gray-500 text-sm">You&apos;ve reached the end</div>
       )}
     </div>
   );

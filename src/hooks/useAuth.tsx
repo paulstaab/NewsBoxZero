@@ -9,32 +9,42 @@ import type { UserSessionConfig, StoredSession } from '@/types';
 interface AuthContextValue {
   /** Current session configuration (null if not authenticated) */
   session: UserSessionConfig | null;
-  
+
   /** Whether the user is authenticated */
   isAuthenticated: boolean;
-  
+
   /** Whether authentication is in progress */
   isLoading: boolean;
-  
+
+  /** Whether initial session load from storage is in progress */
+  isInitializing: boolean;
+
   /** Last authentication error */
   error: string | null;
-  
+
   /**
    * Authenticate user with server credentials
    * Validates credentials by calling /feeds endpoint
    * Stores session in storage on success
    */
-  login: (baseUrl: string, username: string, password: string, rememberDevice?: boolean) => Promise<void>;
-  
+  login: (
+    baseUrl: string,
+    username: string,
+    password: string,
+    rememberDevice?: boolean,
+  ) => Promise<void>;
+
   /**
    * Clear authentication and remove stored session
    */
   logout: () => void;
-  
+
   /**
    * Update session preferences
    */
-  updatePreferences: (preferences: Partial<Pick<UserSessionConfig, 'viewMode' | 'sortOrder' | 'showRead'>>) => void;
+  updatePreferences: (
+    preferences: Partial<Pick<UserSessionConfig, 'viewMode' | 'sortOrder' | 'showRead'>>,
+  ) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -49,8 +59,9 @@ function encodeCredentials(username: string, password: string): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSessionConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Load session from storage on mount
   useEffect(() => {
     const loadStoredSession = () => {
@@ -69,122 +80,137 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setSession(session);
       }
+      setIsInitializing(false);
     };
-    
+
     loadStoredSession();
   }, []);
-  
-  const login = useCallback(async (
-    baseUrl: string,
-    username: string,
-    password: string,
-    rememberDevice = false
-  ) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Validate and normalize URL
-      const validation = validateServerUrl(baseUrl);
-      
-      if (!validation.valid) {
-        throw new Error(validation.error ?? 'Invalid server URL');
-      }
-      
-      const normalizedUrl = normalizeBaseUrl(baseUrl);
-      if (!normalizedUrl) {
-        throw new Error('Failed to normalize server URL');
-      }
-      
-      // Validate required fields
-      if (!username.trim()) {
-        throw new Error('Username is required');
-      }
-      
-      if (!password) {
-        throw new Error('Password is required');
-      }
-      
-      // Encode credentials
-      const credentials = encodeCredentials(username, password);
-      
-      // Validate credentials by calling /feeds endpoint
-      // This serves as the authentication handshake
-      await getFeeds();
-      
-      // If we get here, credentials are valid
-      const newSession: UserSessionConfig = {
-        baseUrl: normalizedUrl,
-        username: username.trim(),
-        credentials,
-        rememberDevice,
-        viewMode: 'card',
-        sortOrder: 'newest',
-        showRead: false,
-        lastSyncAt: new Date().toISOString(),
-      };
-      
-      // Store session
-      const storedSession: StoredSession = {
-        baseUrl: newSession.baseUrl,
-        username: newSession.username,
-        credentials: newSession.credentials,
-        rememberDevice: newSession.rememberDevice,
-      };
-      storeSession(storedSession);
-      
-      // Update state
-      setSession(newSession);
+
+  const login = useCallback(
+    async (baseUrl: string, username: string, password: string, rememberDevice = false) => {
+      setIsLoading(true);
       setError(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Authentication failed';
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
+
+      try {
+        // Validate and normalize URL
+        const validation = validateServerUrl(baseUrl);
+
+        if (!validation.valid) {
+          throw new Error(validation.error ?? 'Invalid server URL');
+        }
+
+        const normalizedUrl = normalizeBaseUrl(baseUrl);
+        if (!normalizedUrl) {
+          throw new Error('Failed to normalize server URL');
+        }
+
+        // Validate required fields
+        if (!username.trim()) {
+          throw new Error('Username is required');
+        }
+
+        if (!password) {
+          throw new Error('Password is required');
+        }
+
+        // Encode credentials
+        const credentials = encodeCredentials(username, password);
+
+        // Create temporary session object for validation
+        const tempSession: UserSessionConfig = {
+          baseUrl: normalizedUrl,
+          username: username.trim(),
+          credentials,
+          rememberDevice,
+          viewMode: 'card',
+          sortOrder: 'newest',
+          showRead: false,
+          lastSyncAt: new Date().toISOString(),
+        };
+
+        // Temporarily set session for API calls during validation
+        setSession(tempSession);
+
+        try {
+          // Validate credentials by calling /feeds endpoint
+          // This serves as the authentication handshake
+          await getFeeds();
+        } catch (validationError) {
+          // Clear temporary session on validation failure
+          setSession(null);
+          throw validationError;
+        }
+
+        // If we get here, credentials are valid
+        const newSession = tempSession;
+
+        // Store session
+        const storedSession: StoredSession = {
+          baseUrl: newSession.baseUrl,
+          username: newSession.username,
+          credentials: newSession.credentials,
+          rememberDevice: newSession.rememberDevice,
+        };
+        storeSession(storedSession);
+
+        // Update state
+        setSession(newSession);
+        setError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Authentication failed';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     // Clear session from both storage types
     clearSession();
-    
+
     // Clear state
     setSession(null);
     setError(null);
   }, []);
-  
-  const updatePreferences = useCallback((preferences: Partial<Pick<UserSessionConfig, 'viewMode' | 'sortOrder' | 'showRead'>>) => {
-    if (!session) return;
-    
-    const updatedSession: UserSessionConfig = {
-      ...session,
-      ...preferences,
-    };
-    
-    // Store updated session
-    const storedSession: StoredSession = {
-      baseUrl: updatedSession.baseUrl,
-      username: updatedSession.username,
-      credentials: updatedSession.credentials,
-      rememberDevice: updatedSession.rememberDevice,
-    };
-    storeSession(storedSession);
-    
-    // Update state
-    setSession(updatedSession);
-  }, [session]);
-  
+
+  const updatePreferences = useCallback(
+    (preferences: Partial<Pick<UserSessionConfig, 'viewMode' | 'sortOrder' | 'showRead'>>) => {
+      if (!session) return;
+
+      const updatedSession: UserSessionConfig = {
+        ...session,
+        ...preferences,
+      };
+
+      // Store updated session
+      const storedSession: StoredSession = {
+        baseUrl: updatedSession.baseUrl,
+        username: updatedSession.username,
+        credentials: updatedSession.credentials,
+        rememberDevice: updatedSession.rememberDevice,
+      };
+      storeSession(storedSession);
+
+      // Update state
+      setSession(updatedSession);
+    },
+    [session],
+  );
+
   const value: AuthContextValue = {
     session,
     isAuthenticated: session !== null,
     isLoading,
+    isInitializing,
     error,
     login,
     logout,
     updatePreferences,
   };
-  
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
@@ -194,10 +220,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  */
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
-  
+
   return context;
 }

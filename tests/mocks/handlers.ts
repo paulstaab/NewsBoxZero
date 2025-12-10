@@ -194,6 +194,21 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(mockVersion);
   }),
 
+  // GET /version - for test URLs (unreachable server simulation)
+  http.get('https://unreachable.invalid/index.php/apps/news/api/v1-3/version', () => {
+    return HttpResponse.error();
+  }),
+
+  // GET /version - for test URLs (wrong path/404 simulation)
+  http.get('https://wrong-path.example.com/index.php/apps/news/api/v1-3/version', () => {
+    return new HttpResponse(null, { status: 404 });
+  }),
+
+  // GET /version - for test URLs (valid alternative server)
+  http.get('https://rss.example.com/index.php/apps/news/api/v1-3/version', () => {
+    return HttpResponse.json(mockVersion);
+  }),
+
   // GET /feeds - requires auth
   http.get(`${BASE_URL}/feeds`, ({ request }) => {
     if (!isAuthorized(request)) {

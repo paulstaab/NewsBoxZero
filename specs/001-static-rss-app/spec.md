@@ -95,7 +95,7 @@ As a user, I want to add, rename, move, or delete feeds and folders so that I ca
 
 ### Functional Requirements
 
-- **FR-001**: On first load present a guided login wizard that asks for the server base URL plus Nextcloud username and app password, validates that the host exposes `/index.php/apps/news/api/v1-3`, tests the connection immediately, and stores the credentials in session storage by default, with an optional "Remember this device" toggle that moves them to local storage only after a successful handshake.
+- **FR-001**: On first load present a guided login wizard that asks for the server base URL, validates connectivity via `GET /index.php/apps/news/api/v1-3/version` (before requesting credentials), then asks for Nextcloud username and app password, tests authentication with those credentials, and stores them in session storage by default, with an optional "Remember this device" toggle that moves them to local storage only after a successful handshake.
 - **FR-002**: Authenticate every API call using HTTP Basic auth by sending `Authorization: Basic base64(USER:PASSWORD)` over HTTPS; block execution if the host is non-HTTPS and surface errors when authentication fails.
 - **FR-003**: Fetch feeds via `GET /index.php/apps/news/api/v1-3/feeds` and folders via `GET /index.php/apps/news/api/v1-3/folders` on load and on-demand refresh, caching results in memory for ≤5 minutes.
 - **FR-004**: Render the aggregated timeline using `GET /index.php/apps/news/api/v1-3/items` with support for pagination (`batchSize`, `offset`), filtering by type (`feed`, `folder`, `starred`, `all`), and toggles for `getRead` and `oldestFirst`, defaulting to `getRead=false` while exposing an inline toggle to include read items on demand without a page reload.

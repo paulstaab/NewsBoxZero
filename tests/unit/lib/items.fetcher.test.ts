@@ -6,7 +6,7 @@ import { aggregateUnreadCounts } from '@/lib/utils/unreadAggregator';
 
 /**
  * Unit tests for items fetcher
- * 
+ *
  * Covers:
  * - /items fetch with default parameters (type=3, batchSize=50, getRead=false)
  * - Client-side unread aggregation from items array
@@ -81,28 +81,88 @@ describe('getItems', () => {
 describe('aggregateUnreadCounts', () => {
   it('should count unread items per feed', () => {
     const items = [
-      { id: 1, feedId: 10, unread: true, starred: false, title: 'Item 1', guid: 'guid1', guidHash: 'hash1' } as any,
-      { id: 2, feedId: 10, unread: true, starred: false, title: 'Item 2', guid: 'guid2', guidHash: 'hash2' } as any,
-      { id: 3, feedId: 20, unread: true, starred: false, title: 'Item 3', guid: 'guid3', guidHash: 'hash3' } as any,
-      { id: 4, feedId: 10, unread: false, starred: false, title: 'Item 4', guid: 'guid4', guidHash: 'hash4' } as any,
+      {
+        id: 1,
+        feedId: 10,
+        unread: true,
+        starred: false,
+        title: 'Item 1',
+        guid: 'guid1',
+        guidHash: 'hash1',
+      } as any,
+      {
+        id: 2,
+        feedId: 10,
+        unread: true,
+        starred: false,
+        title: 'Item 2',
+        guid: 'guid2',
+        guidHash: 'hash2',
+      } as any,
+      {
+        id: 3,
+        feedId: 20,
+        unread: true,
+        starred: false,
+        title: 'Item 3',
+        guid: 'guid3',
+        guidHash: 'hash3',
+      } as any,
+      {
+        id: 4,
+        feedId: 10,
+        unread: false,
+        starred: false,
+        title: 'Item 4',
+        guid: 'guid4',
+        guidHash: 'hash4',
+      } as any,
     ];
 
     const feeds = [
-      { id: 10, title: 'Feed 1', url: 'https://example.com/feed1', enabled: true, unreadCount: 0 } as any,
-      { id: 20, title: 'Feed 2', url: 'https://example.com/feed2', enabled: true, unreadCount: 0 } as any,
+      {
+        id: 10,
+        title: 'Feed 1',
+        url: 'https://example.com/feed1',
+        enabled: true,
+        unreadCount: 0,
+      } as any,
+      {
+        id: 20,
+        title: 'Feed 2',
+        url: 'https://example.com/feed2',
+        enabled: true,
+        unreadCount: 0,
+      } as any,
     ];
 
     const counts = aggregateUnreadCounts(items, feeds, []);
 
-    expect(counts.feeds.find(f => f.id === 10)?.unreadCount).toBe(2);
-    expect(counts.feeds.find(f => f.id === 20)?.unreadCount).toBe(1);
+    expect(counts.feeds.find((f) => f.id === 10)?.unreadCount).toBe(2);
+    expect(counts.feeds.find((f) => f.id === 20)?.unreadCount).toBe(1);
     expect(counts.totalUnread).toBe(3);
   });
 
   it('should aggregate unread counts by folder', () => {
     const items = [
-      { id: 1, feedId: 10, unread: true, starred: false, title: 'Item 1', guid: 'guid1', guidHash: 'hash1' } as any,
-      { id: 2, feedId: 20, unread: true, starred: false, title: 'Item 2', guid: 'guid2', guidHash: 'hash2' } as any,
+      {
+        id: 1,
+        feedId: 10,
+        unread: true,
+        starred: false,
+        title: 'Item 1',
+        guid: 'guid1',
+        guidHash: 'hash1',
+      } as any,
+      {
+        id: 2,
+        feedId: 20,
+        unread: true,
+        starred: false,
+        title: 'Item 2',
+        guid: 'guid2',
+        guidHash: 'hash2',
+      } as any,
     ];
 
     const feeds = [
@@ -118,7 +178,15 @@ describe('aggregateUnreadCounts', () => {
 
   it('should handle items without feed associations', () => {
     const items = [
-      { id: 1, feedId: 999, unread: true, starred: false, title: 'Orphan', guid: 'guid1', guidHash: 'hash1' } as any,
+      {
+        id: 1,
+        feedId: 999,
+        unread: true,
+        starred: false,
+        title: 'Orphan',
+        guid: 'guid1',
+        guidHash: 'hash1',
+      } as any,
     ];
 
     const counts = aggregateUnreadCounts(items, [], []);

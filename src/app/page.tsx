@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  
+
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/timeline');
@@ -18,7 +18,7 @@ export default function HomePage() {
       router.push('/login');
     }
   }, [isAuthenticated, router]);
-  
+
   // Show loading state while redirecting
   return (
     <div className="min-h-screen flex items-center justify-center">

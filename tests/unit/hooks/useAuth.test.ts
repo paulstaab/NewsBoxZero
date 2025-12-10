@@ -4,7 +4,7 @@ import { validateServerUrl, normalizeBaseUrl } from '@/lib/config/env';
 
 /**
  * Unit tests for useAuth hook
- * 
+ *
  * Covers:
  * - Login validation with HTTPS enforcement (FR-002)
  * - Session persistence (remember-device gating)
@@ -47,7 +47,7 @@ describe('useAuth', () => {
       const username = 'testuser';
       const password = 'testpass';
       const expected = btoa(`${username}:${password}`);
-      
+
       // Will be tested via hook implementation
       expect(expected).toBe('dGVzdHVzZXI6dGVzdHBhc3M=');
     });
