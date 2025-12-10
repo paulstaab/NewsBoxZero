@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Validate credentials by calling the API with explicit credentials
         // This avoids relying on storage which hasn't been set yet
         const validationResult = await validateCredentials(normalizedUrl, credentials);
-        
+
         if (!validationResult.valid) {
           throw new Error(validationResult.error ?? 'Authentication failed');
         }
