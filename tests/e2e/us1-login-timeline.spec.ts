@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setupApiMocks, setupUnreachableServer, setupInvalidApiPath } from './mocks';
 
 /**
  * E2E tests for User Story 1: View Aggregated Timeline
@@ -17,6 +18,9 @@ const TEST_PASSWORD = 'testpass';
 
 test.describe('US1: Login and Timeline', () => {
   test.beforeEach(async ({ page }) => {
+    // Set up API mocks before each test
+    await setupApiMocks(page, TEST_SERVER_URL);
+
     // Clear storage before each test
     await page.goto('/');
     await page.evaluate(() => {
@@ -32,8 +36,9 @@ test.describe('US1: Login and Timeline', () => {
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/);
 
-      // Should show wizard steps
-      await expect(page.getByRole('heading', { name: /connect to.*server/i })).toBeVisible();
+      // Should show wizard with heading and server URL input
+      await expect(page.getByRole('heading', { name: /welcome to feedfront/i })).toBeVisible();
+      await expect(page.getByText(/connect to your rss server/i)).toBeVisible();
       await expect(page.getByLabel(/server url/i)).toBeVisible();
     });
 
@@ -52,11 +57,14 @@ test.describe('US1: Login and Timeline', () => {
     });
 
     test('should show error for unreachable server', async ({ page }) => {
+      // Set up mock for unreachable server
+      const unreachableUrl = 'https://unreachable.invalid';
+      await setupUnreachableServer(page, unreachableUrl);
+
       await page.goto('/login');
 
       // Mock a network error by using an unreachable URL
-      // Note: MSW will need to handle this in the implementation
-      await page.getByLabel(/server url/i).fill('https://unreachable.invalid');
+      await page.getByLabel(/server url/i).fill(unreachableUrl);
       await page.getByRole('button', { name: /continue|next/i }).click();
 
       // Should show connectivity error
@@ -70,10 +78,14 @@ test.describe('US1: Login and Timeline', () => {
     });
 
     test('should show error for wrong API path', async ({ page }) => {
+      // Set up mock for invalid API path (404)
+      const wrongPathUrl = 'https://wrong-path.example.com';
+      await setupInvalidApiPath(page, wrongPathUrl);
+
       await page.goto('/login');
 
       // Enter URL that returns 404 for /version
-      await page.getByLabel(/server url/i).fill('https://wrong-path.example.com');
+      await page.getByLabel(/server url/i).fill(wrongPathUrl);
       await page.getByRole('button', { name: /continue|next/i }).click();
 
       // Should show error about wrong server or API
