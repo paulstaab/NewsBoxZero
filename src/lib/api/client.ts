@@ -92,7 +92,7 @@ function sleep(ms: number): Promise<void> {
 export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
   const {
     skipAuth = false,
-    credentials: overrideCredentials,
+    overrideCredentials,
     baseUrl: overrideBaseUrl,
     maxRetries = CONFIG.MAX_RETRIES,
     noRetry = false,

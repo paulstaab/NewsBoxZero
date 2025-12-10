@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { validateServerUrl, normalizeBaseUrl } from '@/lib/config/env';
 import { loadSession, storeSession, clearSession } from '@/lib/storage';
-import { getFeeds } from '@/lib/api/feeds';
+import { validateCredentials } from '@/lib/api/client';
 import type { UserSessionConfig, StoredSession } from '@/types';
 
 interface AuthContextValue {
@@ -116,8 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Encode credentials
         const credentials = encodeCredentials(username, password);
 
-        // Create temporary session object for validation
-        const tempSession: UserSessionConfig = {
+        // Validate credentials by calling the API with explicit credentials
+        // This avoids relying on storage which hasn't been set yet
+        const validationResult = await validateCredentials(normalizedUrl, credentials);
+        
+        if (!validationResult.valid) {
+          throw new Error(validationResult.error ?? 'Authentication failed');
+        }
+
+        // If we get here, credentials are valid - create the session
+        const newSession: UserSessionConfig = {
           baseUrl: normalizedUrl,
           username: username.trim(),
           credentials,
@@ -127,22 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           showRead: false,
           lastSyncAt: new Date().toISOString(),
         };
-
-        // Temporarily set session for API calls during validation
-        setSession(tempSession);
-
-        try {
-          // Validate credentials by calling /feeds endpoint
-          // This serves as the authentication handshake
-          await getFeeds();
-        } catch (validationError) {
-          // Clear temporary session on validation failure
-          setSession(null);
-          throw validationError;
-        }
-
-        // If we get here, credentials are valid
-        const newSession = tempSession;
 
         // Store session
         const storedSession: StoredSession = {
