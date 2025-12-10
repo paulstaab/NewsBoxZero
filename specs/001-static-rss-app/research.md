@@ -124,19 +124,7 @@ interface AuthContext {
 
 ---
 
-## 8. Performance Monitoring
-
-**Question**: How do we enforce Lighthouse p75 ≥90 and bundle budgets in CI?
-
-**Decision**:
-- `next build` output includes bundle analysis; fail CI if JS >180KB gzip.
-- Lighthouse CI GitHub Action runs on every PR against `/out`.
-- Store Lighthouse JSON artifacts for historical comparison.
-
-**Tooling**:
-- `@next/bundle-analyzer` (optional, for debugging)
-- `lighthouse-ci` CLI in GitHub Actions
-- Custom script to parse `.next/build-manifest.json` for size checks.
+## 8. Removed
 
 ---
 

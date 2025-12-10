@@ -350,30 +350,6 @@ ANALYZE=true npm run build
 
 Target: JS < 180KB gzip, CSS < 60KB gzip
 
-### Lighthouse CI
-
-```yaml
-# .github/workflows/lighthouse.yml
-name: Lighthouse CI
-on: [push, pull_request]
-
-jobs:
-  lighthouse:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm ci
-      - run: npm run build
-      - uses: treosh/lighthouse-ci-action@v10
-        with:
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-          configPath: './lighthouserc.json'
-```
-
 ---
 
 ## Deployment

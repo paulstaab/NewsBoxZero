@@ -105,7 +105,6 @@
 - **UX Consistency**: Document the design tokens, spacing scale, and typography choices, plus how WCAG 2.1 AA compliance (contrast, keyboard paths) will be validated.
 - **Responsive Behavior**: Specify the breakpoints (min 320px, max 1440px) and list acceptance cases for each when layouts differ.
 - **Visual Regression Proof**: Identify the screenshot or Percy/Cypress tests that will capture the change and how diffs will be reviewed.
-- **Performance Budgets**: Define expected changes to bundle size (keep <200KB gzip per entry), p75/p90 page-load, and Time to Interactive along with measurement tooling (e.g., Lighthouse CI).
 - **Data Loading Strategy**: Explain lazy-loading/prefetching plan to honor bandwidth budgets, citing affected RSS endpoints.
 - **Static Build Strategy**: Describe how the feature's data will be sourced during static generation/export, what fallback hydration (if any) occurs on the client, and the commands/environments required to reproduce the static build.
 

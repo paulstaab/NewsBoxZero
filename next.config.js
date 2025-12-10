@@ -4,11 +4,11 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   images: {
-    unoptimized: true
+    unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: true
-  }
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;

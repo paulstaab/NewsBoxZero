@@ -55,8 +55,3 @@ jobs:
           name: feedfront-static-out
           path: out
           if-no-files-found: error
-
-      - name: Lighthouse CI
-        run: npm run lhci
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

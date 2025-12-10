@@ -4,7 +4,7 @@ import '../styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Feedfront',
-  description: 'Static headless RSS reader for Nextcloud News.'
+  description: 'Static headless RSS reader for Nextcloud News.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

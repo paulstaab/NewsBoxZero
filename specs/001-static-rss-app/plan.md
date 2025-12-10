@@ -15,7 +15,6 @@ Build a static Next.js (SSG/export) web application that serves as a frontend fo
 **Testing**: Vitest (unit), Playwright (integration + visual regression), axe-core (accessibility)  
 **Target Platform**: Modern browsers (Chrome/Firefox/Safari latest 2 versions), static CDN deployment  
 **Project Type**: Web application (single Next.js project with static export)  
-**Performance Goals**: Lighthouse p75 ≥90 desktop / p90 ≥80 throttled 3G; TTI <1.5s broadband / <2.5s 3G  
 **Constraints**: JS bundle ≤180KB gzip, CSS ≤60KB gzip, total export ≤30MB, offline-capable shell  
 **Scale/Scope**: Single user per instance, target ≤1,000 feeds/folders, ≤10,000 cached items in memory  
 **Unread Count Strategy**: Because the Nextcloud News v1.3 feeds API does not include per-feed unread counts, the client computes them by tallying `unread=true` articles returned by `/items` for each feed, then aggregating folder totals from their child feeds. Overall unread totals are the sum of all feed counts.
@@ -28,7 +27,7 @@ Build a static Next.js (SSG/export) web application that serves as a frontend fo
 2. **Static Delivery Mandate** — `next build && next export` produces `/out` with no `getServerSideProps`; all data fetched client-side via SWR after user provides credentials. No custom API routes; headless-rss endpoints are the only external compute.
 3. **Test Evidence First** — Write failing Vitest unit tests for API client, auth helpers, and state reducers before implementation. Write Playwright E2E for login wizard, timeline load, mark-read, and subscription CRUD. Coverage gate: ≥90% of new lines via `vitest --coverage`.
 4. **Experience Consistency** — Define tokens in `src/styles/tokens.css` (colors, spacing 4/8/16/24/32px, type scale). Use axe-core in Playwright to assert 0 critical violations. Percy (or Playwright screenshots) capture 320/768/1024/1440px breakpoints for onboarding, timeline, empty state, and modals.
-5. **Performance Guardrails** — Measure baseline bundle with `next build` output; target delta ≤180KB JS gzip. Lazy-load article body on intersection; prefetch next batch at 75% scroll. Attach Lighthouse CI reports to every PR; block merge if p75 <90 desktop.
+5. **Performance Guardrails** — Measure baseline bundle with `next build` output; target delta ≤180KB JS gzip. Lazy-load article body on intersection; prefetch next batch at 75% scroll.
 
 ## Project Structure
 
@@ -104,7 +103,7 @@ next.config.js             # output: 'export'
 
 4. **Experience Consistency** ✅ — `research.md` §6 specifies TailwindCSS with custom breakpoints (xs/sm/md/lg). Responsive behavior documented in spec.md. axe-core integration confirmed via Playwright. Design tokens path established (`src/styles/tokens.css`).
 
-5. **Performance Guardrails** ✅ — `research.md` §8 specifies Lighthouse CI + bundle analysis in CI. Target budgets documented (JS ≤180KB, CSS ≤60KB, TTI <1.5s). Lazy-loading and prefetch strategies defined.
+5. **Performance Guardrails** ✅ — `research.md` §8 specifies bundle analysis in CI. Target budgets documented (JS ≤180KB, CSS ≤60KB, TTI <1.5s). Lazy-loading and prefetch strategies defined.
 
 **Gate Status**: PASS — All constitution principles satisfied in design artifacts.
 

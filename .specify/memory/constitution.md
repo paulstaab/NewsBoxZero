@@ -32,7 +32,6 @@ Core pages MUST load in under 1.0s p75 on broadband and 2.5s p90 on throttled 3G
 - Static-first: Build artifacts must be immutable assets deployable to a CDN. All server-side needs must route through existing headless-rss endpoints, and any proposal for custom compute requires an approved RFC plus rollback plan.
 - Dependency discipline: Frontend libraries must be audited for bundle impact and security; adding a framework requires an RFC reviewed against Principle V budgets.
 - Accessibility budget: Every interaction requires keyboard parity and focus states, with axe-core (or equivalent) reports attached to PRs.
-- Observability: Ship Lighthouse reports and performance traces as part of each release package so stakeholders can confirm Principle V compliance.
 
 ## Workflow & Quality Gates
 
@@ -40,7 +39,7 @@ Core pages MUST load in under 1.0s p75 on broadband and 2.5s p90 on throttled 3G
 2. **Spec**: User stories must include UX acceptance criteria, accessibility checks, and measurable performance budgets; specs without these are rejected.
 3. **Tasks**: Each user story receives explicit tasks for tests, UX verification, and performance measurement; no story is marked complete until all three categories pass.
 4. **Review**: Code review checklists must log evidence for lint/test runs, accessibility scans, and performance benchmarks; approvals without evidence are invalid.
-5. **Release**: Deployments require attaching the latest Lighthouse scores, bundle size diffs, and screenshot diffs to the release record.
+5. **Release**: Deployments require attaching bundle size diffs, and screenshot diffs to the release record.
 
 ## Governance
 

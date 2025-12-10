@@ -8,7 +8,7 @@ type Fixtures = {
 export const test = base.extend<Fixtures>({
   makeAxeBuilder: async ({ page }, use) => {
     await use(() => new AxeBuilder({ page }));
-  }
+  },
 });
 
 export { expect };

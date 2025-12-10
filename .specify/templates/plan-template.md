@@ -35,7 +35,7 @@
 2. **Static Delivery Mandate** — Clarify how the feature compiles to static assets (SSG/export commands, data prefetch strategy) and why no new runtime compute is introduced. Include RFC links if exceptions are proposed.
 3. **Test Evidence First** — List the failing tests you will author before implementation (unit, integration, visual) and how coverage ≥90% will be demonstrated.
 4. **Experience Consistency** — Describe the design tokens, accessibility checks, and responsive viewports the work touches, including screenshot diff coverage.
-5. **Performance Guardrails** — Provide projected bundle-size deltas, Lighthouse targets (p75/p90), and any lazy-loading strategy for new assets.
+5. **Performance Guardrails** — Provide projected bundle-size deltas and any lazy-loading strategy for new assets.
 
 ## Project Structure
 

@@ -89,7 +89,7 @@ Examples of foundational tasks (adjust based on your project):
 ### Experience & Performance Checks for User Story 1 (MANDATORY)
 
 - [ ] T0XX [P] [US1] Visual regression snapshot update (Percy/Cypress) covering responsive breakpoints
-- [ ] T0XY [US1] Record Lighthouse CI run + bundle diff to confirm Principle V budgets
+- [ ] T0XY [US1] Record bundle diff to confirm Principle V budgets
 - [ ] T0X1 [US1] Validate static export (`npm run build && npm run export`) and document asset diffs
 
 ### Implementation for User Story 1
@@ -119,7 +119,7 @@ Examples of foundational tasks (adjust based on your project):
 ### Experience & Performance Checks for User Story 2 (MANDATORY)
 
 - [ ] T0XZ [P] [US2] Update responsive screenshots + accessibility audit results
-- [ ] T0YA [US2] Capture Lighthouse/perf metrics after implementing story 2 changes (must meet Principle V budgets)
+- [ ] T0YA [US2] Capture perf metrics after implementing story 2 changes (must meet Principle V budgets)
 - [ ] T0Y1 [US2] Run static export and confirm no dynamic runtime dependencies were introduced
 
 ### Implementation for User Story 2

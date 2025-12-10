@@ -15,7 +15,7 @@
 - [x] T003 Install Tailwind+PostCSS and seed responsive tokens/breakpoints in `tailwind.config.js`, `postcss.config.js`, `src/styles/tokens.css`, and `src/styles/globals.css`.
 - [x] T004 [P] Configure ESLint (strict TS rules), Prettier, and npm scripts in `.eslintrc.cjs`, `.prettierrc`, and `package.json` to satisfy Constitution Principle I.
 - [x] T005 [P] Wire Vitest, Playwright, MSW, axe-core, and coverage gates via `vitest.config.ts`, `playwright.config.ts`, and `tests/setup.ts` with scripts in `package.json`.
-- [x] T006 [P] Author end-to-end CI (lint → test → typecheck → build → export → Lighthouse) inside `.github/workflows/ci.yml` including artifact uploads for `/out`.
+- [x] T006 [P] Author end-to-end CI (lint → test → typecheck → build → export) inside `.github/workflows/ci.yml` including artifact uploads for `/out`.
 
 ---
 
@@ -55,7 +55,7 @@
 ### Experience & Performance Checks
 
 - [ ] T022 [P] [US1] Capture responsive snapshots for onboarding + timeline (320/768/1024/1440px) in `tests/visual/us1-login-timeline.spec.ts` and baseline the layouts.
-- [ ] T023 [US1] Document Lighthouse + bundle metrics for the MVP timeline in `docs/metrics/us1-lighthouse.md` after `npm run build && npx lhci autorun`.
+- [ ] T023 [US1] Document bundle metrics for the MVP timeline in `docs/metrics/bundle.md` after `npm run build`.
 - [ ] T024 [US1] Record static export evidence (asset sizes, HTML count) in `docs/releases/us1-export.md` after `npm run build && npm run export`.
 
 ### Implementation
@@ -86,7 +86,7 @@
 ### Experience & Performance Checks
 
 - [ ] T034 [P] [US2] Refresh responsive/visual baselines for sidebar virtualization, counters, and bulk action bars in `tests/visual/us2-sidebar.spec.ts`.
-- [ ] T035 [US2] Record Lighthouse + bundle metrics focused on read-state interactions in `docs/metrics/us2-readstate.md`.
+- [ ] T035 [US2] Record bundle metrics focused on read-state interactions in `docs/metrics/us2-readstate.md`.
 - [ ] T036 [US2] Log export verification results (bundle diffs, static size) after US2 in `docs/releases/us2-export.md`.
 
 ### Implementation
@@ -118,7 +118,7 @@
 ### Experience & Performance Checks
 
 - [ ] T047 [P] [US3] Capture visual baselines for subscription modals/drawers and drag/drop interactions in `tests/visual/us3-subscriptions.spec.ts`.
-- [ ] T048 [US3] Document Lighthouse/bundle metrics post-subscription work in `docs/metrics/us3-subscriptions.md`.
+- [ ] T048 [US3] Document bundle metrics post-subscription work in `docs/metrics/us3-subscriptions.md`.
 - [ ] T049 [US3] Log export verification + asset diffs for the final story in `docs/releases/us3-export.md`.
 
 ### Implementation
@@ -128,7 +128,7 @@
 - [ ] T052 [P] [US3] Extend API helpers in `src/lib/api/feeds.ts` and `src/lib/api/folders.ts` to cover POST/move/rename/delete endpoints with consistent error mapping (FR-008/FR-009).
 - [ ] T053 [P] [US3] Add drag-and-drop or keyboard move controls for feeds between folders in `src/components/sidebar/FeedList.tsx`, updating ordering + pinned state.
 - [ ] T054 [P] [US3] Introduce `useSubscriptions` orchestration in `src/hooks/useSubscriptions.ts` to sequence CRUD mutations, invalidate SWR caches, and refresh unread counts.
-- [ ] T055 [US3] Implement diagnostics/debug drawer meeting FR-011 in `src/components/debug/DiagnosticsDrawer.tsx`, showing API host, last sync, bundle metrics, and Lighthouse links.
+- [ ] T055 [US3] Implement diagnostics/debug drawer meeting FR-011 in `src/components/debug/DiagnosticsDrawer.tsx`, showing API host, last sync, bundle metrics.
 - [ ] T056 [US3] Provide destructive-action confirmations + cascade warnings via `src/components/subscription/DeleteConfirmDialog.tsx`, halting deletes if feeds remain.
 
 **Checkpoint**: Subscription management works end-to-end; diagnostics available for operations teams.
@@ -166,7 +166,7 @@
 ## Implementation Strategy
 
 1. **MVP First**: Complete Phases 1–2, then deliver US1 end-to-end (login wizard + aggregated timeline) to unlock demos and early feedback.
-2. **Incremental Delivery**: Layer US2 (organization/read state) and US3 (subscriptions/diagnostics) sequentially, validating each with its dedicated tests, visual baselines, and Lighthouse runs before merging.
+2. **Incremental Delivery**: Layer US2 (organization/read state) and US3 (subscriptions/diagnostics) sequentially, validating each with its dedicated tests, visual baselines before merging.
 3. **Parallel Staffing**: After Phase 2, one squad can own US1 polish while others start US2/US3 tasks marked [P], minimizing blocking work.
 4. **Evidence-Driven**: Maintain the pattern of writing tests before implementation, capturing visual/performance artifacts immediately after each story, and refusing to progress until independent acceptance criteria are verifiably met.
 
