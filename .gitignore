@@ -1,0 +1,36 @@
+# Node/Next.js artifacts
+node_modules/
+.next/
+out/
+.dist/
+dist/
+build/
+.turbo/
+
+# Testing and coverage
+coverage/
+playwright-report/
+test-results/
+lhci-report/
+
+# Logs and diagnostics
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Misc
+.vercel/

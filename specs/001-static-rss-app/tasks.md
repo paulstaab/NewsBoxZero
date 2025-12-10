@@ -10,12 +10,12 @@
 
 **Purpose**: Stand up the Next.js 14 static workspace, tooling, and CI scaffolding required by all later phases.
 
-- [ ] T001 Configure Node 20 + Next.js 14 static export defaults (output: 'export', trailingSlash, images.unoptimized) in `package.json`, `tsconfig.json`, and `next.config.js`.
-- [ ] T002 Create the directory skeleton (`src/app`, `src/components`, `src/hooks`, `src/lib`, `src/styles`, `src/types`, `tests/`, `public/`) with placeholder exports in `src/app/page.tsx` and `src/app/layout.tsx` so imports resolve per plan.md.
-- [ ] T003 Install Tailwind+PostCSS and seed responsive tokens/breakpoints in `tailwind.config.js`, `postcss.config.js`, `src/styles/tokens.css`, and `src/styles/globals.css`.
-- [ ] T004 [P] Configure ESLint (strict TS rules), Prettier, and npm scripts in `.eslintrc.cjs`, `.prettierrc`, and `package.json` to satisfy Constitution Principle I.
-- [ ] T005 [P] Wire Vitest, Playwright, MSW, axe-core, and coverage gates via `vitest.config.ts`, `playwright.config.ts`, and `tests/setup.ts` with scripts in `package.json`.
-- [ ] T006 [P] Author end-to-end CI (lint → test → typecheck → build → export → Lighthouse) inside `.github/workflows/ci.yml` including artifact uploads for `/out`.
+- [x] T001 Configure Node 20 + Next.js 14 static export defaults (output: 'export', trailingSlash, images.unoptimized) in `package.json`, `tsconfig.json`, and `next.config.js`.
+- [x] T002 Create the directory skeleton (`src/app`, `src/components`, `src/hooks`, `src/lib`, `src/styles`, `src/types`, `tests/`, `public/`) with placeholder exports in `src/app/page.tsx` and `src/app/layout.tsx` so imports resolve per plan.md.
+- [x] T003 Install Tailwind+PostCSS and seed responsive tokens/breakpoints in `tailwind.config.js`, `postcss.config.js`, `src/styles/tokens.css`, and `src/styles/globals.css`.
+- [x] T004 [P] Configure ESLint (strict TS rules), Prettier, and npm scripts in `.eslintrc.cjs`, `.prettierrc`, and `package.json` to satisfy Constitution Principle I.
+- [x] T005 [P] Wire Vitest, Playwright, MSW, axe-core, and coverage gates via `vitest.config.ts`, `playwright.config.ts`, and `tests/setup.ts` with scripts in `package.json`.
+- [x] T006 [P] Author end-to-end CI (lint → test → typecheck → build → export → Lighthouse) inside `.github/workflows/ci.yml` including artifact uploads for `/out`.
 
 ---
 
