@@ -6,6 +6,8 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { SettingsMenu } from '@/components/ui/SettingsMenu';
 
 export const metadata: Metadata = {
   title: 'Feedfront',
@@ -40,6 +42,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </main>
             </div>
             <OfflineBanner />
+            <InstallPrompt delayMs={3000} showDuringActivity={false} />
+            <SettingsMenu position="top-right" />
           </SWRProvider>
         </AuthProvider>
         <ServiceWorkerRegistration />

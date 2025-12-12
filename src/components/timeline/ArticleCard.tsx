@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import type { Article } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -124,11 +125,13 @@ export function ArticleCard({ article, onMarkRead, onToggleStar }: ArticleCardPr
           {article.enclosureLink && (
             <div className="my-4">
               {article.enclosureMime?.startsWith('image/') ? (
-                <img
+                <Image
                   src={article.enclosureLink}
                   alt={article.mediaDescription ?? ''}
                   className="max-w-full h-auto rounded-lg"
-                  loading="lazy"
+                  width={800}
+                  height={600}
+                  unoptimized
                 />
               ) : article.enclosureMime?.startsWith('audio/') ? (
                 <audio controls className="w-full" preload="none">
