@@ -310,6 +310,7 @@ test.describe('US1: Login and Timeline', () => {
     test('should show offline indicator when network is unavailable', async ({ page, context }) => {
       // Set up authenticated session first
       await page.goto('/login/');
+      await page.waitForLoadState('networkidle');
       await page.getByLabel(/server url/i).fill(TEST_SERVER_URL);
       await page.getByRole('button', { name: /continue|next/i }).click();
       await expect(page.getByLabel(/username/i)).toBeVisible({ timeout: 10000 });
@@ -330,6 +331,7 @@ test.describe('US1: Login and Timeline', () => {
     test('should hide offline indicator when network returns', async ({ page, context }) => {
       // Set up authenticated session
       await page.goto('/login/');
+      await page.waitForLoadState('networkidle');
       await page.getByLabel(/server url/i).fill(TEST_SERVER_URL);
       await page.getByRole('button', { name: /continue|next/i }).click();
       await expect(page.getByLabel(/username/i)).toBeVisible({ timeout: 10000 });
