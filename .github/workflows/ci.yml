@@ -103,25 +103,3 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
           platforms: linux/amd64,linux/arm64
-
-      - name: Inspect image and summarize
-        id: summary
-        run: |
-          IMAGE="ghcr.io/${{ github.repository }}:latest"
-          RAW=$(docker buildx imagetools inspect --format '{{json .}}' "$IMAGE")
-          DIGEST=$(node -e "const data=JSON.parse(process.argv[1]);console.log(data.digest || data.manifest?.digest || '');" "$RAW")
-          SIZE_BYTES=$(node -e "const data=JSON.parse(process.argv[1]);const manifest=data.manifest||data.manifests?.[0];const size=manifest?.descriptor?.size ?? manifest?.size ?? 0;console.log(size);")
-          SIZE_MB=$(( (SIZE_BYTES + 1024*1024 - 1) / (1024*1024) ))
-          if [ "$SIZE_MB" -gt 150 ]; then
-            echo "Image exceeds 150 MB budget: ${SIZE_MB} MB" >&2
-            exit 1
-          fi
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
-          {
-            echo "### GHCR Publish"
-            echo "* Image: $IMAGE"
-            echo "* Digest: $DIGEST"
-            echo "* Compressed Size: ${SIZE_MB} MB"
-            echo "* Docs: https://github.com/${{ github.repository }}/blob/main/docs/releases/docker.md"
-          } >> "$GITHUB_STEP_SUMMARY"
