@@ -90,8 +90,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build & Export
-        run: npx next build
+        run: npm run build
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
