@@ -30,7 +30,7 @@
 
 **Decision**: Use SWR (stale-while-revalidate) for all API calls. Credentials are read from session/local storage on mount; SWR handles caching, deduplication, and background revalidation.
 
-**Rationale**: SWR is lightweight (~4KB gzip), integrates with React Suspense, and offers built-in retry/error handling. It keeps bundle size within Constitution Principle V budgets.
+**Rationale**: SWR is lightweight (~4KB gzip), integrates with React Suspense, and offers built-in retry/error handling while keeping bundle size low.
 
 **Alternatives Considered**:
 - TanStack Query (React Query): more features but larger bundle (~12KB); overkill for simple REST calls.
@@ -99,7 +99,7 @@ interface AuthContext {
 
 **Decision**: TailwindCSS with custom breakpoints matching spec. Utility classes keep styles co-located and tree-shakeable.
 
-**Rationale**: Tailwind produces minimal CSS when purged; aligns with Constitution Principle V (CSS ≤60KB gzip). Alternatively, CSS Modules work but require more boilerplate.
+**Rationale**: Tailwind produces minimal CSS when purged, keeping stylesheets lean. Alternatively, CSS Modules work but require more boilerplate.
 
 **Breakpoints**:
 - `xs`: 320px (single column)

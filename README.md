@@ -58,3 +58,7 @@ git commit --no-verify
 - `npm run test:coverage` - Run tests with coverage
 - `npm run test:e2e` - Run end-to-end tests
 - `npm run test:e2e:ui` - Run E2E tests with UI
+
+## Deployment
+
+The CI workflow builds and publishes a production container to GHCR whenever `main` is green. See [docs/releases/docker.md](docs/releases/docker.md) for pull/run commands, non-root guidance, and credential notes.

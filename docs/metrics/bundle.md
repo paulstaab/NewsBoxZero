@@ -74,15 +74,13 @@ Generated from `npm run build` after implementing Phase 3 (User Story 1).
 
 ---
 
-## Comparison to Constitution Requirements
+## Performance Snapshot
 
-### Principle V: Performance Guardrails
-
-| Metric            | Target   | Actual                    | Status  |
-| ----------------- | -------- | ------------------------- | ------- |
-| JS bundle (gzip)  | ≤ 180 KB | ~35-40 KB                 | ✅ PASS |
-| CSS bundle (gzip) | ≤ 60 KB  | ~10-15 KB                 | ✅ PASS |
-| Total export size | ≤ 30 MB  | TBD (see export evidence) | TBD     |
+| Metric            | Actual    | Notes                              |
+| ----------------- | --------- | ---------------------------------- |
+| JS bundle (gzip)  | ~35-40 KB | Largest route `/timeline`          |
+| CSS bundle (gzip) | ~10-15 KB | Tailwind purge keeps footprint low |
+| Total export size | TBD       | See export evidence report         |
 
 ### Notes
 

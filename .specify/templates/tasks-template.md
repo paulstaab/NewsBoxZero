@@ -8,7 +8,7 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests & Evidence**: The constitution requires executable tests, UX verification, and performance measurements for every user story. Tailor the tasks below to match the spec while keeping all three evidence types.
+**Tests & Evidence**: The constitution requires right-sized verification for every user story. List the minimal automated tests or manual smoke checks needed for risky flows, call out when no extra verification is necessary, and skip release runbooks or recorded evidence unless a dependency demands it.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -79,18 +79,18 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (MANDATORY) ⚠️
+### Tests & Checks for User Story 1 (Right-Sized) ⚠️
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> **NOTE: Add automated tests first when the story can regress silently; otherwise describe the manual check that will run.**
 
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
 
-### Experience & Performance Checks for User Story 1 (MANDATORY)
+### Experience & Performance Checks for User Story 1 (As Needed)
 
-- [ ] T0XX [P] [US1] Visual regression snapshot update (Percy/Cypress) covering responsive breakpoints
-- [ ] T0XY [US1] Record bundle diff to confirm Principle V budgets
-- [ ] T0X1 [US1] Validate static export (`npm run build && npm run export`) and document asset diffs
+- [ ] T0XX [P] [US1] Visual regression snapshot update (Percy/Cypress) covering responsive breakpoints (skip if story is logic-only)
+- [ ] T0XY [US1] Record bundle diff whenever assets change to track bundle drift
+- [ ] T0X1 [US1] Validate static export (`npm run build && npm run export`) only when the story touches build output
 
 ### Implementation for User Story 1
 
@@ -111,16 +111,18 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (MANDATORY) ⚠️
+### Tests & Checks for User Story 2 (Right-Sized) ⚠️
+
+> **NOTE: Add automated coverage when the story can regress silently; document manual verification steps when automation is unnecessary.**
 
 - [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
 
-### Experience & Performance Checks for User Story 2 (MANDATORY)
+### Experience & Performance Checks for User Story 2 (As Needed)
 
-- [ ] T0XZ [P] [US2] Update responsive screenshots + accessibility audit results
-- [ ] T0YA [US2] Capture perf metrics after implementing story 2 changes (must meet Principle V budgets)
-- [ ] T0Y1 [US2] Run static export and confirm no dynamic runtime dependencies were introduced
+- [ ] T0XZ [P] [US2] Update responsive screenshots + accessibility audit results when UI changes occur
+- [ ] T0YA [US2] Capture perf metrics after implementing story 2 changes when performance could shift
+- [ ] T0Y1 [US2] Run static export and confirm no dynamic runtime dependencies were introduced if the story touches build output
 
 ### Implementation for User Story 2
 
@@ -139,16 +141,18 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (MANDATORY) ⚠️
+### Tests & Checks for User Story 3 (Right-Sized) ⚠️
+
+> **NOTE: Keep automated tests for risky flows and spell out manual smoke checks when code changes are cosmetic.**
 
 - [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
 
-### Experience & Performance Checks for User Story 3 (MANDATORY)
+### Experience & Performance Checks for User Story 3 (As Needed)
 
-- [ ] T0YB [P] [US3] Visual regression + accessibility sweep for story 3 screens
-- [ ] T0YC [US3] Update performance dashboard entries (bundle diff + timing)
-- [ ] T0Z1 [US3] Execute static build/export pipeline and attach verification logs
+- [ ] T0YB [P] [US3] Visual regression + accessibility sweep for story 3 screens when UI changes occur
+- [ ] T0YC [US3] Update performance dashboard entries (bundle diff + timing) if bundle size shifts
+- [ ] T0Z1 [US3] Execute static build/export pipeline and attach verification logs only when artifacts change
 
 ### Implementation for User Story 3
 
@@ -196,7 +200,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
+- Automated tests (when required) MUST be written and FAIL before implementation; manual smoke check steps should be documented before coding if automation is unnecessary
 - Models before services
 - Services before endpoints
 - Core implementation before integration
@@ -263,7 +267,7 @@ With multiple developers:
 - [P] tasks = different files, no dependencies
 - [Story] label maps task to specific user story for traceability
 - Each user story should be independently completable and testable
-- Verify tests fail before implementing
+- When automated tests are needed, ensure they fail before implementing to honor Right-Sized Tests
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence

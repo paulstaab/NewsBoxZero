@@ -31,11 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-1. **Code Quality Discipline** — Document linting/type-check tooling, refactoring boundaries, and how the feature keeps scope to a single concern.
-2. **Static Delivery Mandate** — Clarify how the feature compiles to static assets (SSG/export commands, data prefetch strategy) and why no new runtime compute is introduced. Include RFC links if exceptions are proposed.
-3. **Test Evidence First** — List the failing tests you will author before implementation (unit, integration, visual) and how coverage ≥90% will be demonstrated.
-4. **Experience Consistency** — Describe the design tokens, accessibility checks, and responsive viewports the work touches, including screenshot diff coverage.
-5. **Performance Guardrails** — Provide projected bundle-size deltas and any lazy-loading strategy for new assets.
+1. **Simplicity First** — Explain how the work stays within the single-user scope, avoids unnecessary release documentation, and removes ceremony instead of adding process.
+2. **Code Quality Discipline** — Document linting/type-check tooling, refactoring boundaries, and how the feature keeps scope to a single concern.
+3. **Static Delivery Mandate** — Clarify how the feature compiles to static assets (SSG/export commands, data prefetch strategy) and why no new runtime compute is introduced. Include RFC links if exceptions are proposed.
+4. **Right-Sized Tests** — List the automated tests you will add before implementation for risky flows, call out any manual smoke tests that will stand in, and note that recordings are not required.
+5. **Experience Consistency** — Describe the design tokens, accessibility checks, and responsive viewports the work touches, including screenshot diff coverage.
 
 ## Project Structure
 

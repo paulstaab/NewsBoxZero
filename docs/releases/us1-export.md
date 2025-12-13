@@ -78,7 +78,7 @@ The `/out` directory can be deployed to:
 
 ## Constitution Compliance
 
-### Principle II: Static Delivery Mandate
+### Principle III: Static Delivery Mandate
 
 | Requirement                    | Status  | Evidence                      |
 | ------------------------------ | ------- | ----------------------------- |
