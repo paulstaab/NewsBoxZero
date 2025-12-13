@@ -20,7 +20,10 @@ export interface OfflineBannerProps {
  */
 export function useOnlineStatus(): boolean {
   // Start with actual navigator.onLine to avoid hydration mismatch
-  const [isOnline, setIsOnline] = useState<boolean>(() => navigator.onLine);
+  // Check if navigator exists (SSR safe)
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
 
   useEffect(() => {
     const handleOnline = () => {
