@@ -25,6 +25,7 @@ function TimelineContent() {
     isUpdating,
     error,
     refresh,
+    markFolderRead,
   } = useFolderQueue();
 
   useEffect(() => {
@@ -81,6 +82,7 @@ function TimelineContent() {
           onRefresh={() => {
             void refresh();
           }}
+          onMarkAllRead={(folderId) => markFolderRead(folderId)}
           isUpdating={isUpdating}
         />
 

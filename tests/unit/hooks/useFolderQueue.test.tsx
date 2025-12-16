@@ -44,6 +44,10 @@ vi.mock('@/lib/api/feeds', () => ({
   getFeeds: vi.fn(),
 }));
 
+vi.mock('@/lib/api/items', () => ({
+  markItemsRead: vi.fn().mockResolvedValue(undefined),
+}));
+
 function buildArticle(partial: Partial<Article>): Article {
   return {
     id: partial.id ?? Math.floor(Math.random() * 10_000),
@@ -173,5 +177,70 @@ describe('useFolderQueue', () => {
     expect(result.current.activeArticles[0].title).toBe('Offline Story');
     expect(result.current.totalUnread).toBe(1);
     expect(result.current.queue[0]?.name).toBe('Offline Folder');
+  });
+
+  it('marks a folder as read, removes articles, and advances to next folder', async () => {
+    mockFoldersData = [
+      { id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] },
+      { id: 20, name: 'Design Notes', unreadCount: 0, feedIds: [] },
+    ];
+    mockFeedsData = [buildFeed({ id: 1, folderId: 10 }), buildFeed({ id: 2, folderId: 20 })];
+
+    mockUseItemsResult.items = [
+      buildArticle({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
+      buildArticle({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
+      buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' }),
+    ];
+
+    const { result } = renderHook(() => useFolderQueue());
+
+    await waitFor(() => {
+      expect(result.current.activeFolder?.id).toBe(10);
+      expect(result.current.activeArticles).toHaveLength(2);
+    });
+
+    // Mark first folder as read
+    await result.current.markFolderRead(10);
+
+    await waitFor(() => {
+      expect(result.current.activeFolder?.id).toBe(20);
+      expect(result.current.activeArticles).toHaveLength(1);
+    });
+
+    expect(result.current.totalUnread).toBe(1);
+    expect(result.current.queue).toHaveLength(1);
+  });
+
+  it('tracks pendingReadIds when marking folder as read', async () => {
+    mockFoldersData = [{ id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] }];
+    mockFeedsData = [buildFeed({ id: 1, folderId: 10 })];
+
+    mockUseItemsResult.items = [
+      buildArticle({ id: 1, feedId: 1, folderId: 10 }),
+      buildArticle({ id: 2, feedId: 1, folderId: 10 }),
+    ];
+
+    const { result } = renderHook(() => useFolderQueue());
+
+    await waitFor(() => {
+      expect(result.current.activeFolder?.id).toBe(10);
+    });
+
+    // Mark folder as read (this is async)
+    const markPromise = result.current.markFolderRead(10);
+
+    // Check that items were removed optimistically from queue before the API call completes
+    await waitFor(() => {
+      expect(result.current.queue).toHaveLength(0);
+    });
+
+    // Wait for the API call to complete
+    await markPromise;
+
+    // After successful API call, pendingReadIds should be cleared (removed on success)
+    const cache = JSON.parse(localStorage.getItem(CONFIG.TIMELINE_CACHE_KEY) ?? '{}') as {
+      pendingReadIds?: number[];
+    };
+    expect(cache.pendingReadIds).toEqual([]);
   });
 });

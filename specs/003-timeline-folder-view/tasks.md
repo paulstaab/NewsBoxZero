@@ -54,15 +54,15 @@ Purpose: Core state, types, and hooks that every user story depends on. **All la
 
 ### Tests & Checks (Right-Sized)
 
-- [ ] T016 [P] [US2] Extend tests/unit/hooks/useFolderQueue.test.ts with markFolderRead reducer coverage (pendingReadIds + queue advance).
-- [ ] T017 [P] [US2] Add Playwright step in tests/e2e/timeline-folders.spec.ts verifying mark-all triggers API call and surfaces next folder.
+- [X] T016 [P] [US2] Extend tests/unit/hooks/useFolderQueue.test.ts with markFolderRead reducer coverage (pendingReadIds + queue advance).
+- [X] T017 [P] [US2] Add Playwright step in tests/e2e/timeline-folders.spec.ts verifying mark-all triggers API call and surfaces next folder.
 
 ### Implementation
 
-- [ ] T018 [US2] Implement markFolderRead action in src/hooks/useFolderQueue.ts, calling markItemsRead from src/lib/api/items.ts and updating cache.
-- [ ] T019 [US2] Render Mark All as Read button + loading/disabled states within src/components/timeline/FolderStepper.tsx.
-- [ ] T020 [US2] Update src/lib/utils/unreadAggregator.ts and src/lib/storage/timelineCache.ts to drop read articles and recompute folder ordering post-mark.
-- [ ] T021 [US2] Ensure src/app/timeline/page.tsx shows "All articles read" messaging immediately after final folder completion.
+- [X] T018 [US2] Implement markFolderRead action in src/hooks/useFolderQueue.ts, calling markItemsRead from src/lib/api/items.ts and updating cache.
+- [X] T019 [US2] Render Mark All as Read button + loading/disabled states within src/components/timeline/FolderStepper.tsx.
+- [X] T020 [US2] Update src/lib/utils/unreadAggregator.ts and src/lib/storage/timelineCache.ts to drop read articles and recompute folder ordering post-mark.
+- [X] T021 [US2] Ensure src/app/timeline/page.tsx shows "All articles read" messaging immediately after final folder completion.
 
 ---
 

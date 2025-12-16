@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import { useItems } from './useItems';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
+import { markItemsRead } from '@/lib/api/items';
 import {
   buildFolderQueueFromArticles,
   deriveFolderProgress,
@@ -33,6 +34,7 @@ interface UseFolderQueueResult {
   isUpdating: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  markFolderRead: (folderId: number) => Promise<void>;
 }
 
 function stripHtml(input: string): string {
@@ -187,6 +189,61 @@ export function useFolderQueue(): UseFolderQueueResult {
   const error = itemsError ?? foldersError ?? feedsError ?? null;
   const isUpdating = isValidating || isFoldersLoading || isLoading;
 
+  const markFolderRead = useCallback(
+    async (folderId: number) => {
+      const folder = envelope.folders[folderId];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!folder) {
+        return;
+      }
+
+      const itemIds = folder.articles.map((article) => article.id);
+
+      // Optimistically update the cache
+      setEnvelope((current) => {
+        const updatedFolders = { ...current.folders };
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete updatedFolders[folderId];
+
+        const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
+        const nextActiveId = remainingQueue.length > 0 ? remainingQueue[0].id : null;
+
+        const nextEnvelope: TimelineCacheEnvelope = {
+          ...current,
+          folders: updatedFolders,
+          activeFolderId: nextActiveId,
+          pendingReadIds: [...current.pendingReadIds, ...itemIds],
+        };
+
+        storeTimelineCache(nextEnvelope);
+        return nextEnvelope;
+      });
+
+      // Call the API to mark items as read
+      try {
+        await markItemsRead(itemIds);
+
+        // Remove from pendingReadIds on success
+        setEnvelope((current) => {
+          const nextEnvelope: TimelineCacheEnvelope = {
+            ...current,
+            pendingReadIds: current.pendingReadIds.filter((id) => !itemIds.includes(id)),
+          };
+          storeTimelineCache(nextEnvelope);
+          return nextEnvelope;
+        });
+
+        // Trigger a refresh to get updated data from the server
+        await refresh();
+      } catch (error) {
+        // On error, keep the pendingReadIds for retry
+        console.error('Failed to mark items as read:', error);
+        throw error;
+      }
+    },
+    [envelope.folders, refresh],
+  );
+
   return {
     queue: sortedQueue,
     activeFolder,
@@ -197,5 +254,6 @@ export function useFolderQueue(): UseFolderQueueResult {
     isUpdating,
     error,
     refresh,
+    markFolderRead,
   };
 }
