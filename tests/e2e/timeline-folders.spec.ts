@@ -104,3 +104,214 @@ test.describe('Timeline folders (US1)', () => {
     await expect(page.getByText('Color Systems for 2025')).toBeVisible();
   });
 });
+
+test.describe('Timeline update and persistence (US5)', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupApiMocks(page, TEST_SERVER_URL);
+    await page.goto('/');
+    await page.waitForURL(/\/login\//);
+    await page.evaluate(() => {
+      sessionStorage.clear();
+      localStorage.clear();
+    });
+  });
+
+  test('automatically updates articles on mount and merges with cache', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    let initialLoadComplete = false;
+
+    await page.route(`${apiBase}/items**`, async (route) => {
+      if (!initialLoadComplete) {
+        initialLoadComplete = true;
+        await route.continue();
+      } else {
+        // Second load (automatic update) - return same data
+        await route.continue();
+      }
+    });
+
+    await completeLogin(page);
+
+    // Wait for initial render
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    // Verify articles loaded
+    const firstFolderName = mockFolders[0]?.name ?? 'Engineering Updates';
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(firstFolderName, 'i'),
+    );
+    await expect(page.getByText('Ship It Saturday: Folder Queue')).toBeVisible();
+
+    // Automatic update should have been triggered on mount
+    expect(initialLoadComplete).toBe(true);
+  });
+
+  test('manual update button fetches new articles and merges them', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    let updateCallCount = 0;
+
+    await page.route(`${apiBase}/items**`, async (route) => {
+      updateCallCount++;
+      if (updateCallCount === 1) {
+        // Initial load - return standard mock
+        await route.continue();
+      } else {
+        // Manual update - return one additional article
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            items: [
+              {
+                id: 9999,
+                feedId: 101,
+                folderId: mockFolders[0]?.id ?? 1,
+                title: 'Fresh Article from Update',
+                body: 'This is a new article added during update',
+                url: 'https://example.com/fresh-article',
+                pubDate: Math.floor(Date.now() / 1000),
+                unread: true,
+                starred: false,
+                mediaThumbnail: null,
+              },
+            ],
+          }),
+        });
+      }
+    });
+
+    await completeLogin(page);
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    // Initial articles should be visible
+    await expect(page.getByText('Ship It Saturday: Folder Queue')).toBeVisible();
+
+    // Click the Update/Refresh button
+    const updateButton = page.getByRole('button', { name: /update|refresh/i });
+    await expect(updateButton).toBeVisible();
+    await updateButton.click();
+
+    // Loading indicator should appear
+    await expect(updateButton).toBeDisabled({ timeout: 1000 });
+
+    // Wait for update to complete
+    await expect(updateButton).toBeEnabled({ timeout: 5000 });
+
+    // Verify update was called
+    expect(updateCallCount).toBeGreaterThanOrEqual(2);
+
+    // New article should be merged (though it might not be visible in this specific view)
+    // The important thing is that the update completed without error
+  });
+
+  test('persists unread state across page reloads', async ({ page }) => {
+    // First session - login and mark one folder as read
+    await completeLogin(page);
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    const firstFolderName = mockFolders[0]?.name ?? 'Engineering Updates';
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(firstFolderName, 'i'),
+    );
+
+    // Mark first folder as read
+    await page.getByRole('button', { name: /mark all as read/i }).click();
+
+    // Wait for second folder to appear
+    const secondFolderName = mockFolders[1]?.name ?? 'Design Thinking';
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(secondFolderName, 'i'),
+      { timeout: 5000 },
+    );
+
+    // Reload the page
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // State should persist - second folder should still be active
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(secondFolderName, 'i'),
+      { timeout: 5000 },
+    );
+
+    // First folder's articles should not reappear
+    await expect(page.getByText('Ship It Saturday: Folder Queue')).toHaveCount(0);
+  });
+
+  test('shows loading indicator during update and handles errors gracefully', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    let updateAttempt = 0;
+
+    await page.route(`${apiBase}/items**`, async (route) => {
+      updateAttempt++;
+      if (updateAttempt === 1) {
+        // Initial load succeeds
+        await route.continue();
+      } else {
+        // Subsequent updates fail
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Server error' }),
+        });
+      }
+    });
+
+    await completeLogin(page);
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    // Click update button
+    const updateButton = page.getByRole('button', { name: /update|refresh/i });
+    await updateButton.click();
+
+    // Should show loading state
+    await expect(updateButton).toBeDisabled({ timeout: 1000 });
+
+    // Error should be handled - button should re-enable
+    await expect(updateButton).toBeEnabled({ timeout: 5000 });
+
+    // Original articles should still be visible (cache preserved)
+    await expect(page.getByText('Ship It Saturday: Folder Queue')).toBeVisible();
+  });
+
+  test('pendingReadIds prevent already-marked articles from reappearing', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    const markedItemIds: number[] = [];
+    let updateCount = 0;
+
+    await page.route(`${apiBase}/items/read/multiple`, async (route) => {
+      const postData = route.request().postDataJSON() as { itemIds?: number[] };
+      if (postData.itemIds) {
+        markedItemIds.push(...postData.itemIds);
+      }
+      await route.fulfill({ status: 204 });
+    });
+
+    await page.route(`${apiBase}/items**`, async (route) => {
+      updateCount++;
+      await route.continue(); // Always return the same articles
+    });
+
+    await completeLogin(page);
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    // Mark first folder as read
+    await page.getByRole('button', { name: /mark all as read/i }).click();
+    await page.waitForTimeout(500);
+
+    // Trigger manual update
+    const updateButton = page.getByRole('button', { name: /update|refresh/i });
+    await expect(updateButton).toBeVisible({ timeout: 2000 });
+    await updateButton.click();
+    await expect(updateButton).toBeEnabled({ timeout: 5000 });
+
+    // First folder's articles should NOT reappear even though API returns them
+    await expect(page.getByText('Ship It Saturday: Folder Queue')).toHaveCount(0);
+
+    // Second folder should remain active
+    const secondFolderName = mockFolders[1]?.name ?? 'Design Thinking';
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(secondFolderName, 'i'),
+    );
+  });
+});

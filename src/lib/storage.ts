@@ -134,6 +134,7 @@ export function isAuthenticated(): boolean {
 export {
   createEmptyTimelineCache,
   loadTimelineCache,
-  storeTimelineCache,
+  mergeItemsIntoCache,
   pruneTimelineCache,
+  storeTimelineCache,
 } from './storage/timelineCache';

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Metrics and instrumentation client.
  * Tracks last-sync timestamps, diagnostics, and performance metrics.
@@ -256,6 +258,93 @@ export function measure(name: string, startMark: string, endMark?: string): numb
     }
   } catch {
     // Measurement failed
+  }
+
+  return null;
+}
+
+/**
+ * Timeline-specific performance tracking (US5).
+ * Marks and measures key timeline operations.
+ */
+
+/**
+ * Mark timeline cache load start.
+ */
+export function markTimelineCacheLoadStart(): void {
+  mark('timeline-cache-load-start');
+}
+
+/**
+ * Mark timeline cache ready (after hydration).
+ */
+export function markTimelineCacheReady(): void {
+  mark('timeline-cache-ready');
+  const duration = measure('timeline-cache-ready', 'timeline-cache-load-start');
+
+  if (process.env.NODE_ENV === 'development' && duration !== null) {
+    console.log(`📊 Timeline cache ready in ${duration.toFixed(0)}ms`);
+
+    // Warn if exceeding 500ms target
+    if (duration > 500) {
+      console.warn(`⚠️ Timeline cache load exceeded 500ms target (${duration.toFixed(0)}ms)`);
+    }
+  }
+}
+
+/**
+ * Mark timeline update start (when refresh triggered).
+ */
+export function markTimelineUpdateStart(): void {
+  mark('timeline-update-start');
+}
+
+/**
+ * Mark timeline update complete (after merge and revalidate).
+ */
+export function markTimelineUpdateComplete(): void {
+  mark('timeline-update-complete');
+  const duration = measure('timeline-update-complete', 'timeline-update-start');
+
+  if (process.env.NODE_ENV === 'development' && duration !== null) {
+    console.log(`📊 Timeline update completed in ${duration.toFixed(0)}ms`);
+
+    // Warn if exceeding 10s target
+    if (duration > 10000) {
+      console.warn(`⚠️ Timeline update exceeded 10s target (${duration.toFixed(0)}ms)`);
+    }
+  }
+}
+
+/**
+ * Get the last measured timeline cache load duration.
+ */
+export function getTimelineCacheLoadDuration(): number | null {
+  if (!hasPerformanceApi()) {
+    return null;
+  }
+
+  const entries = performance.getEntriesByName('timeline-cache-ready', 'measure');
+  if (entries.length > 0) {
+    const lastEntry = entries[entries.length - 1];
+    return lastEntry.duration;
+  }
+
+  return null;
+}
+
+/**
+ * Get the last measured timeline update duration.
+ */
+export function getTimelineUpdateDuration(): number | null {
+  if (!hasPerformanceApi()) {
+    return null;
+  }
+
+  const entries = performance.getEntriesByName('timeline-update-complete', 'measure');
+  if (entries.length > 0) {
+    const lastEntry = entries[entries.length - 1];
+    return lastEntry.duration;
   }
 
   return null;

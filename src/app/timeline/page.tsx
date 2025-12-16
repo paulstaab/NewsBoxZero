@@ -8,6 +8,13 @@ import { UnreadSummary } from '@/components/timeline/UnreadSummary';
 import { FolderStepper } from '@/components/timeline/FolderStepper';
 import { TimelineList } from '@/components/timeline/TimelineList';
 import { EmptyState } from '@/components/timeline/EmptyState';
+import { RequestStateToast, useToast } from '@/components/ui/RequestStateToast';
+import {
+  markTimelineCacheLoadStart,
+  markTimelineCacheReady,
+  markTimelineUpdateStart,
+  markTimelineUpdateComplete,
+} from '@/lib/metrics/metricsClient';
 
 /**
  * Timeline page content component
@@ -16,6 +23,12 @@ import { EmptyState } from '@/components/timeline/EmptyState';
 function TimelineContent() {
   const router = useRouter();
   const { isAuthenticated, isInitializing } = useAuth();
+
+  // Mark cache load start before hook initialization
+  useEffect(() => {
+    markTimelineCacheLoadStart();
+  }, []);
+
   const {
     activeFolder,
     activeArticles,
@@ -26,13 +39,54 @@ function TimelineContent() {
     error,
     refresh,
     markFolderRead,
+    lastUpdateError,
   } = useFolderQueue();
+
+  const { toasts, showToast, dismissToast } = useToast();
 
   useEffect(() => {
     if (!isInitializing && !isAuthenticated) {
       router.push('/login');
     }
   }, [isAuthenticated, isInitializing, router]);
+
+  // Mark cache ready after hydration
+  useEffect(() => {
+    if (isHydrated) {
+      markTimelineCacheReady();
+    }
+  }, [isHydrated]);
+
+  // Automatic update on mount (US5 requirement)
+  useEffect(() => {
+    if (isHydrated && isAuthenticated) {
+      markTimelineUpdateStart();
+      // Trigger refresh to get latest articles and merge with cache
+      void refresh()
+        .then(() => {
+          markTimelineUpdateComplete();
+        })
+        .catch(() => {
+          // Error already logged and retried in useFolderQueue
+          // Just mark the update as complete (with error)
+          markTimelineUpdateComplete();
+        });
+    }
+    // Only run on mount when hydrated and authenticated
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, isAuthenticated]);
+
+  // Show toast when update fails after all retries
+  useEffect(() => {
+    if (lastUpdateError) {
+      showToast({
+        title: 'Update Failed',
+        message: `Failed to update timeline: ${lastUpdateError}`,
+        type: 'error',
+        duration: 5000,
+      });
+    }
+  }, [lastUpdateError, showToast]);
 
   // Show loading state while checking authentication
   if (isInitializing || !isHydrated) {
@@ -80,7 +134,10 @@ function TimelineContent() {
           activeFolder={activeFolder}
           remainingFolders={remainingFolders}
           onRefresh={() => {
-            void refresh();
+            markTimelineUpdateStart();
+            void refresh().then(() => {
+              markTimelineUpdateComplete();
+            });
           }}
           onMarkAllRead={(folderId) => markFolderRead(folderId)}
           isUpdating={isUpdating}
@@ -112,6 +169,11 @@ function TimelineContent() {
           />
         )}
       </main>
+
+      {/* Toast notifications for errors */}
+      {toasts.map((toast) => (
+        <RequestStateToast key={toast.id} message={toast} onDismiss={dismissToast} />
+      ))}
     </div>
   );
 }

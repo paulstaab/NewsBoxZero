@@ -74,15 +74,15 @@ Purpose: Core state, types, and hooks that every user story depends on. **All la
 
 ### Tests & Checks (Right-Sized)
 
-- [ ] T022 [P] [US5] Add Vitest cases in tests/unit/lib/timelineCache.test.ts for mergeItemsIntoCache, pendingReadIds tombstones, and exponential retry metadata.
-- [ ] T023 [P] [US5] Extend Playwright spec to cover automatic update on load and manual Update button behavior (loading indicator + merged results).
+- [X] T022 [P] [US5] Add Vitest cases in tests/unit/lib/timelineCache.test.ts for mergeItemsIntoCache, pendingReadIds tombstones, and exponential retry metadata.
+- [X] T023 [P] [US5] Extend Playwright spec to cover automatic update on load and manual Update button behavior (loading indicator + merged results).
 
 ### Implementation
 
-- [ ] T024 [US5] Implement cache merge + pendingRead/pendingSkip handling in src/lib/storage/timelineCache.ts per research.md strategy.
-- [ ] T025 [US5] Add automatic update-on-mount + manual refresh wiring in src/app/timeline/page.tsx (call useFolderQueue refresh + SWR revalidate).
-- [ ] T026 [US5] Instrument performance marks and metrics logging in src/lib/metrics/metricsClient.ts and invoke from timeline page after cache render/update complete.
-- [ ] T027 [US5] Build offline retry/backoff logic within src/hooks/useFolderQueue.ts (1 s → 2 s → 4 s) and surface toast errors when updates fail.
+- [X] T024 [US5] Implement cache merge + pendingRead/pendingSkip handling in src/lib/storage/timelineCache.ts per research.md strategy.
+- [X] T025 [US5] Add automatic update-on-mount + manual refresh wiring in src/app/timeline/page.tsx (call useFolderQueue refresh + SWR revalidate).
+- [X] T026 [US5] Instrument performance marks and metrics logging in src/lib/metrics/metricsClient.ts and invoke from timeline page after cache render/update complete.
+- [X] T027 [US5] Build offline retry/backoff logic within src/hooks/useFolderQueue.ts (1 s → 2 s → 4 s) and surface toast errors when updates fail.
 
 ---
 

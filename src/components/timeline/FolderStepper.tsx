@@ -63,7 +63,10 @@ export function FolderStepper({
               </span>
             </span>
             {remainingFolders > 0 && (
-              <span data-testid="remaining-folders-count">{remainingLabel}</span>
+              <>
+                <span className="text-gray-400">•</span>
+                <span data-testid="remaining-folders-count">{remainingLabel}</span>
+              </>
             )}
             {lastUpdatedLabel && (
               <>

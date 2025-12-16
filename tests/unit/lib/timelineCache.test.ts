@@ -111,3 +111,215 @@ describe('timeline cache helpers', () => {
     expect(pruned.folders[2].articles).toHaveLength(CONFIG.TIMELINE_MAX_ITEMS_PER_FOLDER);
   });
 });
+
+describe('mergeItemsIntoCache', () => {
+  it('merges new articles into existing folders without duplicates', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 2,
+          articles: [createPreview({ id: 1, folderId: 1 }), createPreview({ id: 2, folderId: 1 })],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [],
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [
+      createPreview({ id: 2, folderId: 1 }), // Duplicate
+      createPreview({ id: 3, folderId: 1 }), // New
+      createPreview({ id: 4, folderId: 1 }), // New
+    ];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    expect(merged.folders[1].articles).toHaveLength(4);
+    expect(merged.folders[1].articles.map((a) => a.id)).toEqual([1, 2, 3, 4]);
+    expect(merged.folders[1].unreadCount).toBe(4);
+    expect(merged.lastSynced).toBe(now);
+  });
+
+  it('respects pendingReadIds as tombstones', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 1,
+          articles: [createPreview({ id: 1, folderId: 1 })],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [2, 3], // These should be blocked
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [
+      createPreview({ id: 2, folderId: 1 }), // Should be blocked
+      createPreview({ id: 3, folderId: 1 }), // Should be blocked
+      createPreview({ id: 4, folderId: 1 }), // Should be added
+    ];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    expect(merged.folders[1].articles).toHaveLength(2);
+    expect(merged.folders[1].articles.map((a) => a.id)).toEqual([1, 4]);
+    expect(merged.pendingReadIds).toEqual([2, 3]); // Tombstones persist
+  });
+
+  it('creates new folder entries for articles in new folders', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 1,
+          articles: [createPreview({ id: 1, folderId: 1 })],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [],
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [
+      createPreview({ id: 10, folderId: 2 }), // New folder
+      createPreview({ id: 11, folderId: 2 }), // New folder
+    ];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    expect(merged.folders[1]).toBeDefined();
+    expect(merged.folders[2]).toBeDefined();
+    expect(merged.folders[2].articles).toHaveLength(2);
+    expect(merged.folders[2].unreadCount).toBe(2);
+  });
+
+  it('removes folders with zero unread items after merge', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 2,
+          articles: [
+            createPreview({ id: 1, folderId: 1, unread: false }),
+            createPreview({ id: 2, folderId: 1, unread: false }),
+          ],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [],
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [
+      createPreview({ id: 3, folderId: 1, unread: false }), // Also read
+    ];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    expect(merged.folders[1]).toBeUndefined();
+    expect(merged.activeFolderId).toBeNull();
+  });
+
+  it('preserves folder metadata during merge', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 1,
+          articles: [createPreview({ id: 1, folderId: 1 })],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [],
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [createPreview({ id: 2, folderId: 1 })];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    expect(merged.folders[1].name).toBe('Engineering');
+    expect(merged.folders[1].status).toBe('active');
+    expect(merged.folders[1].id).toBe(1);
+  });
+
+  it('applies pruning during merge to respect retention limits', async () => {
+    const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
+    const now = Date.now();
+    const oldTimestamp = now - (CONFIG.TIMELINE_MAX_ITEM_AGE_DAYS + 1) * DAY_IN_MS;
+
+    const existingEnvelope: TimelineCacheEnvelope = {
+      version: CONFIG.TIMELINE_CACHE_VERSION,
+      lastSynced: now - 1000,
+      activeFolderId: 1,
+      folders: {
+        1: {
+          id: 1,
+          name: 'Engineering',
+          sortOrder: 0,
+          status: 'active',
+          unreadCount: 1,
+          articles: [createPreview({ id: 1, folderId: 1, storedAt: oldTimestamp })],
+          lastUpdated: now - 1000,
+        },
+      },
+      pendingReadIds: [],
+      pendingSkipFolderIds: [],
+    };
+
+    const newArticles: ArticlePreview[] = [createPreview({ id: 2, folderId: 1, storedAt: now })];
+
+    const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
+
+    // Old article should be pruned, only new one remains
+    expect(merged.folders[1].articles).toHaveLength(1);
+    expect(merged.folders[1].articles[0].id).toBe(2);
+  });
+});

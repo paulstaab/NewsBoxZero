@@ -6,11 +6,7 @@ import { useItems } from './useItems';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
 import { markItemsRead } from '@/lib/api/items';
-import {
-  buildFolderQueueFromArticles,
-  deriveFolderProgress,
-  sortFolderQueueEntries,
-} from '@/lib/utils/unreadAggregator';
+import { deriveFolderProgress, sortFolderQueueEntries } from '@/lib/utils/unreadAggregator';
 import {
   type Article,
   type ArticlePreview,
@@ -20,7 +16,12 @@ import {
   type TimelineCacheEnvelope,
   UNCATEGORIZED_FOLDER_ID,
 } from '@/types';
-import { createEmptyTimelineCache, loadTimelineCache, storeTimelineCache } from '@/lib/storage';
+import {
+  createEmptyTimelineCache,
+  loadTimelineCache,
+  mergeItemsIntoCache,
+  storeTimelineCache,
+} from '@/lib/storage';
 
 type FeedsSummary = Awaited<ReturnType<typeof getFeeds>>;
 
@@ -35,6 +36,7 @@ interface UseFolderQueueResult {
   error: Error | null;
   refresh: () => Promise<void>;
   markFolderRead: (folderId: number) => Promise<void>;
+  lastUpdateError: string | null;
 }
 
 function stripHtml(input: string): string {
@@ -82,16 +84,10 @@ function toArticlePreview(article: Article, folderId: number, cachedAt: number):
   };
 }
 
-function reduceQueueEntries(entries: FolderQueueEntry[]): Record<number, FolderQueueEntry> {
-  return entries.reduce<Record<number, FolderQueueEntry>>((acc, entry) => {
-    acc[entry.id] = entry;
-    return acc;
-  }, {});
-}
-
 export function useFolderQueue(): UseFolderQueueResult {
   const [envelope, setEnvelope] = useState<TimelineCacheEnvelope>(createEmptyTimelineCache);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [lastUpdateError, setLastUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const cached = loadTimelineCache();
@@ -124,11 +120,28 @@ export function useFolderQueue(): UseFolderQueueResult {
     isLoading,
     isValidating,
     error: itemsError,
-    refresh,
+    refresh: swrRefresh,
   } = useItems({
     getRead: false,
     oldestFirst: false,
   });
+
+  // Refresh with error handling (retry logic handled at page level)
+  const refresh = useCallback(async (): Promise<void> => {
+    try {
+      await swrRefresh();
+      setLastUpdateError(null);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Update failed';
+      setLastUpdateError(errorMessage);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ Timeline update failed:', errorMessage);
+      }
+
+      throw error;
+    }
+  }, [swrRefresh]);
 
   useEffect(() => {
     if (!foldersData || isLoading) return;
@@ -141,22 +154,24 @@ export function useFolderQueue(): UseFolderQueueResult {
         toArticlePreview(article, resolveFolderId(article, feedFolderMap), now),
       );
 
-      const queue = buildFolderQueueFromArticles(foldersData, previews, {
-        existingEntries: current.folders,
-        now,
-      });
+      // Use mergeItemsIntoCache to handle deduplication and pendingReadIds
+      const merged = mergeItemsIntoCache(current, previews, now);
 
-      const nextFolders = reduceQueueEntries(queue);
-      const nextActiveId =
-        typeof current.activeFolderId === 'number' && current.activeFolderId in nextFolders
-          ? current.activeFolderId
-          : (queue[0]?.id ?? null);
+      // Update folder names from foldersData
+      const folderNameMap = new Map<number, string>(foldersData.map((f) => [f.id, f.name]));
+      const updatedFolders: Record<number, FolderQueueEntry> = {};
+
+      for (const [folderIdStr, folder] of Object.entries(merged.folders)) {
+        const id = Number(folderIdStr);
+        updatedFolders[id] = {
+          ...folder,
+          name: folderNameMap.get(id) ?? folder.name,
+        };
+      }
 
       const nextEnvelope: TimelineCacheEnvelope = {
-        ...current,
-        folders: nextFolders,
-        activeFolderId: nextActiveId,
-        lastSynced: now,
+        ...merged,
+        folders: updatedFolders,
       };
 
       storeTimelineCache(nextEnvelope);
@@ -192,8 +207,7 @@ export function useFolderQueue(): UseFolderQueueResult {
   const markFolderRead = useCallback(
     async (folderId: number) => {
       const folder = envelope.folders[folderId];
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!folder) {
+      if (folder === undefined) {
         return;
       }
 
@@ -235,7 +249,7 @@ export function useFolderQueue(): UseFolderQueueResult {
 
         // Trigger a refresh to get updated data from the server
         await refresh();
-      } catch (error) {
+      } catch (error: unknown) {
         // On error, keep the pendingReadIds for retry
         console.error('Failed to mark items as read:', error);
         throw error;
@@ -255,5 +269,6 @@ export function useFolderQueue(): UseFolderQueueResult {
     error,
     refresh,
     markFolderRead,
+    lastUpdateError,
   };
 }

@@ -163,3 +163,85 @@ export function pruneTimelineCache(
     pendingSkipFolderIds,
   };
 }
+
+/**
+ * Merges new articles into the existing cache envelope.
+ * Respects pendingReadIds as tombstones to prevent already-marked items from reappearing.
+ * Deduplicates by article ID and updates unread counts accordingly.
+ */
+export function mergeItemsIntoCache(
+  envelope: TimelineCacheEnvelope,
+  newArticles: ArticlePreview[],
+  now = Date.now(),
+): TimelineCacheEnvelope {
+  const normalized = normalizeEnvelope(envelope);
+  const pendingReadSet = new Set(normalized.pendingReadIds);
+  const folders = { ...normalized.folders };
+
+  // Group new articles by folder
+  const articlesByFolder = new Map<number, ArticlePreview[]>();
+  for (const article of newArticles) {
+    // Skip articles that are in pendingReadIds (tombstones)
+    if (pendingReadSet.has(article.id)) {
+      continue;
+    }
+
+    const existing = articlesByFolder.get(article.folderId) ?? [];
+    existing.push(article);
+    articlesByFolder.set(article.folderId, existing);
+  }
+
+  // Merge articles into each folder
+  for (const [folderId, newFolderArticles] of articlesByFolder) {
+    const existingFolder = folders[folderId];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!existingFolder) {
+      // Create new folder entry if it doesn't exist
+      const unreadCount = newFolderArticles.filter((a) => a.unread).length;
+      if (unreadCount > 0) {
+        folders[folderId] = {
+          id: folderId,
+          name: `Folder ${String(folderId)}`, // Will be updated by caller with actual metadata
+          sortOrder: 0,
+          status: 'queued',
+          unreadCount,
+          articles: newFolderArticles,
+          lastUpdated: now,
+        };
+      }
+      continue;
+    }
+
+    // Merge with existing folder
+    const existingArticleIds = new Set(existingFolder.articles.map((a) => a.id));
+    const articlesToAdd = newFolderArticles.filter((a) => !existingArticleIds.has(a.id));
+
+    const mergedArticles = [...existingFolder.articles, ...articlesToAdd];
+    const prunedArticles = pruneArticlePreviews(mergedArticles, { now });
+    const unreadCount = prunedArticles.filter((a) => a.unread).length;
+
+    if (unreadCount === 0) {
+      // Remove folder if no unread items remain
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete folders[folderId];
+    } else {
+      folders[folderId] = {
+        ...existingFolder,
+        articles: prunedArticles,
+        unreadCount,
+        lastUpdated: now,
+      };
+    }
+  }
+
+  // Re-sort and derive active folder
+  const sortedEntries = sortFolderQueueEntries(Object.values(folders));
+  const sortedFolders = rebuildFolderMap(sortedEntries);
+
+  return {
+    ...normalized,
+    folders: sortedFolders,
+    activeFolderId: deriveActiveFolderId(normalized.activeFolderId, sortedFolders),
+    lastSynced: now,
+  };
+}
