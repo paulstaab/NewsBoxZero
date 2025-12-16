@@ -97,7 +97,7 @@ export interface ArticlePreview {
   hasFullText: boolean;
 
   /** Timestamp (ms) when the article was cached */
-  storedAt: number;
+  storedAt?: number;
 }
 
 /** Raw article object returned by the Nextcloud News API */

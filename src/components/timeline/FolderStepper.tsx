@@ -15,7 +15,6 @@ export function FolderStepper({
   onRefresh,
   isUpdating,
 }: FolderStepperProps) {
-  const hasFolder = Boolean(activeFolder);
   const unreadCount = activeFolder?.unreadCount ?? 0;
   const lastUpdatedLabel = activeFolder
     ? new Date(activeFolder.lastUpdated).toLocaleTimeString([], {
@@ -23,6 +22,10 @@ export function FolderStepper({
         minute: '2-digit',
       })
     : null;
+  const remainingLabel =
+    remainingFolders === 1
+      ? '1 folder queued'
+      : `${Number.isFinite(remainingFolders) ? remainingFolders.toLocaleString() : '0'} folders queued`;
 
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
@@ -43,9 +46,7 @@ export function FolderStepper({
               </span>
             </span>
             {remainingFolders > 0 && (
-              <span data-testid="remaining-folders-count">
-                {remainingFolders === 1 ? '1 folder queued' : `${remainingFolders} folders queued`}
-              </span>
+              <span data-testid="remaining-folders-count">{remainingLabel}</span>
             )}
             {lastUpdatedLabel && (
               <>

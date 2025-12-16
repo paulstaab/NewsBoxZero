@@ -21,6 +21,8 @@ import {
 } from '@/types';
 import { createEmptyTimelineCache, loadTimelineCache, storeTimelineCache } from '@/lib/storage';
 
+type FeedsSummary = Awaited<ReturnType<typeof getFeeds>>;
+
 interface UseFolderQueueResult {
   queue: FolderQueueEntry[];
   activeFolder: FolderQueueEntry | null;
@@ -56,8 +58,11 @@ function resolveFolderId(article: Article, feedFolderMap: Map<number, number>): 
 }
 
 function toArticlePreview(article: Article, folderId: number, cachedAt: number): ArticlePreview {
-  const fallbackTitle = article.title || 'Untitled article';
+  const trimmedTitle = article.title.trim();
+  const fallbackTitle = trimmedTitle.length > 0 ? article.title : 'Untitled article';
   const summary = summarize(article.body, fallbackTitle);
+  const trimmedUrl = article.url.trim();
+  const hasFullText = article.body.trim().length > 0;
 
   return {
     id: article.id,
@@ -65,12 +70,12 @@ function toArticlePreview(article: Article, folderId: number, cachedAt: number):
     feedId: article.feedId,
     title: fallbackTitle,
     summary,
-    url: article.url || '#',
+    url: trimmedUrl.length > 0 ? article.url : '#',
     thumbnailUrl: article.mediaThumbnail,
-    pubDate: article.pubDate ?? 0,
+    pubDate: article.pubDate,
     unread: article.unread,
     starred: article.starred,
-    hasFullText: Boolean(article.body && article.body.trim().length > 0),
+    hasFullText,
     storedAt: cachedAt,
   };
 }
@@ -88,6 +93,8 @@ export function useFolderQueue(): UseFolderQueueResult {
 
   useEffect(() => {
     const cached = loadTimelineCache();
+    // Hydrate client cache from localStorage after mount to avoid SSR mismatches.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnvelope(cached);
     setIsHydrated(true);
   }, []);
@@ -96,10 +103,13 @@ export function useFolderQueue(): UseFolderQueueResult {
     data: foldersData,
     error: foldersError,
     isLoading: isFoldersLoading,
-  } = useSWRImmutable<Folder[]>('folders', getFolders);
+  } = useSWRImmutable<Folder[], Error>('folders', getFolders);
 
-  const { data: feedsResponse, error: feedsError } = useSWRImmutable('feeds', getFeeds);
-  const feeds = feedsResponse?.feeds ?? [];
+  const { data: feedsResponse, error: feedsError } = useSWRImmutable<FeedsSummary, Error>(
+    'feeds',
+    getFeeds,
+  );
+  const feeds = useMemo(() => feedsResponse?.feeds ?? [], [feedsResponse]);
 
   const feedFolderMap = useMemo(() => {
     return new Map<number, number>(
@@ -121,6 +131,8 @@ export function useFolderQueue(): UseFolderQueueResult {
   useEffect(() => {
     if (!foldersData || isLoading) return;
 
+    // Persist refreshed queue into the cache whenever SWR returns new data.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnvelope((current) => {
       const now = Date.now();
       const previews = items.map((article) =>
@@ -134,7 +146,7 @@ export function useFolderQueue(): UseFolderQueueResult {
 
       const nextFolders = reduceQueueEntries(queue);
       const nextActiveId =
-        current.activeFolderId && nextFolders[current.activeFolderId]
+        typeof current.activeFolderId === 'number' && current.activeFolderId in nextFolders
           ? current.activeFolderId
           : (queue[0]?.id ?? null);
 
@@ -155,17 +167,19 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, [envelope.folders]);
 
   const activeFolder = useMemo(() => {
-    if (envelope.activeFolderId && envelope.folders[envelope.activeFolderId]) {
-      return envelope.folders[envelope.activeFolderId];
+    const activeId = envelope.activeFolderId;
+    if (typeof activeId === 'number' && activeId in envelope.folders) {
+      return envelope.folders[activeId];
     }
-    return sortedQueue[0] ?? null;
+
+    return sortedQueue.length > 0 ? sortedQueue[0] : null;
   }, [envelope.activeFolderId, envelope.folders, sortedQueue]);
 
   const progress = useMemo(() => {
-    return deriveFolderProgress(sortedQueue, activeFolder?.id ?? null);
+    return deriveFolderProgress(sortedQueue, activeFolder ? activeFolder.id : null);
   }, [sortedQueue, activeFolder]);
 
-  const activeArticles = activeFolder?.articles ?? [];
+  const activeArticles = activeFolder ? activeFolder.articles : [];
   const totalUnread = useMemo(() => {
     return sortedQueue.reduce((sum, entry) => sum + entry.unreadCount, 0);
   }, [sortedQueue]);

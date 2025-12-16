@@ -37,7 +37,7 @@ export function createEmptyTimelineCache(): TimelineCacheEnvelope {
 }
 
 function normalizeEnvelope(
-  envelope: TimelineCacheEnvelope | null | undefined,
+  envelope: Partial<TimelineCacheEnvelope> | null | undefined,
 ): TimelineCacheEnvelope {
   if (!envelope || envelope.version !== CONFIG.TIMELINE_CACHE_VERSION) {
     return createEmptyTimelineCache();
@@ -68,7 +68,7 @@ export function loadTimelineCache(): TimelineCacheEnvelope {
   }
 
   try {
-    const parsed = JSON.parse(raw) as TimelineCacheEnvelope;
+    const parsed = JSON.parse(raw) as Partial<TimelineCacheEnvelope>;
     const normalized = normalizeEnvelope(parsed);
     return pruneTimelineCache(normalized);
   } catch {
@@ -117,12 +117,15 @@ function deriveActiveFolderId(
   currentActiveId: number | null,
   folders: Record<number, FolderQueueEntry>,
 ): number | null {
-  if (currentActiveId && folders[currentActiveId]) {
+  if (typeof currentActiveId === 'number' && currentActiveId in folders) {
     return currentActiveId;
   }
 
   const ordered = Object.values(folders).sort((a, b) => a.sortOrder - b.sortOrder);
-  return ordered[0]?.id ?? null;
+  if (ordered.length === 0) {
+    return null;
+  }
+  return ordered[0].id;
 }
 
 function prunePendingSkips(

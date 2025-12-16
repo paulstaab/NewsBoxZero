@@ -27,7 +27,7 @@ export function TimelineList({ items, isLoading, emptyMessage }: TimelineListPro
   if (items.length === 0) {
     return (
       <div className="bg-white border border-dashed border-gray-300 rounded-lg p-10 text-center text-gray-500">
-        {emptyMessage || 'No unread articles in this folder.'}
+        {emptyMessage ?? 'No unread articles in this folder.'}
       </div>
     );
   }

@@ -1,0 +1,26 @@
+# Build artifacts
+.next/
+out/
+dist/
+build/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+
+# Project infrastructure
+.devcontainer/
+.github/
+.husky/
+.specify/
+.vscode/
+docs/
+specs/
+
+# Environment and config noise
+.env
+.env.*
+Dockerfile
+Dockerfile.*
+tsconfig.tsbuildinfo
+*.log

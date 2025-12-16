@@ -287,7 +287,7 @@ export function buildFolderQueueFromArticles(
       name:
         folderNameMap.get(folderId) ??
         previous?.name ??
-        (folderId === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : `Folder ${folderId}`),
+        (folderId === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : `Folder ${String(folderId)}`),
       sortOrder: previous?.sortOrder ?? 0,
       status: previous?.status ?? 'queued',
       unreadCount,
@@ -316,17 +316,21 @@ export function deriveFolderProgress(
   }
 
   const ordered = [...queue].sort((a, b) => a.sortOrder - b.sortOrder);
-  const currentEntry = ordered.find((entry) => entry.id === activeFolderId) ?? ordered[0] ?? null;
-  const currentIndex = currentEntry ? ordered.indexOf(currentEntry) : -1;
+  const matchingEntry = ordered.find((entry) => entry.id === activeFolderId);
+  const firstEntry = ordered[0];
+  // At this point, firstEntry must exist because we checked queue.length === 0 above
+  // Use matchingEntry if found, otherwise fall back to first entry (which is guaranteed to exist)
+  const currentEntry = matchingEntry ?? firstEntry;
+  const currentIndex = ordered.indexOf(currentEntry);
   const remainingFolderIds =
     currentIndex >= 0
       ? ordered.slice(currentIndex + 1).map((entry) => entry.id)
       : ordered.map((entry) => entry.id);
-  const nextFolderId = remainingFolderIds[0] ?? null;
+  const nextFolderId = remainingFolderIds.length > 0 ? remainingFolderIds[0] : null;
   const totalUnread = ordered.reduce((sum, entry) => sum + entry.unreadCount, 0);
 
   return {
-    currentFolderId: currentEntry?.id ?? null,
+    currentFolderId: currentEntry.id,
     nextFolderId,
     remainingFolderIds,
     allViewed: totalUnread === 0,

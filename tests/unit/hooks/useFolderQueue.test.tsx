@@ -47,7 +47,7 @@ vi.mock('@/lib/api/feeds', () => ({
 function buildArticle(partial: Partial<Article>): Article {
   return {
     id: partial.id ?? Math.floor(Math.random() * 10_000),
-    guid: partial.guid ?? `guid-${Math.random()}`,
+    guid: partial.guid ?? `guid-${Math.random().toString(36).slice(2)}`,
     guidHash: partial.guidHash ?? 'hash',
     title: partial.title ?? 'Test Article',
     author: partial.author ?? 'Feedfront',
