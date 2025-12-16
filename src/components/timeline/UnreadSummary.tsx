@@ -1,27 +1,22 @@
 'use client';
 
-import type { Article, Feed } from '@/types';
-import { aggregateUnreadCounts } from '@/lib/utils/unreadAggregator';
-import { useMemo } from 'react';
-
 interface UnreadSummaryProps {
-  items: Article[];
-  feeds?: Feed[];
+  totalUnread: number;
+  activeFolderUnread: number;
+  remainingFolders: number;
   className?: string;
 }
 
 /**
- * Unread summary component
- *
- * Displays aggregate unread counts and badges
- * Uses client-side aggregation from items array
+ * Unread summary for the folder-first timeline experience.
  */
-export function UnreadSummary({ items, feeds = [], className = '' }: UnreadSummaryProps) {
-  const counts = useMemo(() => {
-    return aggregateUnreadCounts(items, feeds, []);
-  }, [items, feeds]);
-
-  if (counts.totalUnread === 0) {
+export function UnreadSummary({
+  totalUnread,
+  activeFolderUnread,
+  remainingFolders,
+  className = '',
+}: UnreadSummaryProps) {
+  if (totalUnread === 0) {
     return (
       <div className={`flex items-center gap-2 text-sm text-gray-600 ${className}`}>
         <svg
@@ -39,10 +34,16 @@ export function UnreadSummary({ items, feeds = [], className = '' }: UnreadSumma
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex flex-col gap-1 text-sm ${className}`}>
       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
         <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
-        <span className="text-sm font-medium text-blue-900">{counts.totalUnread} unread</span>
+        <span className="text-sm font-medium text-blue-900">
+          {totalUnread} unread across timeline
+        </span>
+      </div>
+      <div className="text-gray-600">
+        {activeFolderUnread} in focus · {remainingFolders} folder{remainingFolders === 1 ? '' : 's'}{' '}
+        queued
       </div>
     </div>
   );

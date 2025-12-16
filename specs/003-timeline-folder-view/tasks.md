@@ -33,16 +33,16 @@ Purpose: Core state, types, and hooks that every user story depends on. **All la
 
 ### Tests & Checks (Right-Sized)
 
-- [ ] T009 [P] [US1] Add Vitest cases in tests/unit/hooks/useFolderQueue.test.ts validating initial folder ordering + single-folder selection.
-- [ ] T010 [P] [US1] Enable Playwright assertions in tests/e2e/timeline-folders.spec.ts for default folder ordering and empty-state messaging.
+- [X] T009 [P] [US1] Add Vitest cases in tests/unit/hooks/useFolderQueue.test.ts validating initial folder ordering + single-folder selection.
+- [X] T010 [P] [US1] Enable Playwright assertions in tests/e2e/timeline-folders.spec.ts for default folder ordering and empty-state messaging.
 
 ### Implementation
 
-- [ ] T011 [US1] Wire src/hooks/useFolderQueue.ts to hydrate from localStorage, derive FolderProgressState, and emit active folder articles.
-- [ ] T012 [US1] Create src/components/timeline/FolderStepper.tsx to render folder title, unread count, and navigation context above the list.
-- [ ] T013 [US1] Update src/components/timeline/TimelineList.tsx to accept folder-scoped articles and show folder-specific empty/loader states.
-- [ ] T014 [US1] Update src/app/timeline/page.tsx to consume useFolderQueue, remove global infinite scroll, and show all-read message when queue empty.
-- [ ] T015 [US1] Enhance src/components/timeline/UnreadSummary.tsx to display counts for the active folder and total remaining folders.
+- [X] T011 [US1] Wire src/hooks/useFolderQueue.ts to hydrate from localStorage, derive FolderProgressState, and emit active folder articles.
+- [X] T012 [US1] Create src/components/timeline/FolderStepper.tsx to render folder title, unread count, and navigation context above the list.
+- [X] T013 [US1] Update src/components/timeline/TimelineList.tsx to accept folder-scoped articles and show folder-specific empty/loader states.
+- [X] T014 [US1] Update src/app/timeline/page.tsx to consume useFolderQueue, remove global infinite scroll, and show all-read message when queue empty.
+- [X] T015 [US1] Enhance src/components/timeline/UnreadSummary.tsx to display counts for the active folder and total remaining folders.
 
 ---
 

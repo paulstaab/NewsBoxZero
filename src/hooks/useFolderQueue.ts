@@ -24,7 +24,9 @@ import { createEmptyTimelineCache, loadTimelineCache, storeTimelineCache } from 
 interface UseFolderQueueResult {
   queue: FolderQueueEntry[];
   activeFolder: FolderQueueEntry | null;
+  activeArticles: ArticlePreview[];
   progress: FolderProgressState;
+  totalUnread: number;
   isHydrated: boolean;
   isUpdating: boolean;
   error: Error | null;
@@ -163,13 +165,20 @@ export function useFolderQueue(): UseFolderQueueResult {
     return deriveFolderProgress(sortedQueue, activeFolder?.id ?? null);
   }, [sortedQueue, activeFolder]);
 
+  const activeArticles = activeFolder?.articles ?? [];
+  const totalUnread = useMemo(() => {
+    return sortedQueue.reduce((sum, entry) => sum + entry.unreadCount, 0);
+  }, [sortedQueue]);
+
   const error = itemsError ?? foldersError ?? feedsError ?? null;
   const isUpdating = isValidating || isFoldersLoading || isLoading;
 
   return {
     queue: sortedQueue,
     activeFolder,
+    activeArticles,
     progress,
+    totalUnread,
     isHydrated,
     isUpdating,
     error,
