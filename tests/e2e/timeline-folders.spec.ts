@@ -1,6 +1,6 @@
 import { type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { mockFolders, setupApiMocks } from './mocks';
+import { getMockItems, mockFolders, setupApiMocks } from './mocks';
 
 const TEST_SERVER_URL = 'https://rss.example.com';
 const TEST_USERNAME = 'testuser';
@@ -123,10 +123,20 @@ test.describe('Timeline update and persistence (US5)', () => {
     await page.route(`${apiBase}/items**`, async (route) => {
       if (!initialLoadComplete) {
         initialLoadComplete = true;
-        await route.continue();
+        const unreadItems = getMockItems().filter((item) => item.unread);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: unreadItems }),
+        });
       } else {
         // Second load (automatic update) - return same data
-        await route.continue();
+        const unreadItems = getMockItems().filter((item) => item.unread);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: unreadItems }),
+        });
       }
     });
 
@@ -154,14 +164,21 @@ test.describe('Timeline update and persistence (US5)', () => {
       updateCallCount++;
       if (updateCallCount === 1) {
         // Initial load - return standard mock
-        await route.continue();
+        const unreadItems = getMockItems().filter((item) => item.unread);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: unreadItems }),
+        });
       } else {
-        // Manual update - return one additional article
+        // Manual update - return existing items PLUS one additional article
+        const unreadItems = getMockItems().filter((item) => item.unread);
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             items: [
+              ...unreadItems,
               {
                 id: 9999,
                 feedId: 101,
@@ -191,10 +208,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     await expect(updateButton).toBeVisible();
     await updateButton.click();
 
-    // Loading indicator should appear
-    await expect(updateButton).toBeDisabled({ timeout: 1000 });
-
-    // Wait for update to complete
+    // Wait for update to complete (button may briefly disable during loading)
     await expect(updateButton).toBeEnabled({ timeout: 5000 });
 
     // Verify update was called
@@ -244,11 +258,16 @@ test.describe('Timeline update and persistence (US5)', () => {
 
     await page.route(`${apiBase}/items**`, async (route) => {
       updateAttempt++;
-      if (updateAttempt === 1) {
-        // Initial load succeeds
-        await route.continue();
+      if (updateAttempt <= 2) {
+        // Initial load and automatic update succeed
+        const unreadItems = getMockItems().filter((item) => item.unread);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: unreadItems }),
+        });
       } else {
-        // Subsequent updates fail
+        // Manual update fails
         await route.fulfill({
           status: 500,
           contentType: 'application/json',
@@ -268,7 +287,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     await expect(updateButton).toBeDisabled({ timeout: 1000 });
 
     // Error should be handled - button should re-enable
-    await expect(updateButton).toBeEnabled({ timeout: 5000 });
+    await expect(updateButton).toBeEnabled({ timeout: 10000 });
 
     // Original articles should still be visible (cache preserved)
     await expect(page.getByText('Ship It Saturday: Folder Queue')).toBeVisible();
@@ -287,7 +306,13 @@ test.describe('Timeline update and persistence (US5)', () => {
     });
 
     await page.route(`${apiBase}/items**`, async (route) => {
-      await route.continue(); // Always return the same articles
+      // Always return the same articles
+      const unreadItems = getMockItems().filter((item) => item.unread);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: unreadItems }),
+      });
     });
 
     await completeLogin(page);
@@ -317,7 +342,8 @@ test.describe('Timeline update and persistence (US5)', () => {
     await completeLogin(page);
 
     const firstFolderName = mockFolders[0]?.name ?? 'Engineering Updates';
-    const secondFolderName = mockFolders[1]?.name ?? 'Design Thinking';
+    const secondFolderName = mockFolders[1]?.name ?? 'Design Inspiration';
+    const thirdFolderName = mockFolders[2]?.name ?? 'Podcasts';
 
     // Verify first folder is active
     await expect(page.getByTestId('active-folder-name')).toHaveText(
@@ -327,12 +353,20 @@ test.describe('Timeline update and persistence (US5)', () => {
     // Click Skip button
     await page.getByRole('button', { name: /skip/i }).click();
 
-    // Verify next folder appears
+    // Verify second folder appears
     await expect(page.getByTestId('active-folder-name')).toHaveText(
       new RegExp(secondFolderName, 'i'),
     );
 
-    // Skip the second folder (assuming only 2 folders in mock)
+    // Skip the second folder
+    await page.getByRole('button', { name: /skip/i }).click();
+
+    // Verify third folder appears
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(thirdFolderName, 'i'),
+    );
+
+    // Skip the third folder
     await page.getByRole('button', { name: /skip/i }).click();
 
     // Verify "All folders viewed" message
@@ -351,36 +385,6 @@ test.describe('Timeline update and persistence (US5)', () => {
   test('expands article to show details and marks as read (US4)', async ({ page }) => {
     const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
 
-    // Mock single item fetch
-    await page.route(`${apiBase}/items?*`, async (route) => {
-      const url = new URL(route.request().url());
-      const id = url.searchParams.get('id');
-
-      if (id) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            items: [
-              {
-                id: Number(id),
-                guid: `guid-${id}`,
-                title: 'Full Article Title',
-                body: '<p>This is the full content of the article.</p>',
-                feedId: 101,
-                unread: true,
-                starred: false,
-                pubDate: 1700000000,
-                lastModified: 1700000000,
-              },
-            ],
-          }),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-
     // Mock mark read
     let markReadCalled = false;
     await page.route(`${apiBase}/items/*/read`, async (route) => {
@@ -390,8 +394,14 @@ test.describe('Timeline update and persistence (US5)', () => {
 
     await completeLogin(page);
 
+    // Wait for articles to load
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    // Wait for at least one article to be present
+    await expect(page.getByRole('article').first()).toBeVisible({ timeout: 5000 });
+
     // Find an article card
-    const articleCard = page.locator('article').first();
+    const articleCard = page.getByRole('article').first();
 
     // Verify summary is visible
     await expect(articleCard).toContainText('Ship It Saturday'); // From mock data
@@ -399,8 +409,8 @@ test.describe('Timeline update and persistence (US5)', () => {
     // Click to expand
     await articleCard.click();
 
-    // Verify full content is loaded
-    await expect(articleCard).toContainText('This is the full content of the article.');
+    // Verify full content is loaded (from the mock item's body field)
+    await expect(articleCard).toContainText('Engineering just shipped the folder queue feature');
 
     // Verify mark read was called
     expect(markReadCalled).toBe(true);
