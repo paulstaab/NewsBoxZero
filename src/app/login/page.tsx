@@ -128,13 +128,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--color-surface))] px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-[hsl(var(--color-surface-elevated))] rounded-lg shadow-md p-8 border border-[hsl(var(--color-border))]">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Feedfront</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-[hsl(var(--color-text))] mb-2">
+              Welcome to Feedfront
+            </h1>
+            <p className="text-[hsl(var(--color-text-muted))]">
               {step === LoginStep.SERVER_URL && 'Connect to your RSS server'}
               {step === LoginStep.VALIDATING_URL && 'Checking server connectivity...'}
               {step === LoginStep.CREDENTIALS && 'Enter your credentials'}
@@ -142,26 +144,25 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Step indicator */}
           <div className="mb-8 flex justify-center space-x-2">
             <div
-              className={`h-2 w-12 rounded-full ${step >= LoginStep.SERVER_URL ? 'bg-blue-600' : 'bg-gray-300'}`}
+              className={`h-2 w-12 rounded-full ${step >= LoginStep.SERVER_URL ? 'bg-[hsl(var(--color-accent))]' : 'bg-[hsl(var(--color-border))]'}`}
             />
             <div
-              className={`h-2 w-12 rounded-full ${step >= LoginStep.VALIDATING_URL ? 'bg-blue-600' : 'bg-gray-300'}`}
+              className={`h-2 w-12 rounded-full ${step >= LoginStep.VALIDATING_URL ? 'bg-[hsl(var(--color-accent))]' : 'bg-[hsl(var(--color-border))]'}`}
             />
             <div
-              className={`h-2 w-12 rounded-full ${step >= LoginStep.CREDENTIALS ? 'bg-blue-600' : 'bg-gray-300'}`}
+              className={`h-2 w-12 rounded-full ${step >= LoginStep.CREDENTIALS ? 'bg-[hsl(var(--color-accent))]' : 'bg-[hsl(var(--color-border))]'}`}
             />
             <div
-              className={`h-2 w-12 rounded-full ${step >= LoginStep.AUTHENTICATING ? 'bg-blue-600' : 'bg-gray-300'}`}
+              className={`h-2 w-12 rounded-full ${step >= LoginStep.AUTHENTICATING ? 'bg-[hsl(var(--color-accent))]' : 'bg-[hsl(var(--color-border))]'}`}
             />
           </div>
 
           {/* Error display */}
           {(validationError ?? error) && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-800">{validationError ?? error}</p>
+            <div className="mb-6 p-4 bg-[hsl(var(--color-error)/0.1)] border border-[hsl(var(--color-error)/0.2)] rounded-md">
+              <p className="text-sm text-[hsl(var(--color-error))]">{validationError ?? error}</p>
             </div>
           )}
 
@@ -174,7 +175,10 @@ export default function LoginPage() {
               className="space-y-6"
             >
               <div>
-                <label htmlFor="serverUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="serverUrl"
+                  className="block text-sm font-medium text-[hsl(var(--color-text))] mb-2"
+                >
                   Server URL
                 </label>
                 <input
@@ -185,18 +189,18 @@ export default function LoginPage() {
                     setServerUrl(e.target.value);
                   }}
                   placeholder="https://rss.example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-[hsl(var(--color-border))] rounded-md bg-[hsl(var(--color-surface))] text-[hsl(var(--color-text))] focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:border-transparent"
                   autoFocus
                   required
                 />
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-[hsl(var(--color-text-muted))]">
                   Must be an HTTPS URL to your headless-rss instance
                 </p>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                className="w-full bg-[hsl(var(--color-accent))] text-white py-2 px-4 rounded-md hover:bg-[hsl(var(--color-accent-strong))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:ring-offset-2 transition-colors"
               >
                 Continue
               </button>
@@ -206,8 +210,10 @@ export default function LoginPage() {
           {/* Step 2: Validating URL */}
           {step === LoginStep.VALIDATING_URL && (
             <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600">Checking connectivity to {serverUrl}...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--color-accent))] mb-4"></div>
+              <p className="text-[hsl(var(--color-text-muted))]">
+                Checking connectivity to {serverUrl}...
+              </p>
             </div>
           )}
 
@@ -220,7 +226,10 @@ export default function LoginPage() {
               className="space-y-6"
             >
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-[hsl(var(--color-text))] mb-2"
+                >
                   Username
                 </label>
                 <input
@@ -230,7 +239,7 @@ export default function LoginPage() {
                   onChange={(e) => {
                     setUsername(e.target.value);
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-[hsl(var(--color-border))] rounded-md bg-[hsl(var(--color-surface))] text-[hsl(var(--color-text))] focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:border-transparent"
                   autoFocus
                   required
                   autoComplete="username"
@@ -238,7 +247,10 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-[hsl(var(--color-text))] mb-2"
+                >
                   Password
                 </label>
                 <input
@@ -248,7 +260,7 @@ export default function LoginPage() {
                   onChange={(e) => {
                     setPassword(e.target.value);
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-[hsl(var(--color-border))] rounded-md bg-[hsl(var(--color-surface))] text-[hsl(var(--color-text))] focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:border-transparent"
                   required
                   autoComplete="current-password"
                 />
@@ -262,9 +274,12 @@ export default function LoginPage() {
                   onChange={(e) => {
                     setRememberDevice(e.target.checked);
                   }}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-[hsl(var(--color-accent))] border-[hsl(var(--color-border))] rounded focus:ring-[hsl(var(--color-accent))]"
                 />
-                <label htmlFor="rememberDevice" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="rememberDevice"
+                  className="ml-2 block text-sm text-[hsl(var(--color-text))]"
+                >
                   Remember this device
                 </label>
               </div>
@@ -273,13 +288,13 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                  className="flex-1 bg-[hsl(var(--color-surface-muted))] text-[hsl(var(--color-text))] py-2 px-4 rounded-md hover:bg-[hsl(var(--color-surface-elevated))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:ring-offset-2 transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  className="flex-1 bg-[hsl(var(--color-accent))] text-white py-2 px-4 rounded-md hover:bg-[hsl(var(--color-accent-strong))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent))] focus:ring-offset-2 transition-colors"
                 >
                   Sign In
                 </button>
@@ -290,20 +305,22 @@ export default function LoginPage() {
           {/* Step 4: Authenticating */}
           {step === LoginStep.AUTHENTICATING && (
             <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600">Authenticating with {serverUrl}...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--color-accent))] mb-4"></div>
+              <p className="text-[hsl(var(--color-text-muted))]">
+                Authenticating with {serverUrl}...
+              </p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-[hsl(var(--color-text-muted))]">
           Powered by{' '}
           <a
             href="https://github.com/Your-Org/headless-rss"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-[hsl(var(--color-accent))] hover:underline"
           >
             headless-rss
           </a>

@@ -12,11 +12,15 @@ const TEST_PASSWORD = 'testpass';
 
 async function loginUser(page: Page) {
   await page.goto('/login/');
+  await page.evaluate(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
   await page.waitForLoadState('domcontentloaded');
 
   await page.getByLabel(/server url/i).fill(TEST_SERVER_URL);
   await page.getByRole('button', { name: /^continue$/i }).click();
-  await page.waitForTimeout(500);
+  await page.waitForSelector('input[id="username"]');
 
   await page.getByLabel(/username/i).fill(TEST_USERNAME);
   await page.getByLabel(/password/i).fill(TEST_PASSWORD);

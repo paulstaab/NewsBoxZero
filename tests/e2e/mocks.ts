@@ -213,7 +213,7 @@ export async function setupApiMocks(page: Page, baseUrl = 'https://rss.example.c
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ version: '1.3.0' }),
+      body: JSON.stringify({ version: '1.3.0', apiLevels: ['v1-3'] }),
     });
   });
 

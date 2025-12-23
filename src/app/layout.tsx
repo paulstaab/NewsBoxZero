@@ -36,17 +36,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SkipLink href="#main-content">Skip to main content</SkipLink>
         <AuthProvider>
           <SWRProvider>
-            <SidebarProvider>
-              <div className="flex min-h-screen flex-col">
-                {/* Main content area */}
-                <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-                  {children}
-                </main>
-              </div>
-              <OfflineBanner />
-              <InstallPrompt delayMs={3000} showDuringActivity={false} />
-              <SettingsMenu position="top-right" />
-            </SidebarProvider>
+            <div className="flex min-h-screen flex-col">
+              {/* Main content area */}
+              <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </main>
+            </div>
+            <OfflineBanner />
+            <InstallPrompt delayMs={3000} showDuringActivity={false} />
+            <SettingsMenu position="top-right" />
           </SWRProvider>
         </AuthProvider>
         <ServiceWorkerRegistration />
