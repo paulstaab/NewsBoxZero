@@ -32,6 +32,7 @@ Verification MUST exist, but it must match risk—not bureaucracy.
 - Add or update automated tests before merge whenever behavior could regress silently (data fetching, mutations, auth, routing, caching, or accessibility logic).
 - Manual smoke tests are acceptable for copy or purely presentational tweaks; describe the manual check in the PR instead of capturing video evidence.
 - No change may merge if regressions would only be caught by users later; if automation is impractical, explain why and provide the lightweight checklist that was executed.
+- Unit tests should cover positive and negative cases. E2E should focus on the most important user journey along the happy path.
 
 ### V. Experience Consistency
 UI work MUST use the shared design tokens, typography scale, and spacing system, remain responsive between 320px and 1440px, and meet WCAG 2.1 AA contrast and keyboard navigation rules.
