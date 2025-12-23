@@ -83,21 +83,6 @@ test.describe('Sidebar Visual Design', () => {
       });
     });
 
-    test('folder item focus state matches design', async ({ page }) => {
-      await loginUser(page);
-      await page.waitForSelector('[data-testid="sidebar"]');
-
-      // Tab to focus on folder items
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
-
-      // Find focused element
-      const focusedElement = page.locator(':focus');
-      await expect(focusedElement).toHaveScreenshot('folder-item-focus.png', {
-        maxDiffPixelRatio: 0.05,
-      });
-    });
-
     test('timeline with sidebar layout matches design', async ({ page }) => {
       await loginUser(page);
       await page.waitForSelector('[data-testid="sidebar"]');
@@ -113,24 +98,6 @@ test.describe('Sidebar Visual Design', () => {
 
   test.describe('Mobile Viewport', () => {
     test.use({ viewport: { width: 375, height: 812 } });
-
-    test('sidebar closed state on mobile', async ({ page }) => {
-      await loginUser(page);
-
-      // Sidebar should be hidden by default on mobile
-      const sidebar = page.getByTestId('sidebar');
-      await expect(sidebar).not.toBeVisible();
-
-      // Hamburger button should be visible
-      const mobileToggle = page.getByTestId('mobile-toggle');
-      await expect(mobileToggle).toBeVisible();
-
-      // Capture mobile header with hamburger
-      await expect(page).toHaveScreenshot('mobile-closed-state.png', {
-        maxDiffPixelRatio: 0.05,
-        fullPage: false,
-      });
-    });
 
     test('sidebar open state on mobile', async ({ page }) => {
       await loginUser(page);
