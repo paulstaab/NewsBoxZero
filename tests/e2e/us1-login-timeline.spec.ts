@@ -7,9 +7,11 @@ import { setupApiMocks, setupUnreachableServer, setupInvalidApiPath } from './mo
  * Tests the complete flow:
  * 1. Login wizard with URL/credential validation
  * 2. Timeline rendering with unread items
- * 3. Unread ↔ All toggle
- * 4. Infinite scroll and pagination
- * 5. Offline indicator behavior
+ * 3. Infinite scroll and pagination
+ * 4. Offline indicator behavior
+ *
+ * Note: Per Core Principle VI (Unread-Only Focus), the app exclusively works
+ * with unread articles. There is no "view all" or "show read" functionality.
  */
 
 const TEST_SERVER_URL = 'https://rss.example.com';
