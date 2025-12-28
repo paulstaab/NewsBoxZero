@@ -4,7 +4,8 @@ import useSWR, { type SWRConfiguration } from 'swr';
 import { useAuth } from './useAuth';
 import { getItems } from '@/lib/api/items';
 import type { Article } from '@/types';
-import { useState, useLayoutEffect, useCallback, useEffect } from 'react';
+import { UNCATEGORIZED_FOLDER_ID } from '@/types';
+import { useState, useLayoutEffect, useCallback, useEffect, useMemo } from 'react';
 
 interface ItemsParams {
   type?: number;
@@ -20,10 +21,13 @@ interface UseItemsOptions extends ItemsParams {
   infiniteScroll?: boolean;
   /** Prefetch next batch when this percentage of current batch is visible */
   prefetchThreshold?: number;
+  /** Filter items to a single folder after fetch */
+  activeFolderId?: number | null;
 }
 
 interface UseItemsResult {
   items: Article[];
+  allItems: Article[];
   isLoading: boolean;
   isValidating: boolean;
   error: Error | null;
@@ -56,6 +60,7 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     getRead = false, // Unread only by default
     oldestFirst = false,
     batchSize = DEFAULT_BATCH_SIZE,
+    activeFolderId,
   } = options;
 
   const [offset, setOffset] = useState(0);
@@ -147,8 +152,17 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     await mutate();
   }, [mutate]);
 
+  const filteredItems = useMemo(() => {
+    if (typeof activeFolderId !== 'number') {
+      return allItems;
+    }
+
+    return allItems.filter((item) => (item.folderId ?? UNCATEGORIZED_FOLDER_ID) === activeFolderId);
+  }, [activeFolderId, allItems]);
+
   return {
-    items: allItems,
+    items: filteredItems,
+    allItems,
     isLoading,
     isValidating,
     error: error ?? null,

@@ -28,8 +28,8 @@ description: "Task list for Folder Queue Pills"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create scaffold pill component file in src/components/timeline/FolderQueuePills.tsx
-- [ ] T002 [P] Align folder queue/pill types in src/types/folder.ts
+- [X] T001 Create scaffold pill component file in src/components/timeline/FolderQueuePills.tsx
+- [X] T002 [P] Align folder queue/pill types in src/types/folder.ts
 
 ---
 
@@ -39,9 +39,9 @@ description: "Task list for Folder Queue Pills"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 [P] Add queue ordering helpers (active pin, stable ties, skip-to-end) in src/lib/utils/unreadAggregator.ts
-- [ ] T004 Update cache persistence for activeFolderId/sortOrder and zero-unread pruning in src/lib/storage/timelineCache.ts
-- [ ] T005 Update queue state derivation and action API in src/hooks/useFolderQueue.ts
+- [X] T003 [P] Add queue ordering helpers (active pin, stable ties, skip-to-end) in src/lib/utils/unreadAggregator.ts
+- [X] T004 Update cache persistence for activeFolderId/sortOrder and zero-unread pruning in src/lib/storage/timelineCache.ts
+- [X] T005 Update queue state derivation and action API in src/hooks/useFolderQueue.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -55,16 +55,16 @@ description: "Task list for Folder Queue Pills"
 
 ### Tests & Checks for User Story 1 (Right-Sized) ⚠️
 
-- [ ] T006 [P] [US1] Add ordering/active-pin unit tests in tests/unit/unreadAggregator.test.ts
-- [ ] T007 [US1] Add selection and move-to-top hook tests in tests/hooks/useFolderQueue.test.ts
-- [ ] T008 [US1] Add pill render/order/selection Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
+- [X] T006 [P] [US1] Add ordering/active-pin unit tests in tests/unit/unreadAggregator.test.ts
+- [X] T007 [US1] Add selection and move-to-top hook tests in tests/hooks/useFolderQueue.test.ts
+- [X] T008 [US1] Add pill render/order/selection Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implement pill strip layout, styles, and a11y states in src/components/timeline/FolderQueuePills.tsx
-- [ ] T010 [US1] Replace Unread/All pills with FolderQueuePills in src/app/timeline/page.tsx
-- [ ] T011 [US1] Update or retire legacy pill logic in src/components/timeline/FolderStepper.tsx
-- [ ] T012 [US1] Wire pill click selection + scroll-into-view in src/components/timeline/FolderQueuePills.tsx
+- [X] T009 [US1] Implement pill strip layout, styles, and a11y states in src/components/timeline/FolderQueuePills.tsx
+- [X] T010 [US1] Replace Unread/All pills with FolderQueuePills in src/app/timeline/page.tsx
+- [X] T011 [US1] Update or retire legacy pill logic in src/components/timeline/FolderStepper.tsx
+- [X] T012 [US1] Wire pill click selection + scroll-into-view in src/components/timeline/FolderQueuePills.tsx
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -78,14 +78,14 @@ description: "Task list for Folder Queue Pills"
 
 ### Tests & Checks for User Story 2 (Right-Sized) ⚠️
 
-- [ ] T013 [US2] Add mark-all-read and skip queue tests in tests/hooks/useFolderQueue.test.ts
-- [ ] T014 [US2] Add mark-all/skip Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
+- [X] T013 [US2] Add mark-all-read and skip queue tests in tests/hooks/useFolderQueue.test.ts
+- [X] T014 [US2] Add mark-all/skip Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Implement mark-all-read removal + auto-select-next in src/hooks/useFolderQueue.ts
-- [ ] T016 [US2] Implement skip-to-end behavior with stable ordering in src/hooks/useFolderQueue.ts
-- [ ] T017 [US2] Wire mark-all/skip UI handlers to queue actions in src/components/timeline/TimelineList.tsx
+- [X] T015 [US2] Implement mark-all-read removal + auto-select-next in src/hooks/useFolderQueue.ts
+- [X] T016 [US2] Implement skip-to-end behavior with stable ordering in src/hooks/useFolderQueue.ts
+- [X] T017 [US2] Wire mark-all/skip UI handlers to queue actions in src/components/timeline/TimelineList.tsx
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -99,13 +99,13 @@ description: "Task list for Folder Queue Pills"
 
 ### Tests & Checks for User Story 3 (Right-Sized) ⚠️
 
-- [ ] T018 [P] [US3] Add active-folder filtering tests in tests/hooks/useItems.test.ts
-- [ ] T019 [US3] Add filtered timeline Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
+- [X] T018 [P] [US3] Add active-folder filtering tests in tests/hooks/useItems.test.ts
+- [X] T019 [US3] Add filtered timeline Playwright coverage in tests/e2e/folder-queue-pills.spec.ts
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Filter items by activeFolderId in src/hooks/useItems.ts
-- [ ] T021 [US3] Consume filtered items in src/components/timeline/TimelineList.tsx
+- [X] T020 [US3] Filter items by activeFolderId in src/hooks/useItems.ts
+- [X] T021 [US3] Consume filtered items in src/components/timeline/TimelineList.tsx
 
 **Checkpoint**: All user stories should now be independently functional
 

@@ -6,7 +6,12 @@ import { useItems } from './useItems';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
 import { markItemsRead, markItemRead as apiMarkItemRead } from '@/lib/api/items';
-import { deriveFolderProgress, sortFolderQueueEntries } from '@/lib/utils/unreadAggregator';
+import {
+  deriveFolderProgress,
+  moveFolderToEnd,
+  pinActiveFolder,
+  sortFolderQueueEntries,
+} from '@/lib/utils/unreadAggregator';
 import {
   type Article,
   type ArticlePreview,
@@ -35,6 +40,7 @@ interface UseFolderQueueResult {
   isUpdating: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  setActiveFolder: (folderId: number) => void;
   markFolderRead: (folderId: number) => Promise<void>;
   markItemRead: (itemId: number) => Promise<void>;
   skipFolder: (folderId: number) => Promise<void>;
@@ -87,6 +93,18 @@ function toArticlePreview(article: Article, folderId: number, cachedAt: number):
   };
 }
 
+function buildFolderMap(entries: FolderQueueEntry[]): Record<number, FolderQueueEntry> {
+  return entries.reduce<Record<number, FolderQueueEntry>>((acc, entry) => {
+    acc[entry.id] = entry;
+    return acc;
+  }, {});
+}
+
+function findNextActiveId(queue: FolderQueueEntry[]): number | null {
+  const nextActive = queue.find((entry) => entry.status !== 'skipped');
+  return nextActive ? nextActive.id : null;
+}
+
 export function useFolderQueue(): UseFolderQueueResult {
   const [envelope, setEnvelope] = useState<TimelineCacheEnvelope>(createEmptyTimelineCache);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -119,7 +137,7 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, [feeds]);
 
   const {
-    items,
+    allItems,
     isLoading,
     isValidating,
     error: itemsError,
@@ -153,7 +171,7 @@ export function useFolderQueue(): UseFolderQueueResult {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnvelope((current) => {
       const now = Date.now();
-      const previews = items.map((article) =>
+      const previews = allItems.map((article) =>
         toArticlePreview(article, resolveFolderId(article, feedFolderMap), now),
       );
 
@@ -180,7 +198,7 @@ export function useFolderQueue(): UseFolderQueueResult {
       storeTimelineCache(nextEnvelope);
       return nextEnvelope;
     });
-  }, [foldersData, items, feedFolderMap, isLoading]);
+  }, [foldersData, allItems, feedFolderMap, isLoading]);
 
   const sortedQueue = useMemo(() => {
     return sortFolderQueueEntries(Object.values(envelope.folders));
@@ -195,9 +213,13 @@ export function useFolderQueue(): UseFolderQueueResult {
     return sortedQueue.find((f) => f.status !== 'skipped') ?? null;
   }, [envelope.activeFolderId, envelope.folders, sortedQueue]);
 
-  const progress = useMemo(() => {
-    return deriveFolderProgress(sortedQueue, activeFolder ? activeFolder.id : null);
+  const orderedQueue = useMemo(() => {
+    return pinActiveFolder(sortedQueue, activeFolder ? activeFolder.id : null);
   }, [sortedQueue, activeFolder]);
+
+  const progress = useMemo(() => {
+    return deriveFolderProgress(orderedQueue, activeFolder ? activeFolder.id : null);
+  }, [orderedQueue, activeFolder]);
 
   const activeArticles = activeFolder ? activeFolder.articles : [];
   const totalUnread = useMemo(() => {
@@ -206,6 +228,32 @@ export function useFolderQueue(): UseFolderQueueResult {
 
   const error = itemsError ?? foldersError ?? feedsError ?? null;
   const isUpdating = isValidating || isFoldersLoading || isLoading;
+
+  const setActiveFolder = useCallback((folderId: number) => {
+    setEnvelope((current) => {
+      if (!(folderId in current.folders)) {
+        return current;
+      }
+
+      const target = current.folders[folderId];
+      const updatedFolders = { ...current.folders };
+      if (target.status === 'skipped') {
+        updatedFolders[folderId] = {
+          ...target,
+          status: 'queued',
+        };
+      }
+
+      const nextEnvelope: TimelineCacheEnvelope = {
+        ...current,
+        folders: updatedFolders,
+        activeFolderId: folderId,
+      };
+
+      storeTimelineCache(nextEnvelope);
+      return nextEnvelope;
+    });
+  }, []);
 
   const markFolderRead = useCallback(
     async (folderId: number) => {
@@ -224,11 +272,11 @@ export function useFolderQueue(): UseFolderQueueResult {
         delete updatedFolders[folderId];
 
         const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
-        const nextActiveId = remainingQueue.length > 0 ? remainingQueue[0].id : null;
+        const nextActiveId = findNextActiveId(remainingQueue);
 
         const nextEnvelope: TimelineCacheEnvelope = {
           ...current,
-          folders: updatedFolders,
+          folders: buildFolderMap(remainingQueue),
           activeFolderId: nextActiveId,
           pendingReadIds: [...current.pendingReadIds, ...itemIds],
         };
@@ -265,24 +313,13 @@ export function useFolderQueue(): UseFolderQueueResult {
   const skipFolder = useCallback((folderId: number) => {
     return new Promise<void>((resolve) => {
       setEnvelope((current) => {
-        const updatedFolders = { ...current.folders };
-        const folder = updatedFolders[folderId];
-
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (folder) {
-          updatedFolders[folderId] = {
-            ...folder,
-            status: 'skipped',
-          };
-        }
-
-        const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
-        const nextActive = remainingQueue.find((f) => f.status !== 'skipped');
-        const nextActiveId = nextActive ? nextActive.id : null;
+        const updatedEntries = moveFolderToEnd(Object.values(current.folders), folderId);
+        const remainingQueue = sortFolderQueueEntries(updatedEntries);
+        const nextActiveId = findNextActiveId(remainingQueue);
 
         const nextEnvelope: TimelineCacheEnvelope = {
           ...current,
-          folders: updatedFolders,
+          folders: buildFolderMap(remainingQueue),
           activeFolderId: nextActiveId,
           pendingSkipFolderIds: [...current.pendingSkipFolderIds, folderId],
         };
@@ -309,11 +346,11 @@ export function useFolderQueue(): UseFolderQueueResult {
         });
 
         const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
-        const nextActiveId = remainingQueue.length > 0 ? remainingQueue[0].id : null;
+        const nextActiveId = findNextActiveId(remainingQueue);
 
         const nextEnvelope: TimelineCacheEnvelope = {
           ...current,
-          folders: updatedFolders,
+          folders: buildFolderMap(remainingQueue),
           activeFolderId: nextActiveId,
           pendingSkipFolderIds: [],
         };
@@ -344,25 +381,28 @@ export function useFolderQueue(): UseFolderQueueResult {
       if (targetFolderId === null) return current;
 
       const folder = updatedFolders[targetFolderId];
-      const updatedArticles = folder.articles.map((a) =>
-        a.id === itemId ? { ...a, unread: false } : a,
-      );
+      const updatedArticles = folder.articles.filter((a) => a.id !== itemId);
 
-      // Recompute unread count
       const unreadCount = updatedArticles.filter((a) => a.unread).length;
 
-      updatedFolders[targetFolderId] = {
-        ...folder,
-        articles: updatedArticles,
-        unreadCount,
-      };
+      if (unreadCount === 0) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete updatedFolders[targetFolderId];
+      } else {
+        updatedFolders[targetFolderId] = {
+          ...folder,
+          articles: updatedArticles,
+          unreadCount,
+        };
+      }
 
-      // Re-sort queue
-      // const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
+      const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
+      const nextActiveId = findNextActiveId(remainingQueue);
 
       const nextEnvelope: TimelineCacheEnvelope = {
         ...current,
-        folders: updatedFolders,
+        folders: buildFolderMap(remainingQueue),
+        activeFolderId: nextActiveId,
         pendingReadIds: [...current.pendingReadIds, itemId],
       };
 
@@ -389,7 +429,7 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, []);
 
   return {
-    queue: sortedQueue,
+    queue: orderedQueue,
     activeFolder,
     activeArticles,
     progress,
@@ -398,6 +438,7 @@ export function useFolderQueue(): UseFolderQueueResult {
     isUpdating,
     error,
     refresh,
+    setActiveFolder,
     markFolderRead,
     markItemRead,
     skipFolder,

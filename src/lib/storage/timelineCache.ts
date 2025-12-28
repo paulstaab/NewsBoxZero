@@ -70,7 +70,7 @@ export function loadTimelineCache(): TimelineCacheEnvelope {
   try {
     const parsed = JSON.parse(raw) as Partial<TimelineCacheEnvelope>;
     const normalized = normalizeEnvelope(parsed);
-    return pruneTimelineCache(normalized);
+    return pruneTimelineCache(normalized, Date.now(), { resetSkipped: true });
   } catch {
     localStorage.removeItem(CONFIG.TIMELINE_CACHE_KEY);
     return createEmptyTimelineCache();
@@ -86,12 +86,18 @@ export function storeTimelineCache(envelope: TimelineCacheEnvelope): void {
   localStorage.setItem(CONFIG.TIMELINE_CACHE_KEY, JSON.stringify(pruned));
 }
 
+interface TimelineCachePruneOptions {
+  resetSkipped?: boolean;
+}
+
 function pruneFolders(
   folders: Record<number, FolderQueueEntry>,
   now = Date.now(),
+  options: TimelineCachePruneOptions = {},
 ): Record<number, FolderQueueEntry> {
   const validEntries = Object.values(folders).map((entry) => ({
     ...entry,
+    status: options.resetSkipped && entry.status === 'skipped' ? 'queued' : entry.status,
     articles: ensureArticlesArray(entry.articles),
   }));
 
@@ -109,7 +115,9 @@ function pruneFolders(
     })
     .filter((entry): entry is FolderQueueEntry => entry !== null);
 
-  const sortedEntries = sortFolderQueueEntries(prunedEntries);
+  const sortedEntries = sortFolderQueueEntries(prunedEntries, {
+    respectSkip: !options.resetSkipped,
+  });
   return rebuildFolderMap(sortedEntries);
 }
 
@@ -122,10 +130,8 @@ function deriveActiveFolderId(
   }
 
   const ordered = Object.values(folders).sort((a, b) => a.sortOrder - b.sortOrder);
-  if (ordered.length === 0) {
-    return null;
-  }
-  return ordered[0].id;
+  const nextActive = ordered.find((entry) => entry.status !== 'skipped');
+  return nextActive ? nextActive.id : null;
 }
 
 function prunePendingSkips(
@@ -142,14 +148,14 @@ function prunePendingSkips(
 export function pruneTimelineCache(
   envelope: TimelineCacheEnvelope,
   now = Date.now(),
+  options: TimelineCachePruneOptions = {},
 ): TimelineCacheEnvelope {
   const normalized = normalizeEnvelope(envelope);
-  const folders = pruneFolders(normalized.folders, now);
+  const folders = pruneFolders(normalized.folders, now, options);
   const pendingReadIds = ensureArrayOfNumbers(normalized.pendingReadIds);
-  const pendingSkipFolderIds = prunePendingSkips(
-    ensureArrayOfNumbers(normalized.pendingSkipFolderIds),
-    folders,
-  );
+  const pendingSkipFolderIds = options.resetSkipped
+    ? []
+    : prunePendingSkips(ensureArrayOfNumbers(normalized.pendingSkipFolderIds), folders);
 
   // Drop cache if it has grown beyond retention window to avoid stale payloads
   const lastSyncedWithinWindow = normalized.lastSynced > now - MAX_AGE_MS * 2;

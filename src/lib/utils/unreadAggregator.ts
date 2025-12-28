@@ -18,7 +18,6 @@ import { CONFIG } from '@/lib/config/env';
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_MAX_ITEMS = CONFIG.TIMELINE_MAX_ITEMS_PER_FOLDER;
 const DEFAULT_MAX_AGE_MS = CONFIG.TIMELINE_MAX_ITEM_AGE_DAYS * DAY_IN_MS;
-const folderNameCollator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
 /**
  * Counts unread articles per feed.
@@ -230,24 +229,37 @@ export function groupArticlesByFolder(articles: ArticlePreview[]): Map<number, A
   return grouped;
 }
 
-export function sortFolderQueueEntries(entries: FolderQueueEntry[]): FolderQueueEntry[] {
-  const sorted = [...entries].sort((a, b) => {
-    // 1. Status: 'skipped' goes to the bottom
-    if (a.status === 'skipped' && b.status !== 'skipped') return 1;
-    if (a.status !== 'skipped' && b.status === 'skipped') return -1;
+export interface FolderQueueSortOptions {
+  /** Whether skipped folders should be forced to the end of the queue. */
+  respectSkip?: boolean;
+}
 
-    // 2. Unread count (descending)
+export function sortFolderQueueEntries(
+  entries: FolderQueueEntry[],
+  options: FolderQueueSortOptions = {},
+): FolderQueueEntry[] {
+  const { respectSkip = true } = options;
+
+  const sorted = [...entries].sort((a, b) => {
+    if (respectSkip) {
+      const aSkipped = a.status === 'skipped';
+      const bSkipped = b.status === 'skipped';
+      if (aSkipped && !bSkipped) return 1;
+      if (!aSkipped && bSkipped) return -1;
+      if (aSkipped && bSkipped) {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return a.id - b.id;
+      }
+    }
+
     if (b.unreadCount !== a.unreadCount) {
       return b.unreadCount - a.unreadCount;
     }
 
-    // 3. Name (ascending)
-    const nameComparison = folderNameCollator.compare(a.name, b.name);
-    if (nameComparison !== 0) {
-      return nameComparison;
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder;
     }
 
-    // 4. ID (ascending)
     return a.id - b.id;
   });
 
@@ -255,6 +267,38 @@ export function sortFolderQueueEntries(entries: FolderQueueEntry[]): FolderQueue
     ...entry,
     sortOrder: index,
   }));
+}
+
+export function pinActiveFolder(
+  queue: FolderQueueEntry[],
+  activeFolderId: number | null,
+): FolderQueueEntry[] {
+  if (typeof activeFolderId !== 'number') {
+    return queue;
+  }
+
+  const activeIndex = queue.findIndex((entry) => entry.id === activeFolderId);
+  if (activeIndex <= 0) {
+    return queue;
+  }
+
+  const activeEntry = queue[activeIndex];
+  return [activeEntry, ...queue.slice(0, activeIndex), ...queue.slice(activeIndex + 1)];
+}
+
+export function moveFolderToEnd(queue: FolderQueueEntry[], folderId: number): FolderQueueEntry[] {
+  if (queue.length === 0) return queue;
+  const maxSortOrder = queue.reduce((max, entry) => Math.max(max, entry.sortOrder), 0);
+
+  return queue.map((entry) =>
+    entry.id === folderId
+      ? {
+          ...entry,
+          status: 'skipped',
+          sortOrder: maxSortOrder + 1,
+        }
+      : entry,
+  );
 }
 
 function countUnreadPreviews(articles: ArticlePreview[]): number {
@@ -322,7 +366,7 @@ export function deriveFolderProgress(
     };
   }
 
-  const ordered = [...queue].sort((a, b) => a.sortOrder - b.sortOrder);
+  const ordered = [...queue];
   const matchingEntry = ordered.find((entry) => entry.id === activeFolderId);
   const firstEntry = ordered[0];
   // At this point, firstEntry must exist because we checked queue.length === 0 above

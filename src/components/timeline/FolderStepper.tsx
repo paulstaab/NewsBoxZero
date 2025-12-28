@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import type { FolderQueueEntry } from '@/types';
 
 interface FolderStepperProps {
   activeFolder: FolderQueueEntry | null;
   remainingFolders: number;
   onRefresh: () => void;
-  onSkip?: (folderId: number) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -15,10 +13,8 @@ export function FolderStepper({
   activeFolder,
   remainingFolders,
   onRefresh,
-  onSkip,
   isUpdating,
 }: FolderStepperProps) {
-  const [isSkipping, setIsSkipping] = useState(false);
   const unreadCount = activeFolder?.unreadCount ?? 0;
   const lastUpdatedLabel = activeFolder
     ? new Date(activeFolder.lastUpdated).toLocaleTimeString([], {
@@ -30,19 +26,6 @@ export function FolderStepper({
     remainingFolders === 1
       ? '1 folder queued'
       : `${Number.isFinite(remainingFolders) ? remainingFolders.toLocaleString() : '0'} folders queued`;
-
-  const handleSkip = async () => {
-    if (!activeFolder || !onSkip) return;
-
-    setIsSkipping(true);
-    try {
-      await onSkip(activeFolder.id);
-    } catch (error) {
-      console.error('Failed to skip folder:', error);
-    } finally {
-      setIsSkipping(false);
-    }
-  };
 
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
@@ -78,17 +61,6 @@ export function FolderStepper({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {activeFolder && onSkip && (
-            <button
-              onClick={() => {
-                void handleSkip();
-              }}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70"
-              disabled={isSkipping || isUpdating}
-            >
-              {isSkipping ? 'Skipping…' : 'Skip'}
-            </button>
-          )}
           <button
             onClick={onRefresh}
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70"

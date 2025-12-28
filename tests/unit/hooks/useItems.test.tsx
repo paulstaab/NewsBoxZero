@@ -1,0 +1,78 @@
+import { describe, expect, it, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { useItems } from '@/hooks/useItems';
+import { getItems } from '@/lib/api/items';
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isInitializing: false,
+    session: { baseUrl: 'https://rss.example.com', username: 'user', token: 'token' },
+  }),
+}));
+
+vi.mock('@/lib/api/items', () => ({
+  getItems: vi.fn(),
+}));
+
+const mockedGetItems = vi.mocked(getItems);
+
+describe('useItems', () => {
+  it('filters items by activeFolderId while preserving allItems', async () => {
+    mockedGetItems.mockResolvedValueOnce([
+      {
+        id: 1,
+        guid: 'guid-1',
+        guidHash: 'hash-1',
+        title: 'First',
+        author: 'Author',
+        url: 'https://example.com/1',
+        body: 'Body',
+        feedId: 101,
+        folderId: 10,
+        unread: true,
+        starred: false,
+        pubDate: 1_700_000_000,
+        lastModified: 1_700_000_000,
+        enclosureLink: null,
+        enclosureMime: null,
+        fingerprint: 'fp-1',
+        contentHash: 'ch-1',
+        mediaThumbnail: null,
+        mediaDescription: null,
+        rtl: false,
+      },
+      {
+        id: 2,
+        guid: 'guid-2',
+        guidHash: 'hash-2',
+        title: 'Second',
+        author: 'Author',
+        url: 'https://example.com/2',
+        body: 'Body',
+        feedId: 201,
+        folderId: 20,
+        unread: true,
+        starred: false,
+        pubDate: 1_700_000_000,
+        lastModified: 1_700_000_000,
+        enclosureLink: null,
+        enclosureMime: null,
+        fingerprint: 'fp-2',
+        contentHash: 'ch-2',
+        mediaThumbnail: null,
+        mediaDescription: null,
+        rtl: false,
+      },
+    ]);
+
+    const { result } = renderHook(() => useItems({ activeFolderId: 10 }));
+
+    await waitFor(() => {
+      expect(result.current.items).toHaveLength(1);
+    });
+
+    expect(result.current.items[0]?.id).toBe(1);
+    expect(result.current.allItems).toHaveLength(2);
+  });
+});

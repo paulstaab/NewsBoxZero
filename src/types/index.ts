@@ -18,6 +18,7 @@ export type {
   ApiFolder,
   FoldersResponse,
   FolderQueueEntry,
+  FolderQueuePill,
   FolderQueueStatus,
   FolderProgressState,
   TimelineCacheEnvelope,

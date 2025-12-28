@@ -68,7 +68,7 @@ describe('timeline cache helpers', () => {
 
     expect(loaded.folders[1].articles).toHaveLength(2);
     expect(loaded.pendingReadIds).toEqual([1, 2]);
-    expect(loaded.pendingSkipFolderIds).toEqual([1]);
+    expect(loaded.pendingSkipFolderIds).toEqual([]);
   });
 
   it('drops stale articles and removes empty folders during pruning', () => {

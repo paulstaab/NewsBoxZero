@@ -397,11 +397,12 @@ test.describe('Timeline update and persistence (US5)', () => {
     // Wait for articles to load
     await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
 
-    // Wait for at least one article to be present
-    await expect(page.getByRole('article').first()).toBeVisible({ timeout: 5000 });
-
-    // Find an article card
-    const articleCard = page.getByRole('article').first();
+    // Wait for the target article card to be present
+    const articleCard = page
+      .getByRole('article')
+      .filter({ hasText: /ship it saturday/i })
+      .first();
+    await expect(articleCard).toBeVisible({ timeout: 5000 });
 
     // Verify summary is visible
     await expect(articleCard).toContainText('Ship It Saturday'); // From mock data
