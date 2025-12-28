@@ -53,6 +53,7 @@
     "swr": "^2.3.8"
   },
   "devDependencies": {
+    "@openai/codex": "^0.77.0",
     "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.57.0",

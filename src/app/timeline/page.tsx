@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useFolderQueue } from '@/hooks/useFolderQueue';
 import { UnreadSummary } from '@/components/timeline/UnreadSummary';
+import { FolderQueuePills } from '@/components/timeline/FolderQueuePills';
 import { FolderStepper } from '@/components/timeline/FolderStepper';
 import { TimelineList } from '@/components/timeline/TimelineList';
-import { MarkAllReadButton } from '@/components/timeline/MarkAllReadButton';
 import { EmptyState } from '@/components/timeline/EmptyState';
 import { RequestStateToast, useToast } from '@/components/ui/RequestStateToast';
 import {
@@ -31,6 +31,7 @@ function TimelineContent() {
   }, []);
 
   const {
+    queue,
     activeFolder,
     activeArticles,
     progress,
@@ -39,6 +40,7 @@ function TimelineContent() {
     isUpdating,
     error,
     refresh,
+    setActiveFolder,
     markFolderRead,
     markItemRead,
     skipFolder,
@@ -137,6 +139,12 @@ function TimelineContent() {
               remainingFolders={remainingFolders}
             />
           </div>
+          <FolderQueuePills
+            queue={queue}
+            activeFolderId={activeFolder ? activeFolder.id : null}
+            onSelect={setActiveFolder}
+            isLoading={isUpdating}
+          />
         </div>
       </header>
 
@@ -151,7 +159,6 @@ function TimelineContent() {
               markTimelineUpdateComplete();
             });
           }}
-          onSkip={(folderId) => skipFolder(folderId)}
           isUpdating={isUpdating}
         />
 
@@ -184,16 +191,10 @@ function TimelineContent() {
             onMarkRead={(id) => {
               void markItemRead(id);
             }}
+            onMarkAllRead={() => markFolderRead(activeFolder.id)}
+            onSkipFolder={() => skipFolder(activeFolder.id)}
+            isUpdating={isUpdating}
           />
-        )}
-
-        {activeFolder && activeFolderUnread > 0 && (
-          <div className="mt-6 flex justify-end">
-            <MarkAllReadButton
-              onMarkAllRead={() => markFolderRead(activeFolder.id)}
-              disabled={isUpdating}
-            />
-          </div>
         )}
       </main>
 

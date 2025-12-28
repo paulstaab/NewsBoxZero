@@ -397,27 +397,28 @@ test.describe('Timeline update and persistence (US5)', () => {
     // Wait for articles to load
     await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
 
-    // Wait for at least one article to be present
-    await expect(page.getByRole('article').first()).toBeVisible({ timeout: 5000 });
-
-    // Find an article card
+    // Wait for the first article card to be present
     const articleCard = page.getByRole('article').first();
+    await expect(articleCard).toBeVisible({ timeout: 5000 });
 
-    // Verify summary is visible
-    await expect(articleCard).toContainText('Ship It Saturday'); // From mock data
+    const titleText = (await articleCard.getByRole('link').textContent())?.trim() ?? '';
+    expect(titleText).toBeTruthy();
 
-    // Click to expand
-    await articleCard.click();
+    const targetCard = page.getByRole('article').filter({ hasText: titleText }).first();
+    await expect(targetCard).toBeVisible({ timeout: 5000 });
 
-    // Verify full content is loaded (from the mock item's body field)
-    await expect(articleCard).toContainText('Engineering just shipped the folder queue feature');
+    // Verify title is a link
+    const titleLink = targetCard.getByRole('link');
+    await expect(titleLink).toHaveAttribute('target', '_blank');
+    await expect(titleLink).toHaveAttribute('rel', 'noopener noreferrer');
+
+    // Click to expand (also marks as read)
+    await targetCard.click();
 
     // Verify mark read was called
     expect(markReadCalled).toBe(true);
 
-    // Verify title is a link
-    const titleLink = articleCard.getByRole('link');
-    await expect(titleLink).toHaveAttribute('target', '_blank');
-    await expect(titleLink).toHaveAttribute('rel', 'noopener noreferrer');
+    // Verify the read item is removed from the unread-only timeline
+    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(0);
   });
 });

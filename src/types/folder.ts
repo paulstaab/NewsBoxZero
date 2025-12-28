@@ -56,6 +56,14 @@ export interface FolderQueueEntry {
   lastUpdated: number;
 }
 
+export interface FolderQueuePill {
+  id: number;
+  label: string;
+  unreadCount: number;
+  isActive: boolean;
+  isSkipped: boolean;
+}
+
 export interface TimelineCacheEnvelope {
   version: number;
   lastSynced: number;
