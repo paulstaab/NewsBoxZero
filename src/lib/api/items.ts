@@ -3,7 +3,7 @@
  * Aligned with contracts/items.md
  */
 
-import { apiGet, apiPost } from './client';
+import { apiGet, apiPost, type ApiRequestOptions } from './client';
 import {
   type Article,
   type ItemsResponse,
@@ -48,14 +48,17 @@ function buildItemsQuery(params: ItemsQueryParams): string {
 /**
  * Fetches items with optional filtering and pagination.
  */
-export async function getItems(params: ItemsQueryParams = {}): Promise<Article[]> {
+export async function getItems(
+  params: ItemsQueryParams = {},
+  options?: ApiRequestOptions,
+): Promise<Article[]> {
   const query = buildItemsQuery({
     batchSize: CONFIG.DEFAULT_BATCH_SIZE,
     type: ItemFilterType.ALL,
     getRead: false,
     ...params,
   });
-  const response = await apiGet<ItemsResponse>(`/items${query}`);
+  const response = await apiGet<ItemsResponse>(`/items${query}`, options);
   return response.items.map(normalizeArticle);
 }
 

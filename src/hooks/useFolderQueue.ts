@@ -6,6 +6,7 @@ import { useItems } from './useItems';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
 import { markItemsRead, markItemRead as apiMarkItemRead } from '@/lib/api/items';
+import { fetchUnreadItemsForSync, reconcileTimelineCache } from '@/lib/sync';
 import {
   deriveFolderProgress,
   moveFolderToEnd,
@@ -38,6 +39,7 @@ interface UseFolderQueueResult {
   totalUnread: number;
   isHydrated: boolean;
   isUpdating: boolean;
+  isRefreshing: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
   setActiveFolder: (folderId: number) => void;
@@ -105,15 +107,62 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
   return nextActive ? nextActive.id : null;
 }
 
+const SYNC_TIMEOUT_MS = 8000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('Sync timed out'));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function applyFolderNames(
+  envelope: TimelineCacheEnvelope,
+  foldersData: Folder[] | undefined,
+): TimelineCacheEnvelope {
+  if (!foldersData || foldersData.length === 0) {
+    return envelope;
+  }
+
+  const folderNameMap = new Map<number, string>(
+    foldersData.map((folder) => [folder.id, folder.name]),
+  );
+  const updatedFolders: Record<number, FolderQueueEntry> = {};
+
+  for (const [folderIdStr, folder] of Object.entries(envelope.folders)) {
+    const id = Number(folderIdStr);
+    updatedFolders[id] = {
+      ...folder,
+      name: folderNameMap.get(id) ?? folder.name,
+    };
+  }
+
+  return {
+    ...envelope,
+    folders: updatedFolders,
+  };
+}
+
 export function useFolderQueue(): UseFolderQueueResult {
   const [envelope, setEnvelope] = useState<TimelineCacheEnvelope>(createEmptyTimelineCache);
   const [isHydrated, setIsHydrated] = useState(false);
   const [lastUpdateError, setLastUpdateError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const cached = loadTimelineCache();
     // Hydrate client cache from localStorage after mount to avoid SSR mismatches.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setEnvelope(cached);
     setIsHydrated(true);
   }, []);
@@ -147,28 +196,59 @@ export function useFolderQueue(): UseFolderQueueResult {
     oldestFirst: false,
   });
 
+  const hasLocalUnread = useMemo(() => {
+    return Object.values(envelope.folders).some((entry) => entry.unreadCount > 0);
+  }, [envelope.folders]);
+
   // Refresh with error handling (retry logic handled at page level)
   const refresh = useCallback(async (): Promise<void> => {
+    setIsSyncing(true);
     try {
-      await swrRefresh();
+      if (!hasLocalUnread) {
+        await swrRefresh();
+        setLastUpdateError(null);
+        return;
+      }
+
+      const { items, serverUnreadIds } = await withTimeout(
+        fetchUnreadItemsForSync(),
+        SYNC_TIMEOUT_MS,
+      );
+      const now = Date.now();
+
+      setEnvelope((current) => {
+        const { envelope: reconciled } = reconcileTimelineCache(current, serverUnreadIds, now);
+        const previews = items.map((article) =>
+          toArticlePreview(article, resolveFolderId(article, feedFolderMap), now),
+        );
+
+        const merged = mergeItemsIntoCache(reconciled, previews, now);
+        const nextEnvelope = applyFolderNames(merged, foldersData);
+
+        storeTimelineCache(nextEnvelope);
+        return nextEnvelope;
+      });
+
       setLastUpdateError(null);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Update failed';
       setLastUpdateError(errorMessage);
 
       if (process.env.NODE_ENV === 'development') {
-        console.error('❌ Timeline update failed:', errorMessage);
+        console.debug('❌ Timeline update failed:', errorMessage);
       }
 
       throw error;
+    } finally {
+      setIsSyncing(false);
     }
-  }, [swrRefresh]);
+  }, [feedFolderMap, foldersData, hasLocalUnread, swrRefresh]);
 
   useEffect(() => {
     if (!foldersData || isLoading) return;
 
     // Persist refreshed queue into the cache whenever SWR returns new data.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setEnvelope((current) => {
       const now = Date.now();
       const previews = allItems.map((article) =>
@@ -177,23 +257,7 @@ export function useFolderQueue(): UseFolderQueueResult {
 
       // Use mergeItemsIntoCache to handle deduplication and pendingReadIds
       const merged = mergeItemsIntoCache(current, previews, now);
-
-      // Update folder names from foldersData
-      const folderNameMap = new Map<number, string>(foldersData.map((f) => [f.id, f.name]));
-      const updatedFolders: Record<number, FolderQueueEntry> = {};
-
-      for (const [folderIdStr, folder] of Object.entries(merged.folders)) {
-        const id = Number(folderIdStr);
-        updatedFolders[id] = {
-          ...folder,
-          name: folderNameMap.get(id) ?? folder.name,
-        };
-      }
-
-      const nextEnvelope: TimelineCacheEnvelope = {
-        ...merged,
-        folders: updatedFolders,
-      };
+      const nextEnvelope = applyFolderNames(merged, foldersData);
 
       storeTimelineCache(nextEnvelope);
       return nextEnvelope;
@@ -227,7 +291,7 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, [sortedQueue]);
 
   const error = itemsError ?? foldersError ?? feedsError ?? null;
-  const isUpdating = isValidating || isFoldersLoading || isLoading;
+  const isUpdating = isSyncing || isValidating || isFoldersLoading || isLoading;
 
   const setActiveFolder = useCallback((folderId: number) => {
     setEnvelope((current) => {
@@ -436,6 +500,7 @@ export function useFolderQueue(): UseFolderQueueResult {
     totalUnread,
     isHydrated,
     isUpdating,
+    isRefreshing: isSyncing,
     error,
     refresh,
     setActiveFolder,

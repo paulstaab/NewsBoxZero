@@ -1,6 +1,6 @@
 {
-  "name": "Feedfront",
-  "short_name": "Feedfront",
+  "name": "NewsBoxZero",
+  "short_name": "NewsBoxZero",
   "description": "Static headless RSS reader for Nextcloud News",
   "start_url": "/",
   "display": "standalone",

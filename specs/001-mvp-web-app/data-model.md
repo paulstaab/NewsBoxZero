@@ -85,9 +85,9 @@ interface UserSessionConfig {
 ```
 
 **Storage**:
-- `sessionStorage` (default): Key `feedfront:session`
-- `localStorage` (opt-in): Key `feedfront:session`
-- Preferences only: `localStorage` key `feedfront:preferences`
+- `sessionStorage` (default): Key `newsboxzero:session`
+- `localStorage` (opt-in): Key `newsboxzero:session`
+- Preferences only: `localStorage` key `newsboxzero:preferences`
 
 ---
 

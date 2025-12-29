@@ -8,15 +8,15 @@ Sync Impact Report
 - Follow-ups: None
 -->
 
-# Feedfront Constitution
+# NewsBoxZero Constitution
 
 ## Scope
-Feedfront is a single-user progressive web app (PWA) that serves as a front-end client for headless-rss backends.
+NewsBoxZero is a single-user progressive web app (PWA) that serves as a front-end client for headless-rss backends.
 
 ## Core Principles
 
 ### I. Simplicity First
-Feedfront serves exactly one operator, so work MUST minimize ceremony and moving parts.
+NewsBoxZero serves exactly one operator, so work MUST minimize ceremony and moving parts.
 - Deliver only artifacts that future maintenance truly needs; do not produce release playbooks, sign-off packets, or recorded test evidence unless a dependency explicitly demands it.
 - Prefer solutions with fewer services, dependencies, and feature flags. New compute or tooling requires a clear solo-maintainer story and rollback.
 - Document lightweight checklists directly inside plans or PRs instead of creating new templates.
@@ -44,7 +44,7 @@ The application MUST exclusively work with unread articles; read articles have n
 - API queries MUST explicitly filter for unread status when possible; prefetching or background sync operations MUST NOT retrieve read articles.
 - UI components MUST NOT render read article data, even during transitions or animations.
 
-**Rationale**: Feedfront exists to surface unread content efficiently. Retaining read articles wastes storage, complicates state management, and risks surfacing stale content. Immediate eviction on read ensures the solo operator's limited storage and cognitive bandwidth stay focused on actionable items.
+**Rationale**: NewsBoxZero exists to surface unread content efficiently. Retaining read articles wastes storage, complicates state management, and risks surfacing stale content. Immediate eviction on read ensures the solo operator's limited storage and cognitive bandwidth stay focused on actionable items.
 
 
 ## Delivery Constraints

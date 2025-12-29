@@ -54,16 +54,15 @@ export function OfflineBanner({
   message = 'You are currently offline. Some features may be unavailable.',
 }: OfflineBannerProps) {
   const isOnline = useOnlineStatus();
-  const [lastOnlineState, setLastOnlineState] = useState(true);
   const [dismissed, setDismissed] = useState(false);
 
   // Reset dismissed state when coming back online then going offline again
-  if (isOnline !== lastOnlineState) {
-    setLastOnlineState(isOnline);
+  useEffect(() => {
     if (isOnline) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDismissed(false);
     }
-  }
+  }, [isOnline]);
 
   // Don't render if online or dismissed
   if (isOnline || dismissed) {

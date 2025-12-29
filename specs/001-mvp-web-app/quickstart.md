@@ -1,10 +1,10 @@
-# Quickstart: Feedfront Development
+# Quickstart: NewsBoxZero Development
 
 **Feature**: 001-mvp-web-app  
 **Date**: 2025-12-12  
 **Last Updated**: Phase 6 completion
 
-This guide helps developers get started with the Feedfront static RSS reader project.
+This guide helps developers get started with the NewsBoxZero static RSS reader project.
 
 ---
 
@@ -23,8 +23,8 @@ This guide helps developers get started with the Feedfront static RSS reader pro
 
 ```bash
 # Clone the repository
-git clone https://github.com/paulstaab/feedfront.git
-cd feedfront
+git clone https://github.com/paulstaab/newsboxzero.git
+cd newsboxzero
 
 # Install dependencies
 npm install
@@ -33,7 +33,7 @@ npm install
 ### 2. Project Structure
 
 ```
-feedfront/
+newsboxzero/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── layout.tsx          # Root layout
@@ -367,7 +367,7 @@ npm run build
 
 ### CORS Configuration Required
 
-Since Feedfront makes client-side API calls to your Nextcloud News server, you must configure CORS headers on your server:
+Since NewsBoxZero makes client-side API calls to your Nextcloud News server, you must configure CORS headers on your server:
 
 ```apache
 # Apache .htaccess or httpd.conf
@@ -422,7 +422,7 @@ The most common issue is CORS errors when connecting to your Nextcloud News serv
 ### Login Issues
 
 **"Server URL must use HTTPS"**
-- Feedfront requires HTTPS for security. HTTP URLs are rejected.
+- NewsBoxZero requires HTTPS for security. HTTP URLs are rejected.
 - For local testing, use `https://localhost` with a self-signed certificate or use the test server URL `https://rss.example.com` with MSW mocks.
 
 **"Server not found or invalid API endpoint"**
@@ -508,4 +508,4 @@ npm run build
 - [Vitest Unit Testing](https://vitest.dev/)
 - [TailwindCSS](https://tailwindcss.com/)
 - [MSW (Mock Service Worker)](https://mswjs.io/)
-- [Project Repository](https://github.com/paulstaab/feedfront)
+- [Project Repository](https://github.com/paulstaab/newsboxzero)

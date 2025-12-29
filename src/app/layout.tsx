@@ -4,13 +4,11 @@ import '../styles/globals.css';
 import { SWRProvider } from '@/lib/swr/provider';
 import { AuthProvider } from '@/hooks/useAuth';
 import { SkipLink } from '@/components/ui/SkipLink';
-import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
-import { InstallPrompt } from '@/components/ui/InstallPrompt';
-import { SettingsMenu } from '@/components/ui/SettingsMenu';
+import { ClientOverlays } from '@/components/ui/ClientOverlays';
 
 export const metadata: Metadata = {
-  title: 'Feedfront',
+  title: 'NewsBoxZero',
   description: 'Static headless RSS reader for Nextcloud News.',
   manifest: '/manifest.json',
   icons: {
@@ -41,9 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 {children}
               </main>
             </div>
-            <OfflineBanner />
-            <InstallPrompt delayMs={3000} showDuringActivity={false} />
-            <SettingsMenu position="top-right" />
+            <ClientOverlays />
           </SWRProvider>
         </AuthProvider>
         <ServiceWorkerRegistration />

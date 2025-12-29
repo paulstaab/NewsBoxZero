@@ -128,7 +128,8 @@ You **MUST** consider the user input before proceeding (if not empty).
 9. Completion validation:
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
+   - Validate that linters pass (lint:fix, typecheck and format)
+   - Validate that unit and e2e tests pass
    - Confirm the implementation follows the technical plan
    - Report final status with summary of completed work
 

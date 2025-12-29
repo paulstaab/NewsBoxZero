@@ -45,3 +45,4 @@ tests/e2e/.auth
 .codex/version.json
 .codex/skills
 .codex/sessions
+tests/e2e/.*

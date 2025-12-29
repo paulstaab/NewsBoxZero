@@ -186,53 +186,65 @@ export function RequestStateToast({ message, onDismiss }: RequestStateToastProps
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = (toast: Omit<ToastMessage, 'id'>) => {
+  const showToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = `toast-${String(Date.now())}-${String(Math.random())}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
-  };
+  }, []);
 
-  const dismissToast = (id: string) => {
+  const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  const showError = (title: string, message: string, action?: ToastMessage['action']) => {
-    showToast({ type: 'error', title, message, action, duration: 0 });
-  };
+  const showError = useCallback(
+    (title: string, message: string, action?: ToastMessage['action']) => {
+      showToast({ type: 'error', title, message, action, duration: 0 });
+    },
+    [showToast],
+  );
 
-  const showRetryError = (message: string, onRetry: () => void) => {
-    showToast({
-      type: 'error',
-      title: 'Request Failed',
-      message,
-      action: {
-        label: 'Retry',
-        onClick: onRetry,
-      },
-      duration: 0,
-    });
-  };
+  const showRetryError = useCallback(
+    (message: string, onRetry: () => void) => {
+      showToast({
+        type: 'error',
+        title: 'Request Failed',
+        message,
+        action: {
+          label: 'Retry',
+          onClick: onRetry,
+        },
+        duration: 0,
+      });
+    },
+    [showToast],
+  );
 
-  const showRateLimitWarning = (retryAfter?: number) => {
-    const message = retryAfter
-      ? `Too many requests. Please wait ${String(Math.ceil(retryAfter / 1000))} seconds before trying again.`
-      : 'Too many requests. Please wait before trying again.';
+  const showRateLimitWarning = useCallback(
+    (retryAfter?: number) => {
+      const message = retryAfter
+        ? `Too many requests. Please wait ${String(Math.ceil(retryAfter / 1000))} seconds before trying again.`
+        : 'Too many requests. Please wait before trying again.';
 
-    showToast({
-      type: 'warning',
-      title: 'Rate Limited',
-      message,
-      duration: retryAfter ?? 5000,
-    });
-  };
+      showToast({
+        type: 'warning',
+        title: 'Rate Limited',
+        message,
+        duration: retryAfter ?? 5000,
+      });
+    },
+    [showToast],
+  );
 
-  const showBackoffWarning = (attempt: number, delay: number) => {
-    showToast({
-      type: 'warning',
-      title: 'Connection Issue',
-      message: `Retrying request (attempt ${String(attempt)})... Waiting ${String(Math.ceil(delay / 1000))} seconds.`,
-      duration: delay,
-    });
-  };
+  const showBackoffWarning = useCallback(
+    (attempt: number, delay: number) => {
+      showToast({
+        type: 'warning',
+        title: 'Connection Issue',
+        message: `Retrying request (attempt ${String(attempt)})... Waiting ${String(Math.ceil(delay / 1000))} seconds.`,
+        duration: delay,
+      });
+    },
+    [showToast],
+  );
 
   return {
     toasts,

@@ -36,6 +36,9 @@ export type {
 } from './article';
 export { normalizeArticle, ItemFilterType } from './article';
 
+// Sync helpers
+export type { ReconciliationSweep } from './sync';
+
 // Mutation queue
 export type {
   ReadStateMutation,

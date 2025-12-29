@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { ArticlePreview } from '@/types';
 import { ArticleCard } from './ArticleCard';
 import { MarkAllReadButton } from './MarkAllReadButton';
+import { TimelineActionButton } from './TimelineActionButton';
+import { timelineActionConfig } from './timelineActionConfig';
 
 interface TimelineListProps {
   items: ArticlePreview[];
@@ -13,6 +15,7 @@ interface TimelineListProps {
   onMarkAllRead?: () => Promise<void>;
   onSkipFolder?: () => Promise<void>;
   isUpdating?: boolean;
+  disableActions?: boolean;
 }
 
 /**
@@ -26,13 +29,15 @@ export function TimelineList({
   onMarkAllRead,
   onSkipFolder,
   isUpdating,
+  disableActions,
 }: TimelineListProps) {
   const [isSkipping, setIsSkipping] = useState(false);
 
   const showActions = items.length > 0 && Boolean(onMarkAllRead ?? onSkipFolder);
+  const skipConfig = timelineActionConfig.skip;
 
   const handleSkip = async () => {
-    if (!onSkipFolder) return;
+    if (!onSkipFolder || disableActions || isUpdating) return;
 
     setIsSkipping(true);
     try {
@@ -63,31 +68,39 @@ export function TimelineList({
     );
   }
 
+  const actionDisabled = disableActions ?? isUpdating;
+
+  const renderActionRow = () => (
+    <div className="flex items-center justify-end gap-2">
+      {onSkipFolder && (
+        <TimelineActionButton
+          icon={<skipConfig.Icon className="h-5 w-5" />}
+          label={skipConfig.label}
+          tooltip={skipConfig.tooltip}
+          disabled={actionDisabled ?? isSkipping}
+          isLoading={isSkipping}
+          onClick={() => {
+            void handleSkip();
+          }}
+        />
+      )}
+      {onMarkAllRead && (
+        <MarkAllReadButton
+          onMarkAllRead={onMarkAllRead}
+          disabled={actionDisabled}
+          className="border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50"
+        />
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {showActions && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex gap-2">
-            {onSkipFolder && (
-              <button
-                onClick={() => {
-                  void handleSkip();
-                }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70"
-                disabled={isSkipping || isUpdating}
-              >
-                {isSkipping ? 'Skipping…' : 'Skip'}
-              </button>
-            )}
-          </div>
-          {onMarkAllRead && (
-            <MarkAllReadButton onMarkAllRead={onMarkAllRead} disabled={isUpdating} />
-          )}
-        </div>
-      )}
+      {showActions && renderActionRow()}
       {items.map((article) => (
         <ArticleCard key={article.id} article={article} onMarkRead={onMarkRead} />
       ))}
+      {showActions && renderActionRow()}
     </div>
   );
 }

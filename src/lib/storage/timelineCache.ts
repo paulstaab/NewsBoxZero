@@ -170,6 +170,63 @@ export function pruneTimelineCache(
   };
 }
 
+interface ReconcileResult {
+  envelope: TimelineCacheEnvelope;
+  removedIds: number[];
+}
+
+/**
+ * Reconciles cached unread items against the server unread ID set.
+ * Evicts items missing on the server or tombstoned via pendingReadIds.
+ */
+export function reconcileTimelineCache(
+  envelope: TimelineCacheEnvelope,
+  serverUnreadIds: Set<number>,
+  now = Date.now(),
+): ReconcileResult {
+  const normalized = normalizeEnvelope(envelope);
+  const pendingReadSet = new Set(normalized.pendingReadIds);
+  const removedIdSet = new Set<number>();
+
+  const reconciledEntries = Object.values(normalized.folders)
+    .map((entry) => {
+      const reconciledArticles = entry.articles.filter((article) => {
+        const isTombstoned = pendingReadSet.has(article.id);
+        const isUnreadOnServer = serverUnreadIds.has(article.id);
+        if (!isUnreadOnServer || isTombstoned) {
+          removedIdSet.add(article.id);
+          return false;
+        }
+        return true;
+      });
+
+      const prunedArticles = pruneArticlePreviews(reconciledArticles, { now });
+      const unreadCount = prunedArticles.filter((article) => article.unread).length;
+      if (unreadCount === 0) {
+        return null;
+      }
+
+      return {
+        ...entry,
+        articles: prunedArticles,
+        unreadCount,
+      };
+    })
+    .filter((entry): entry is FolderQueueEntry => entry !== null);
+
+  const sortedEntries = sortFolderQueueEntries(reconciledEntries);
+  const sortedFolders = rebuildFolderMap(sortedEntries);
+
+  return {
+    envelope: {
+      ...normalized,
+      folders: sortedFolders,
+      activeFolderId: deriveActiveFolderId(normalized.activeFolderId, sortedFolders),
+    },
+    removedIds: Array.from(removedIdSet),
+  };
+}
+
 /**
  * Merges new articles into the existing cache envelope.
  * Respects pendingReadIds as tombstones to prevent already-marked items from reappearing.

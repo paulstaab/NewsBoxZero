@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: NewsBoxZero Items Sync
+  version: 1.0.0
+  description: >-
+    Unread-only item fetch used for read-status reconciliation and unread loading.
+servers:
+  - url: /index.php/apps/news/api/v1-3
+paths:
+  /items:
+    get:
+      summary: Fetch unread items for sync reconciliation
+      description: >-
+        Retrieves unread items only. Used to build the server unread ID set and
+        then merge new unread items into the local cache.
+      parameters:
+        - in: query
+          name: batchSize
+          schema:
+            type: integer
+          description: Number of items per page.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Pagination offset.
+        - in: query
+          name: type
+          schema:
+            type: integer
+            enum: [0, 1, 2, 3]
+          description: Filter type (0=feed, 1=folder, 2=starred, 3=all).
+        - in: query
+          name: id
+          schema:
+            type: integer
+          description: Feed or folder id when type is 0 or 1.
+        - in: query
+          name: getRead
+          schema:
+            type: boolean
+            default: false
+          description: Must be false to enforce unread-only sync.
+        - in: query
+          name: oldestFirst
+          schema:
+            type: boolean
+          description: Sort order toggle.
+        - in: query
+          name: lastModified
+          schema:
+            type: integer
+          description: Unix timestamp filter.
+      responses:
+        "200":
+          description: Unread items payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Article"
+                required: [items]
+        "401":
+          description: Invalid credentials
+        "422":
+          description: Validation error
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        feedId:
+          type: integer
+        folderId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        body:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        lastModified:
+          type: integer
+        unread:
+          type: boolean
+        starred:
+          type: boolean
+      required:
+        - id
+        - feedId
+        - unread

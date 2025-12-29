@@ -5,16 +5,9 @@ import type { FolderQueueEntry } from '@/types';
 interface FolderStepperProps {
   activeFolder: FolderQueueEntry | null;
   remainingFolders: number;
-  onRefresh: () => void;
-  isUpdating: boolean;
 }
 
-export function FolderStepper({
-  activeFolder,
-  remainingFolders,
-  onRefresh,
-  isUpdating,
-}: FolderStepperProps) {
+export function FolderStepper({ activeFolder, remainingFolders }: FolderStepperProps) {
   const unreadCount = activeFolder?.unreadCount ?? 0;
   const lastUpdatedLabel = activeFolder
     ? new Date(activeFolder.lastUpdated).toLocaleTimeString([], {
@@ -60,21 +53,7 @@ export function FolderStepper({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={onRefresh}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70"
-            disabled={isUpdating}
-          >
-            {isUpdating && (
-              <span
-                className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
-                aria-hidden
-              />
-            )}
-            {isUpdating ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
+        <div />
       </div>
     </section>
   );

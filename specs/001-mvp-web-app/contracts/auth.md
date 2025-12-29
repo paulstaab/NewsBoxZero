@@ -6,7 +6,7 @@
 
 ## Overview
 
-Feedfront uses HTTP Basic authentication with Nextcloud app passwords. The `/feeds` endpoint is used for credential validation since it requires authentication (unlike `/version` which is public).
+NewsBoxZero uses HTTP Basic authentication with Nextcloud app passwords. The `/feeds` endpoint is used for credential validation since it requires authentication (unlike `/version` which is public).
 
 ---
 
@@ -123,13 +123,13 @@ interface StoredSession {
 
 function storeSession(session: StoredSession): void {
   const storage = session.rememberDevice ? localStorage : sessionStorage;
-  storage.setItem('feedfront:session', JSON.stringify(session));
+  storage.setItem('newsboxzero:session', JSON.stringify(session));
 }
 
 function loadSession(): StoredSession | null {
   // Try localStorage first (persistent), then sessionStorage
-  const stored = localStorage.getItem('feedfront:session') 
-              ?? sessionStorage.getItem('feedfront:session');
+  const stored = localStorage.getItem('newsboxzero:session') 
+              ?? sessionStorage.getItem('newsboxzero:session');
   
   if (!stored) return null;
   
@@ -141,8 +141,8 @@ function loadSession(): StoredSession | null {
 }
 
 function clearSession(): void {
-  localStorage.removeItem('feedfront:session');
-  sessionStorage.removeItem('feedfront:session');
+  localStorage.removeItem('newsboxzero:session');
+  sessionStorage.removeItem('newsboxzero:session');
 }
 ```
 
@@ -280,7 +280,7 @@ Include in login wizard help text:
 > 
 > 1. Go to your Nextcloud Settings → Security
 > 2. Scroll to "Devices & sessions"
-> 3. Enter "Feedfront" as device name
+> 3. Enter "NewsBoxZero" as device name
 > 4. Click "Create new app password"
 > 5. Copy the generated password here
 > 

@@ -98,6 +98,7 @@ Execution steps:
 
 4. Sequential questioning loop (interactive):
    - Present EXACTLY ONE question at a time.
+   - First present the question to the user. Format: `**Question:** <Question>?`
    - For multiple‑choice questions:
      - **Analyze all options** and determine the **most suitable option** based on:
        - Best practices for the project type

@@ -133,7 +133,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-lg shadow-md p-8">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Feedfront</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to NewsBoxZero</h1>
             <p className="text-gray-600">
               {step === LoginStep.SERVER_URL && 'Connect to your RSS server'}
               {step === LoginStep.VALIDATING_URL && 'Checking server connectivity...'}
