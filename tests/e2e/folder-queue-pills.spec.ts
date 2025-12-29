@@ -1,37 +1,18 @@
-import { type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { mockFolders, setupApiMocks } from './mocks';
+import { getMockItems, mockFolders, setupApiMocks } from './mocks';
 
 const TEST_SERVER_URL = 'https://rss.example.com';
-const TEST_USERNAME = 'testuser';
-const TEST_PASSWORD = 'testpass';
-
-async function completeLogin(page: Page) {
-  await page.goto('/login/');
-  await page.waitForLoadState('networkidle');
-  await page.getByLabel(/server url/i).fill(TEST_SERVER_URL);
-  await page.getByRole('button', { name: /^continue$/i }).click();
-  await expect(page.getByLabel(/username/i)).toBeVisible({ timeout: 10_000 });
-  await page.getByLabel(/username/i).fill(TEST_USERNAME);
-  await page.getByLabel(/password/i).fill(TEST_PASSWORD);
-  await page.getByRole('button', { name: /log.*in|sign.*in/i }).click();
-  await page.waitForURL(/\/timeline/, { timeout: 10_000 });
-}
+const storageStatePath = 'tests/e2e/.auth/user.json';
 
 test.describe('Folder queue pills', () => {
+  test.use({ storageState: storageStatePath });
+
   test.beforeEach(async ({ page }) => {
     await setupApiMocks(page, TEST_SERVER_URL);
-    await page.goto('/');
-    await page.waitForURL(/\/login\//);
-    await page.evaluate(() => {
-      sessionStorage.clear();
-      localStorage.clear();
-    });
+    await page.goto('/timeline');
   });
 
   test('renders pills in unread order and highlights the active folder', async ({ page }) => {
-    await completeLogin(page);
-
     const pills = page.locator('[role="tablist"] button');
     await expect(pills).toHaveCount(3);
 
@@ -44,8 +25,6 @@ test.describe('Folder queue pills', () => {
   });
 
   test('selects a pill, pins it first, and filters the timeline list', async ({ page }) => {
-    await completeLogin(page);
-
     const pills = page.locator('[role="tablist"] button');
     await pills.nth(1).click();
 
@@ -58,11 +37,26 @@ test.describe('Folder queue pills', () => {
 
   test('mark-all-read removes the active pill and advances the queue', async ({ page }) => {
     const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
-    await page.route(`${apiBase}/items/read/multiple`, async (route) => {
-      await route.fulfill({ status: 200 });
+    let folderRead = false;
+
+    await page.unroute(`${apiBase}/items**`);
+    await page.route(`${apiBase}/items**`, async (route) => {
+      const unreadItems = getMockItems().filter((item) => item.unread);
+      const remainingItems = folderRead
+        ? unreadItems.filter((item) => item.folderId !== 10)
+        : unreadItems;
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: remainingItems }),
+      });
     });
 
-    await completeLogin(page);
+    await page.route(`${apiBase}/items/read/multiple`, async (route) => {
+      folderRead = true;
+      await route.fulfill({ status: 200 });
+    });
 
     await page.getByRole('button', { name: /mark all as read/i }).click();
 
@@ -73,8 +67,6 @@ test.describe('Folder queue pills', () => {
   });
 
   test('skip moves the active folder pill to the end', async ({ page }) => {
-    await completeLogin(page);
-
     await page.getByRole('button', { name: /^skip$/i }).click();
 
     const pills = page.locator('[role="tablist"] button');
