@@ -33,4 +33,8 @@ TypeScript 5.9 on Node.js 20 (Next.js App Router): Follow standard conventions
 - 004-folder-queue-pills: Added TypeScript 5.9 on Node.js 20 (Next.js App Router) + Next.js 16 (static export), React 19, SWR, Tailwind CSS, date-fns
 
 <!-- MANUAL ADDITIONS START -->
+
+Before you finish a task, always run linting (lint:fix, typecheck and format) and tests (test and test:e2e)
+and fix any problems.
+
 <!-- MANUAL ADDITIONS END -->

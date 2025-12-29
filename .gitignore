@@ -44,3 +44,4 @@ next-env.d.ts
 .codex/version.json
 .codex/skills
 .codex/sessions
+tests/e2e/.*
