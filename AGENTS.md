@@ -4,6 +4,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-28
 
 ## Active Technologies
 
+- TypeScript 5.9, Node.js 20 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (006-pinned-action-buttons)
+
 - TypeScript 5.9 on Node.js 20 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (005-article-sync-readstatus)
 - Browser localStorage + sessionStorage (timeline cache + session/preferences) (005-article-sync-readstatus)
 
@@ -32,6 +34,8 @@ npm run test:e2e      # Run end-to-end tests
 TypeScript 5.9 on Node.js 20 (Next.js App Router): Follow standard conventions
 
 ## Recent Changes
+
+- 006-pinned-action-buttons: Added TypeScript 5.9, Node.js 20 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
 
 - 005-article-sync-readstatus: Added TypeScript 5.9 on Node.js 20 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
 

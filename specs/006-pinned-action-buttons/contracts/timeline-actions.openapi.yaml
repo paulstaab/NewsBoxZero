@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: Feedfront Timeline Actions
+  version: 1.0.0
+  description: >-
+    API interactions used by the timeline action buttons. Skip is client-only
+    and does not call the API.
+servers:
+  - url: /index.php/apps/news/api/v1-3
+paths:
+  /items:
+    get:
+      summary: Fetch unread items for sync
+      description: Retrieve unread-only items for reconciliation and refresh.
+      parameters:
+        - in: query
+          name: batchSize
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: type
+          schema:
+            type: integer
+            enum: [0, 1, 2, 3]
+        - in: query
+          name: id
+          schema:
+            type: integer
+        - in: query
+          name: getRead
+          schema:
+            type: boolean
+            default: false
+        - in: query
+          name: oldestFirst
+          schema:
+            type: boolean
+        - in: query
+          name: lastModified
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unread items payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Article"
+                required: [items]
+        "401":
+          description: Invalid credentials
+        "422":
+          description: Validation error
+  /folders/{folderId}/read:
+    post:
+      summary: Mark all items in a folder as read
+      parameters:
+        - in: path
+          name: folderId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newestItemId:
+                  type: integer
+              required: [newestItemId]
+      responses:
+        "200":
+          description: Folder marked as read
+        "401":
+          description: Invalid credentials
+        "422":
+          description: Validation error
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        feedId:
+          type: integer
+        folderId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        body:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        lastModified:
+          type: integer
+        unread:
+          type: boolean
+        starred:
+          type: boolean
+      required:
+        - id
+        - feedId
+        - unread
