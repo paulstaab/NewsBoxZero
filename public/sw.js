@@ -4,9 +4,12 @@
  */
 
 const CACHE_NAME = 'newsboxzero-v1';
+const scopePath = self.registration ? new URL(self.registration.scope).pathname : '/';
+const normalizedScope = scopePath.endsWith('/') ? scopePath.slice(0, -1) : scopePath;
+const basePath = normalizedScope === '/' ? '' : normalizedScope;
 const SHELL_ASSETS = [
-  '/',
-  '/index.html',
+  `${basePath}/`,
+  `${basePath}/index.html`,
   // Add other critical assets as needed
 ];
 
@@ -60,7 +63,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Fall back to cache for offline
           return caches.match(request).then((cached) => {
-            return cached || caches.match('/');
+            return cached || caches.match(`${basePath}/`);
           });
         }),
     );

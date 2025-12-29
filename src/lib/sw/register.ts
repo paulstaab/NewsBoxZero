@@ -1,5 +1,7 @@
 'use client';
 
+import { APP_BASE_PATH } from '@/lib/config/env';
+
 /**
  * Service worker registration utility.
  * Handles SW lifecycle events and provides registration helpers.
@@ -32,8 +34,10 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/',
+    const basePath = APP_BASE_PATH || '';
+    const scope = `${basePath}/`.replace(/\/\/+$/, '/');
+    const registration = await navigator.serviceWorker.register(`${basePath}/sw.js`, {
+      scope,
     });
 
     // Handle updates

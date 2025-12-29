@@ -5,6 +5,12 @@
 
 /** Storage key for debug mode preference */
 const DEBUG_KEY = 'newsboxzero:debug';
+const RAW_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
+/**
+ * Base path for deployments hosted under a subfolder (e.g., GitHub Pages).
+ */
+export const APP_BASE_PATH = RAW_BASE_PATH ? `/${RAW_BASE_PATH.replace(/^\/|\/$/g, '')}` : '';
 
 /**
  * Checks if a URL is secure (HTTPS or localhost for development).

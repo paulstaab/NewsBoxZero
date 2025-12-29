@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import '../styles/globals.css';
 import { SWRProvider } from '@/lib/swr/provider';
 import { AuthProvider } from '@/hooks/useAuth';
+import { APP_BASE_PATH } from '@/lib/config/env';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
 import { ClientOverlays } from '@/components/ui/ClientOverlays';
@@ -10,10 +11,10 @@ import { ClientOverlays } from '@/components/ui/ClientOverlays';
 export const metadata: Metadata = {
   title: 'NewsBoxZero',
   description: 'Static headless RSS reader for Nextcloud News.',
-  manifest: '/manifest.json',
+  manifest: `${APP_BASE_PATH}/manifest.json`,
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: `${APP_BASE_PATH}/favicon.ico`,
+    apple: `${APP_BASE_PATH}/apple-touch-icon.png`,
   },
 };
 
