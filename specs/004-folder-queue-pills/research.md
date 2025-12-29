@@ -56,7 +56,7 @@
 
 ## 5. Local Storage Schema (Best Practices)
 
-**Decision**: Continue using `feedfront.timeline.v1` in `localStorage`, pruning by max age and max items per folder. The pill queue reads from and writes to the same envelope to preserve offline behavior.
+**Decision**: Continue using `newsboxzero.timeline.v1` in `localStorage`, pruning by max age and max items per folder. The pill queue reads from and writes to the same envelope to preserve offline behavior.
 
 **Rationale**: Reuses the existing pruning rules and avoids schema changes. It also satisfies the static delivery and unread-only constraints.
 

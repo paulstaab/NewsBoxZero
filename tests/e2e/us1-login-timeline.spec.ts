@@ -44,7 +44,7 @@ test.describe('US1: Login and Timeline', () => {
       await expect(page).toHaveURL(/\/login\//);
 
       // Should show wizard with heading and server URL input
-      await expect(page.getByRole('heading', { name: /welcome to feedfront/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /welcome to newsboxzero/i })).toBeVisible();
       await expect(page.getByText(/connect to your rss server/i)).toBeVisible();
       await expect(page.getByLabel(/server url/i)).toBeVisible();
     });
@@ -198,10 +198,10 @@ test.describe('US1: Login and Timeline', () => {
       await page.waitForURL(/\/timeline/);
 
       // Check storage
-      const sessionData = await page.evaluate(() => sessionStorage.getItem('feedfront:session'));
+      const sessionData = await page.evaluate(() => sessionStorage.getItem('newsboxzero:session'));
       expect(sessionData).not.toBeNull();
 
-      const localData = await page.evaluate(() => localStorage.getItem('feedfront:session'));
+      const localData = await page.evaluate(() => localStorage.getItem('newsboxzero:session'));
       expect(localData).toBeNull();
     });
 
@@ -223,7 +223,7 @@ test.describe('US1: Login and Timeline', () => {
       await page.waitForURL(/\/timeline/);
 
       // Check storage
-      const localData = await page.evaluate(() => localStorage.getItem('feedfront:session'));
+      const localData = await page.evaluate(() => localStorage.getItem('newsboxzero:session'));
       expect(localData).not.toBeNull();
     });
   });

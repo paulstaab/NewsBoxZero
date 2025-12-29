@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Feedfront Timeline Actions
+  title: NewsBoxZero Timeline Actions
   version: 1.0.0
   description: >-
     API interactions used by the timeline action buttons. Skip is client-only

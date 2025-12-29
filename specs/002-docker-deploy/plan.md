@@ -97,8 +97,8 @@ Dockerfile (new, repo root)
 - **Read-only root FS** → ensure server writes nothing outside `/tmp`; test with `docker run --read-only` locally.
 
 ### Manual Verification Checklist (Right-Sized Tests)
-1. Build image locally via `docker build -t feedfront:latest .`.
-2. Run `docker run --rm --user 1001 --read-only --tmpfs /tmp:rw -p 8000:8000 feedfront:latest`.
+1. Build image locally via `docker build -t newsboxzero:latest .`.
+2. Run `docker run --rm --user 1001 --read-only --tmpfs /tmp:rw -p 8000:8000 newsboxzero:latest`.
 3. Hit `http://localhost:8000` and verify static site renders.
 4. Inspect container logs for write attempts outside `/tmp`.
 5. Check `docker image ls` to confirm size ≤150 MB.

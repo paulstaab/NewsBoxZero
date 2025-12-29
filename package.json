@@ -1,5 +1,5 @@
 {
-  "name": "feedfront",
+  "name": "newsboxzero",
   "version": "1.0.0",
   "description": "A static webapp frontend for headless-rss",
   "private": true,
@@ -36,15 +36,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/paulstaab/feedfront.git"
+    "url": "git+https://github.com/paulstaab/newsboxzero.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/paulstaab/feedfront/issues"
+    "url": "https://github.com/paulstaab/newsboxzero/issues"
   },
-  "homepage": "https://github.com/paulstaab/feedfront#readme",
+  "homepage": "https://github.com/paulstaab/newsboxzero#readme",
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.1",

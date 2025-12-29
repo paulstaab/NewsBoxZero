@@ -107,7 +107,7 @@ export function clearPreferences(): void {
 }
 
 /**
- * Clears all Feedfront data from storage.
+ * Clears all NewsBoxZero data from storage.
  */
 export function clearAllData(): void {
   clearSession();

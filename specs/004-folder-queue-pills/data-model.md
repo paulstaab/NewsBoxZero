@@ -7,7 +7,7 @@
 
 | Entity | Purpose | Key Fields | Validation / Notes |
 |--------|---------|------------|--------------------|
-| `TimelineCacheEnvelope` | Persisted unread queue state stored in `feedfront.timeline.v1`. | `version`, `lastSynced`, `activeFolderId`, `folders`, `pendingReadIds`, `pendingSkipFolderIds`. | `activeFolderId` must reference a folder in `folders` or be `null`. `pendingReadIds` are tombstones for unread-only enforcement. |
+| `TimelineCacheEnvelope` | Persisted unread queue state stored in `newsboxzero.timeline.v1`. | `version`, `lastSynced`, `activeFolderId`, `folders`, `pendingReadIds`, `pendingSkipFolderIds`. | `activeFolderId` must reference a folder in `folders` or be `null`. `pendingReadIds` are tombstones for unread-only enforcement. |
 | `FolderQueueEntry` | Represents a folder in the queue and its unread articles. | `id`, `name`, `sortOrder`, `status`, `unreadCount`, `articles`, `lastUpdated`. | `unreadCount` must equal unread articles in `articles`. `status` is `queued | active | skipped | completed`. |
 | `FolderQueuePill` | UI representation of a queued folder in the pill strip. | `id`, `label`, `unreadCount`, `isActive`, `isSkipped`. | `label` format: `${name} (${unreadCount})`. Only unread folders render pills. |
 | `FolderProgressState` | Derived state for navigation between folders. | `currentFolderId`, `nextFolderId`, `remainingFolderIds`, `allViewed`. | Derived from queue order; recomputed after every cache mutation. |

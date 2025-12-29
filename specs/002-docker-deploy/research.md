@@ -18,8 +18,8 @@
 
 ## Verification Checklist (Manual)
 1. `npm ci && npm run build && npm run export` locally to ensure `/out` exists before Docker build.
-2. `docker build -t feedfront:latest .` using the multi-stage Dockerfile.
-3. `docker run --rm --user 1234 --read-only --tmpfs /tmp:rw -p 8000:8000 feedfront:latest`.
+2. `docker build -t newsboxzero:latest .` using the multi-stage Dockerfile.
+3. `docker run --rm --user 1234 --read-only --tmpfs /tmp:rw -p 8000:8000 newsboxzero:latest`.
 4. Within 30 seconds, hit `http://localhost:8000` and confirm app renders.
 5. Inspect container logs for any write attempts outside `/tmp`; fix if present.
-6. Record `docker image ls feedfront` size plus `docker buildx imagetools inspect` compressed size and ensure ≤150 MB; add results to docs/metrics/bundle.md and workflow summary.
+6. Record `docker image ls newsboxzero` size plus `docker buildx imagetools inspect` compressed size and ensure ≤150 MB; add results to docs/metrics/bundle.md and workflow summary.

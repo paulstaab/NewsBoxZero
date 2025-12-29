@@ -12,7 +12,7 @@
 
 **Decision**: Yes — Next.js 14 supports `output: 'export'` in `next.config.js`. Pages using only client components or static generation work out of the box.
 
-**Rationale**: The Feedfront spec mandates no server runtime. Using `output: 'export'` produces an `/out` directory of HTML/CSS/JS that can be deployed to any static CDN (Vercel, Cloudflare Pages, GitHub Pages, S3+CloudFront).
+**Rationale**: The NewsBoxZero spec mandates no server runtime. Using `output: 'export'` produces an `/out` directory of HTML/CSS/JS that can be deployed to any static CDN (Vercel, Cloudflare Pages, GitHub Pages, S3+CloudFront).
 
 **Alternatives Considered**:
 - Vite + React: lighter, but loses Next.js routing conventions, image optimization, and `next/link` prefetching.
@@ -146,7 +146,7 @@ interface AuthContext {
 
 **Decision**: Assume yes per spec assumption. Document that headless-rss must return `Access-Control-Allow-Origin: *` or the frontend's origin, plus `Access-Control-Allow-Headers: Authorization`.
 
-**Fallback**: If CORS is blocked, users must deploy Feedfront on the same origin or configure a reverse proxy. This is a deployment concern, not an app concern.
+**Fallback**: If CORS is blocked, users must deploy NewsBoxZero on the same origin or configure a reverse proxy. This is a deployment concern, not an app concern.
 
 ---
 

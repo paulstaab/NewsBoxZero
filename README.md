@@ -1,8 +1,15 @@
-# feedfront
+[![CI](https://github.com/paulstaab/newsboxzero/actions/workflows/ci.yml/badge.svg)](https://github.com/paulstaab/newsboxzero/actions/workflows/ci.yml)
+[![GHCR](https://img.shields.io/badge/ghcr.io%2Fpaulstaab%2Fnewsboxzero-latest-blue)](https://ghcr.io/paulstaab/newsboxzero)
 
-A static webapp frontend for headless-rss
+# NewsBoxZero
+
+An Inbox-Zero Workflow inspired RSS Feedreader that focuses on skimming through new articles quickly.
+
+Can use [headless-rss](https://github.com/paulstaab/headless-rss) and maybe other RSS aggregators
+that use the Nextcloud News v1.3 protocol as backend.
 
 > **✨ Vibe-coded with [spec-kit](https://github.com/github/spec-kit)** — This entire application was built using AI-driven specification-first development, from requirements through implementation.
+> Code-quality will not be stellar.
 
 ## Development Setup
 
@@ -61,4 +68,4 @@ git commit --no-verify
 
 ## Deployment
 
-The CI workflow builds and publishes a production container to GHCR whenever `main` is green. See [docs/releases/docker.md](docs/releases/docker.md) for pull/run commands, non-root guidance, and credential notes.
+The CI workflow builds and publishes a production container to GHCR whenever `main` is green. The image is `ghcr.io/paulstaab/newsboxzero:latest`. See [docs/releases/docker.md](docs/releases/docker.md) for pull/run commands, non-root guidance, and credential notes.

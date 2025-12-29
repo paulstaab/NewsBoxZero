@@ -122,7 +122,7 @@ export function InstallPrompt({ delayMs = 3000, showDuringActivity = false }: In
               id="install-prompt-title"
               className="text-sm font-semibold text-[hsl(var(--color-text))]"
             >
-              Install Feedfront
+              Install NewsBoxZero
             </h3>
             <p
               id="install-prompt-description"
@@ -140,7 +140,7 @@ export function InstallPrompt({ delayMs = 3000, showDuringActivity = false }: In
                 }}
                 disabled={isInstalling}
                 className="rounded-md bg-[hsl(var(--color-primary))] px-3 py-1.5 text-sm font-medium text-white hover:bg-[hsl(var(--color-primary-hover))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-primary))] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Install Feedfront app"
+                aria-label="Install NewsBoxZero app"
               >
                 {isInstalling ? 'Installing...' : 'Install'}
               </button>

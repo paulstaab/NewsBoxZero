@@ -28,7 +28,7 @@ export default async function globalSetup(config) {
   await page.evaluate(
     ({ baseUrl, username, credentials: encoded }) => {
       localStorage.setItem(
-        'feedfront:session',
+        'newsboxzero:session',
         JSON.stringify({
           baseUrl,
           username,

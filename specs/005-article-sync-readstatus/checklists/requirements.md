@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning  
 **Created**: 2025-12-29  
-**Feature**: [Link to spec.md](/workspaces/feedfront/specs/005-article-sync-readstatus/spec.md)
+**Feature**: [Link to spec.md](/workspaces/newsboxzero/specs/005-article-sync-readstatus/spec.md)
 
 ## Content Quality
 

@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2025-12-29
-**Feature**: /workspaces/feedfront/specs/006-pinned-action-buttons/spec.md
+**Feature**: /workspaces/newsboxzero/specs/006-pinned-action-buttons/spec.md
 
 ## Content Quality
 

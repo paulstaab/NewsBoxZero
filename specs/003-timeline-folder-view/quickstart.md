@@ -19,7 +19,7 @@ Visit `http://localhost:3000`. The service worker registers automatically in dev
 ## 3. Working on the Folder Timeline
 
 1. **Seed dummy data**: Enable MSW by running `npm run dev` (already configured). The `tests/mocks` handlers return sample feeds/folders/items so you can exercise the UI without a live backend.
-2. **Toggle timeline cache**: Use DevTools → Application → Local Storage → `feedfront.timeline.v1` to inspect or reset the cached unread queue.
+2. **Toggle timeline cache**: Use DevTools → Application → Local Storage → `newsboxzero.timeline.v1` to inspect or reset the cached unread queue.
 3. **Debug performance metrics**: Open the console to see `performance.measure` logs for `timeline-cache-ready` and `timeline-update-complete`.
 4. **Offline simulation**: In DevTools → Network, check "Offline" and reload the timeline. You should still see cached articles plus the offline banner.
 
@@ -48,7 +48,7 @@ Playwright tests rely on the same MSW mocks; no external network is required.
 
 | Symptom | Fix |
 |---------|-----|
-| Timeline blank after login | Clear `feedfront.timeline.v1` and `feedfront.session` entries; then reload. |
+| Timeline blank after login | Clear `newsboxzero.timeline.v1` and `newsboxzero:session` entries; then reload. |
 | Articles never mark as read | Ensure CORS allows `POST /items/*`; check console for 401/403. |
 | Update button spins forever | Run `npm run dev -- --logLevel debug` to see SWR errors; network tab should show failing `/items` call. |
 | Service worker cache stale | In DevTools → Application → Service Workers, click "Skip waiting" then reload.
