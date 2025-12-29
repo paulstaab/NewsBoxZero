@@ -111,10 +111,15 @@ function TimelineContent() {
     return null; // Will redirect
   }
 
-  const remainingFolders = progress.remainingFolderIds.length;
   const hasUnread = !progress.allViewed;
 
   const showEmptyState = !activeFolder;
+  const lastUpdatedLabel = activeFolder
+    ? new Date(activeFolder.lastUpdated).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
 
   let emptyStateType: 'no-unread' | 'no-items' | 'offline' | 'error' | 'all-viewed' = 'no-unread';
   if (error) {
@@ -128,10 +133,10 @@ function TimelineContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">Timeline</h1>
+            <h1 className="text-2xl font-bold text-gray-900">NewsBoxZero</h1>
           </div>
           <FolderQueuePills
             queue={queue}
@@ -144,7 +149,7 @@ function TimelineContent() {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <FolderStepper activeFolder={activeFolder} remainingFolders={remainingFolders} />
+        <FolderStepper activeFolder={activeFolder} />
 
         {showEmptyState ? (
           <EmptyState
@@ -178,6 +183,11 @@ function TimelineContent() {
             isUpdating={isUpdating}
             disableActions={!hasUnread}
           />
+        )}
+        {lastUpdatedLabel && (
+          <div className="mt-10 text-center text-sm text-gray-500">
+            Last updated at {lastUpdatedLabel}
+          </div>
         )}
       </main>
 

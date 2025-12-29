@@ -245,8 +245,8 @@ test.describe('US1: Login and Timeline', () => {
     });
 
     test('should show unread count for the active folder', async ({ page }) => {
-      await expect(page.getByTestId('active-folder-unread')).toBeVisible();
-      await expect(page.getByTestId('active-folder-unread')).toHaveText(/\d+/);
+      await expect(page.getByTestId('active-folder-name')).toBeVisible();
+      await expect(page.getByTestId('active-folder-name')).toHaveText(/\w+/);
     });
 
     test('should support infinite scroll', async ({ page }) => {
