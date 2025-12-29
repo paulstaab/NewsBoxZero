@@ -244,9 +244,9 @@ test.describe('US1: Login and Timeline', () => {
       await expect(page.getByRole('heading').first()).toBeVisible();
     });
 
-    test('should show unread count summary', async ({ page }) => {
-      // Should display aggregate unread count
-      await expect(page.getByText(/\d+\s+(unread|new)/i)).toBeVisible();
+    test('should show unread count for the active folder', async ({ page }) => {
+      await expect(page.getByTestId('active-folder-unread')).toBeVisible();
+      await expect(page.getByTestId('active-folder-unread')).toHaveText(/\d+/);
     });
 
     test('should support infinite scroll', async ({ page }) => {

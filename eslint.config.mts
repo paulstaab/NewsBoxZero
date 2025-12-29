@@ -70,5 +70,6 @@ export default defineConfig([
     '*.config.cjs',
     '*.config.mjs',
     '*.config.mts',
+    '*.min.js',
   ]),
 ]);

@@ -4,11 +4,11 @@ import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useFolderQueue } from '@/hooks/useFolderQueue';
-import { UnreadSummary } from '@/components/timeline/UnreadSummary';
 import { FolderQueuePills } from '@/components/timeline/FolderQueuePills';
 import { FolderStepper } from '@/components/timeline/FolderStepper';
 import { TimelineList } from '@/components/timeline/TimelineList';
 import { EmptyState } from '@/components/timeline/EmptyState';
+import { PinnedActionCluster } from '@/components/timeline/PinnedActionCluster';
 import { RequestStateToast, useToast } from '@/components/ui/RequestStateToast';
 import {
   markTimelineCacheLoadStart,
@@ -111,8 +111,8 @@ function TimelineContent() {
     return null; // Will redirect
   }
 
-  const activeFolderUnread = activeFolder?.unreadCount ?? 0;
   const remainingFolders = progress.remainingFolderIds.length;
+  const hasUnread = !progress.allViewed;
 
   const showEmptyState = !activeFolder;
 
@@ -132,13 +132,6 @@ function TimelineContent() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">Timeline</h1>
-
-            {/* Unread summary */}
-            <UnreadSummary
-              totalUnread={totalUnread}
-              activeFolderUnread={activeFolderUnread}
-              remainingFolders={remainingFolders}
-            />
           </div>
           <FolderQueuePills
             queue={queue}
@@ -151,21 +144,7 @@ function TimelineContent() {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <FolderStepper
-          activeFolder={activeFolder}
-          remainingFolders={remainingFolders}
-          onRefresh={() => {
-            markTimelineUpdateStart();
-            void refresh()
-              .then(() => {
-                markTimelineUpdateComplete();
-              })
-              .catch(() => {
-                markTimelineUpdateComplete();
-              });
-          }}
-          isRefreshing={isRefreshing}
-        />
+        <FolderStepper activeFolder={activeFolder} remainingFolders={remainingFolders} />
 
         {showEmptyState ? (
           <EmptyState
@@ -196,12 +175,35 @@ function TimelineContent() {
             onMarkRead={(id) => {
               void markItemRead(id);
             }}
-            onMarkAllRead={() => markFolderRead(activeFolder.id)}
-            onSkipFolder={() => skipFolder(activeFolder.id)}
             isUpdating={isUpdating}
+            disableActions={!hasUnread}
           />
         )}
       </main>
+
+      <PinnedActionCluster
+        onSync={() => {
+          markTimelineUpdateStart();
+          void refresh()
+            .then(() => {
+              markTimelineUpdateComplete();
+            })
+            .catch(() => {
+              markTimelineUpdateComplete();
+            });
+        }}
+        onSkip={async () => {
+          if (!activeFolder) return;
+          await skipFolder(activeFolder.id);
+        }}
+        onMarkAllRead={async () => {
+          if (!activeFolder) return;
+          await markFolderRead(activeFolder.id);
+        }}
+        disableSkip={!hasUnread}
+        disableMarkAllRead={!hasUnread}
+        isSyncing={isRefreshing}
+      />
 
       {/* Toast notifications for errors */}
       {toasts.map((toast) => (

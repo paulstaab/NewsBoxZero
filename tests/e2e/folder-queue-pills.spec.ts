@@ -58,7 +58,7 @@ test.describe('Folder queue pills', () => {
       await route.fulfill({ status: 200 });
     });
 
-    await page.getByRole('button', { name: /mark all as read/i }).click();
+    await page.getByRole('button', { name: /mark all read/i }).click();
 
     await expect(page.getByTestId('active-folder-name')).toHaveText(
       new RegExp(mockFolders[1]?.name ?? 'Design Inspiration', 'i'),

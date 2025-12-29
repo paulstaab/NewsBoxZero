@@ -24,6 +24,8 @@ specs
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.dockerignore
+*.log*
 
 # Docker-specific files
 Dockerfile

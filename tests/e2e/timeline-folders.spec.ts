@@ -65,7 +65,7 @@ test.describe('Timeline folders (US1)', () => {
     await expect(page.getByTestId('active-folder-unread')).toHaveText('3');
 
     // Click Mark All as Read button
-    await page.getByRole('button', { name: /mark all as read/i }).click();
+    await page.getByRole('button', { name: /mark all read/i }).click();
 
     // Verify API was called
     await page.waitForTimeout(500);
@@ -205,7 +205,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     );
 
     // Mark first folder as read
-    await page.getByRole('button', { name: /mark all as read/i }).click();
+    await page.getByRole('button', { name: /mark all read/i }).click();
 
     // Wait for second folder to appear
     const secondFolderName = mockFolders[1]?.name ?? 'Design Thinking';
@@ -295,7 +295,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
 
     // Mark first folder as read
-    await page.getByRole('button', { name: /mark all as read/i }).click();
+    await page.getByRole('button', { name: /mark all read/i }).click();
     await page.waitForTimeout(500);
 
     // Trigger manual update
@@ -311,6 +311,58 @@ test.describe('Timeline update and persistence (US5)', () => {
     const secondFolderName = mockFolders[1]?.name ?? 'Design Thinking';
     await expect(page.getByTestId('active-folder-name')).toHaveText(
       new RegExp(secondFolderName, 'i'),
+    );
+  });
+
+  test('supports hotkeys for refresh, skip, and mark all read', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    let updateCallCount = 0;
+    let markMultipleReadCalled = false;
+
+    await page.unroute(`${apiBase}/items**`);
+    await page.route(`${apiBase}/items**`, async (route) => {
+      updateCallCount++;
+      const unreadItems = getMockItems().filter((item) => item.unread);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: unreadItems }),
+      });
+    });
+
+    await page.route(`${apiBase}/items/read/multiple`, async (route) => {
+      markMultipleReadCalled = true;
+      await route.fulfill({ status: 204 });
+    });
+
+    await page.goto('/timeline');
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    const firstFolderName = mockFolders[0]?.name ?? 'Engineering Updates';
+    const secondFolderName = mockFolders[1]?.name ?? 'Design Inspiration';
+    const thirdFolderName = mockFolders[2]?.name ?? 'Podcasts';
+
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(firstFolderName, 'i'),
+    );
+
+    const refreshButton = page.getByRole('button', { name: /refresh/i });
+    await expect(refreshButton).toBeEnabled({ timeout: 5000 });
+
+    const initialUpdateCount = updateCallCount;
+    await page.keyboard.press('r');
+    await expect.poll(() => updateCallCount).toBeGreaterThan(initialUpdateCount);
+
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(secondFolderName, 'i'),
+    );
+
+    await page.keyboard.press('Enter');
+    await expect.poll(() => markMultipleReadCalled).toBe(true);
+    await expect(page.getByTestId('active-folder-name')).toHaveText(
+      new RegExp(thirdFolderName, 'i'),
+      { timeout: 5000 },
     );
   });
 
