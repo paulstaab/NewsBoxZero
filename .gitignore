@@ -37,6 +37,7 @@ Thumbs.db
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 next-env.d.ts
+tests/e2e/.auth
 
 # Codex files
 .codex/auth.json
