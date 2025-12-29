@@ -213,7 +213,7 @@ test.describe('Accessibility Compliance', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test('timeline page should be accessible (empty state)', async ({ page, makeAxeBuilder }) => {
+    test('timeline page should be accessible (empty state)', async ({ makeAxeBuilder }) => {
       const accessibilityScanResults = await makeAxeBuilder()
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { Article, Folder, Feed, ArticlePreview, FolderQueueEntry } from '@/types';
 import { useFolderQueue } from '@/hooks/useFolderQueue';
 import { CONFIG } from '@/lib/config/env';
@@ -210,7 +210,9 @@ describe('useFolderQueue', () => {
     });
 
     // Mark first folder as read
-    await result.current.markFolderRead(10);
+    await act(async () => {
+      await result.current.markFolderRead(10);
+    });
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(20);
@@ -237,7 +239,10 @@ describe('useFolderQueue', () => {
     });
 
     // Mark folder as read (this is async)
-    const markPromise = result.current.markFolderRead(10);
+    let markPromise: Promise<void> = Promise.resolve();
+    act(() => {
+      markPromise = result.current.markFolderRead(10);
+    });
 
     // Check that items were removed optimistically from queue before the API call completes
     await waitFor(() => {
@@ -276,7 +281,9 @@ describe('useFolderQueue', () => {
     });
 
     // Skip first folder
-    await result.current.skipFolder(10);
+    await act(async () => {
+      await result.current.skipFolder(10);
+    });
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(20);
@@ -315,7 +322,9 @@ describe('useFolderQueue', () => {
       expect(result.current.queue[0]?.id).toBe(10);
     });
 
-    result.current.setActiveFolder(30);
+    act(() => {
+      result.current.setActiveFolder(30);
+    });
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(30);
@@ -339,13 +348,17 @@ describe('useFolderQueue', () => {
       expect(result.current.activeArticles).toHaveLength(2);
     });
 
-    await result.current.markItemRead(1);
+    await act(async () => {
+      await result.current.markItemRead(1);
+    });
 
     await waitFor(() => {
       expect(result.current.activeArticles).toHaveLength(1);
     });
 
-    await result.current.markItemRead(2);
+    await act(async () => {
+      await result.current.markItemRead(2);
+    });
 
     await waitFor(() => {
       expect(result.current.queue).toHaveLength(0);
@@ -365,7 +378,9 @@ describe('useFolderQueue', () => {
     });
 
     // Skip the only folder
-    await result.current.skipFolder(10);
+    await act(async () => {
+      await result.current.skipFolder(10);
+    });
 
     await waitFor(() => {
       expect(result.current.activeFolder).toBeNull();
@@ -373,7 +388,9 @@ describe('useFolderQueue', () => {
     });
 
     // Restart
-    await result.current.restart();
+    await act(async () => {
+      await result.current.restart();
+    });
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(10);

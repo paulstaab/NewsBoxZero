@@ -5,10 +5,17 @@ import { ArticleCard } from '@/components/timeline/ArticleCard';
 import type { ArticlePreview, Article } from '@/types';
 
 // Mock next/image
+/* eslint-disable @next/next/no-img-element */
+type MockImageProps = React.ImgHTMLAttributes<HTMLImageElement> & { unoptimized?: boolean };
+
 vi.mock('next/image', () => ({
-  // eslint-disable-next-line @next/next/no-img-element
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img alt="" {...props} />,
+  default: (props: MockImageProps) => {
+    const { unoptimized, ...rest } = props;
+    void unoptimized;
+    return <img alt="" {...rest} />;
+  },
 }));
+/* eslint-enable @next/next/no-img-element */
 
 // Mock SWR
 const { mockSWRResponse } = vi.hoisted(() => ({
