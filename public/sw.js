@@ -1,9 +1,9 @@
 /**
- * Service Worker for Feedfront.
+ * Service Worker for NewsBoxZero.
  * Provides offline shell caching and network status awareness.
  */
 
-const CACHE_NAME = 'feedfront-v1';
+const CACHE_NAME = 'newsboxzero-v1';
 const SHELL_ASSETS = [
   '/',
   '/index.html',

@@ -2,7 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
- * Accessibility tests for Feedfront PWA.
+ * Accessibility tests for NewsBoxZero PWA.
  * Validates WCAG 2.1 AA compliance using axe-core.
  */
 

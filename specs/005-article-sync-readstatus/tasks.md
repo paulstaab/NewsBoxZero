@@ -8,7 +8,7 @@ description: "Task list for Article Sync Read Status"
 **Input**: Design documents from `/specs/005-article-sync-readstatus/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests & Evidence**: Automated tests are not explicitly requested in the spec. Manual verification steps in `/workspaces/feedfront/specs/005-article-sync-readstatus/quickstart.md` will be used to confirm reconciliation, unread loading, and error handling. Ensure read articles are never loaded and are evicted immediately when detected as read.
+**Tests & Evidence**: Automated tests are not explicitly requested in the spec. Manual verification steps in `/workspaces/newsboxzero/specs/005-article-sync-readstatus/quickstart.md` will be used to confirm reconciliation, unread loading, and error handling. Ensure read articles are never loaded and are evicted immediately when detected as read.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 

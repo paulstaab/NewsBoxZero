@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2025-12-28
-**Feature**: /workspaces/feedfront/specs/004-folder-queue-pills/spec.md
+**Feature**: /workspaces/newsboxzero/specs/004-folder-queue-pills/spec.md
 
 ## Content Quality
 

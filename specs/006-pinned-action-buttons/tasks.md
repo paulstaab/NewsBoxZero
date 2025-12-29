@@ -8,7 +8,7 @@ description: "Task list for pinned action buttons implementation"
 **Input**: Design documents from `/specs/006-pinned-action-buttons/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/, quickstart.md
 
-**Tests & Evidence**: Manual smoke checks in `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md` cover all stories (UI placement, disabled state, tooltips, and responsiveness). No new automated tests are required because changes are presentational and rely on existing state; keep verification focused on UI behavior and accessibility. Ensure unread-only behavior remains unchanged (no read items displayed or retained).
+**Tests & Evidence**: Manual smoke checks in `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md` cover all stories (UI placement, disabled state, tooltips, and responsiveness). No new automated tests are required because changes are presentational and rely on existing state; keep verification focused on UI behavior and accessibility. Ensure unread-only behavior remains unchanged (no read items displayed or retained).
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -22,8 +22,8 @@ description: "Task list for pinned action buttons implementation"
 
 **Purpose**: Shared UI assets used across all action placements
 
-- [X] T001 Create action icon components for Sync/Skip/Mark All Read in `/workspaces/feedfront/src/components/timeline/TimelineActionIcons.tsx`
-- [X] T002 [P] Create reusable icon-only action button with tooltip + aria-label support in `/workspaces/feedfront/src/components/timeline/TimelineActionButton.tsx`
+- [X] T001 Create action icon components for Sync/Skip/Mark All Read in `/workspaces/newsboxzero/src/components/timeline/TimelineActionIcons.tsx`
+- [X] T002 [P] Create reusable icon-only action button with tooltip + aria-label support in `/workspaces/newsboxzero/src/components/timeline/TimelineActionButton.tsx`
 
 ---
 
@@ -31,7 +31,7 @@ description: "Task list for pinned action buttons implementation"
 
 **Purpose**: Shared configuration for consistent action labeling
 
-- [X] T003 Create action metadata map (labels/tooltips/icons) in `/workspaces/feedfront/src/components/timeline/timelineActionConfig.ts`
+- [X] T003 Create action metadata map (labels/tooltips/icons) in `/workspaces/newsboxzero/src/components/timeline/timelineActionConfig.ts`
 
 **Checkpoint**: Shared action assets ready for all stories
 
@@ -45,13 +45,13 @@ description: "Task list for pinned action buttons implementation"
 
 ### Tests & Checks for User Story 1 (Right-Sized)
 
-- [ ] T004 [US1] Validate pinned cluster placement and icons per `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md`
+- [ ] T004 [US1] Validate pinned cluster placement and icons per `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md`
 
 ### Implementation for User Story 1
 
-- [X] T005 [P] [US1] Build pinned action cluster component in `/workspaces/feedfront/src/components/timeline/PinnedActionCluster.tsx`
-- [X] T006 [US1] Mount pinned cluster and handlers in `/workspaces/feedfront/src/app/timeline/page.tsx`
-- [X] T007 [P] [US1] Replace header summary with icon-only Sync on the right in `/workspaces/feedfront/src/components/timeline/FolderStepper.tsx`
+- [X] T005 [P] [US1] Build pinned action cluster component in `/workspaces/newsboxzero/src/components/timeline/PinnedActionCluster.tsx`
+- [X] T006 [US1] Mount pinned cluster and handlers in `/workspaces/newsboxzero/src/app/timeline/page.tsx`
+- [X] T007 [P] [US1] Replace header summary with icon-only Sync on the right in `/workspaces/newsboxzero/src/components/timeline/FolderStepper.tsx`
 
 **Checkpoint**: Pinned cluster + header Sync are functional and scroll-stable
 
@@ -65,14 +65,14 @@ description: "Task list for pinned action buttons implementation"
 
 ### Tests & Checks for User Story 2 (Right-Sized)
 
-- [ ] T008 [US2] Validate disabled/enabled behavior per `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md`
+- [ ] T008 [US2] Validate disabled/enabled behavior per `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md`
 
 ### Implementation for User Story 2
 
-- [X] T009 [US2] Derive `allRead`/`hasUnread` state in `/workspaces/feedfront/src/app/timeline/page.tsx`
-- [X] T010 [P] [US2] Apply disabled state + aria-disabled to pinned cluster buttons in `/workspaces/feedfront/src/components/timeline/PinnedActionCluster.tsx`
-- [X] T011 [P] [US2] Update Mark All Read icon-only button to honor disabled state in `/workspaces/feedfront/src/components/timeline/MarkAllReadButton.tsx`
-- [X] T012 [US2] Enforce pointer/keyboard lockout for disabled list actions in `/workspaces/feedfront/src/components/timeline/TimelineList.tsx`
+- [X] T009 [US2] Derive `allRead`/`hasUnread` state in `/workspaces/newsboxzero/src/app/timeline/page.tsx`
+- [X] T010 [P] [US2] Apply disabled state + aria-disabled to pinned cluster buttons in `/workspaces/newsboxzero/src/components/timeline/PinnedActionCluster.tsx`
+- [X] T011 [P] [US2] Update Mark All Read icon-only button to honor disabled state in `/workspaces/newsboxzero/src/components/timeline/MarkAllReadButton.tsx`
+- [X] T012 [US2] Enforce pointer/keyboard lockout for disabled list actions in `/workspaces/newsboxzero/src/components/timeline/TimelineList.tsx`
 
 **Checkpoint**: Disabled state is consistent across pinned + list actions
 
@@ -86,13 +86,13 @@ description: "Task list for pinned action buttons implementation"
 
 ### Tests & Checks for User Story 3 (Right-Sized)
 
-- [ ] T013 [US3] Validate top/bottom action rows per `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md`
+- [ ] T013 [US3] Validate top/bottom action rows per `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md`
 
 ### Implementation for User Story 3
 
-- [X] T014 [US3] Convert top action row to icon-only, right-aligned controls in `/workspaces/feedfront/src/components/timeline/TimelineList.tsx`
-- [X] T015 [US3] Add bottom action row with the same controls in `/workspaces/feedfront/src/components/timeline/TimelineList.tsx`
-- [X] T016 [US3] Ensure Skip/Mark All Read reuse shared icon/tooltip config in `/workspaces/feedfront/src/components/timeline/TimelineList.tsx`
+- [X] T014 [US3] Convert top action row to icon-only, right-aligned controls in `/workspaces/newsboxzero/src/components/timeline/TimelineList.tsx`
+- [X] T015 [US3] Add bottom action row with the same controls in `/workspaces/newsboxzero/src/components/timeline/TimelineList.tsx`
+- [X] T016 [US3] Ensure Skip/Mark All Read reuse shared icon/tooltip config in `/workspaces/newsboxzero/src/components/timeline/TimelineList.tsx`
 
 **Checkpoint**: Top and bottom action rows are both functional and aligned
 
@@ -102,8 +102,8 @@ description: "Task list for pinned action buttons implementation"
 
 **Purpose**: Visual regression and final runbook confirmation
 
-- [ ] T017 [P] Update visual regression snapshots for header + action rows in `/workspaces/feedfront/tests/visual/timeline-folders.spec.ts`
-- [ ] T018 Run the full manual verification checklist in `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md`
+- [ ] T017 [P] Update visual regression snapshots for header + action rows in `/workspaces/newsboxzero/tests/visual/timeline-folders.spec.ts`
+- [ ] T018 Run the full manual verification checklist in `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md`
 
 ---
 
@@ -133,21 +133,21 @@ description: "Task list for pinned action buttons implementation"
 ### User Story 1
 
 ```bash
-Task: "Build pinned action cluster component in /workspaces/feedfront/src/components/timeline/PinnedActionCluster.tsx"
-Task: "Replace header summary with icon-only Sync on the right in /workspaces/feedfront/src/components/timeline/FolderStepper.tsx"
+Task: "Build pinned action cluster component in /workspaces/newsboxzero/src/components/timeline/PinnedActionCluster.tsx"
+Task: "Replace header summary with icon-only Sync on the right in /workspaces/newsboxzero/src/components/timeline/FolderStepper.tsx"
 ```
 
 ### User Story 2
 
 ```bash
-Task: "Apply disabled state + aria-disabled to pinned cluster buttons in /workspaces/feedfront/src/components/timeline/PinnedActionCluster.tsx"
-Task: "Update Mark All Read icon-only button to honor disabled state in /workspaces/feedfront/src/components/timeline/MarkAllReadButton.tsx"
+Task: "Apply disabled state + aria-disabled to pinned cluster buttons in /workspaces/newsboxzero/src/components/timeline/PinnedActionCluster.tsx"
+Task: "Update Mark All Read icon-only button to honor disabled state in /workspaces/newsboxzero/src/components/timeline/MarkAllReadButton.tsx"
 ```
 
 ### User Story 3
 
 ```bash
-# No safe parallel tasks: all changes touch /workspaces/feedfront/src/components/timeline/TimelineList.tsx
+# No safe parallel tasks: all changes touch /workspaces/newsboxzero/src/components/timeline/TimelineList.tsx
 ```
 
 ---
@@ -159,7 +159,7 @@ Task: "Update Mark All Read icon-only button to honor disabled state in /workspa
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational
 3. Complete Phase 3: User Story 1
-4. Validate via `/workspaces/feedfront/specs/006-pinned-action-buttons/quickstart.md`
+4. Validate via `/workspaces/newsboxzero/specs/006-pinned-action-buttons/quickstart.md`
 
 ### Incremental Delivery
 

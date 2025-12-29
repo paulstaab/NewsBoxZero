@@ -58,7 +58,7 @@ function buildArticle(partial: Partial<Article>): Article {
     guid: partial.guid ?? `guid-${Math.random().toString(36).slice(2)}`,
     guidHash: partial.guidHash ?? 'hash',
     title: partial.title ?? 'Test Article',
-    author: partial.author ?? 'Feedfront',
+    author: partial.author ?? 'NewsBoxZero',
     url: partial.url ?? 'https://example.com/article',
     body: partial.body ?? '<p>Body</p>',
     feedId: partial.feedId ?? 1,

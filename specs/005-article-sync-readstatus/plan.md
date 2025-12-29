@@ -1,6 +1,6 @@
 # Implementation Plan: Article Sync Read Status
 
-**Branch**: `005-article-sync-readstatus` | **Date**: 2025-12-29 | **Spec**: /workspaces/feedfront/specs/005-article-sync-readstatus/spec.md
+**Branch**: `005-article-sync-readstatus` | **Date**: 2025-12-29 | **Spec**: /workspaces/newsboxzero/specs/005-article-sync-readstatus/spec.md
 **Input**: Feature specification from `/specs/005-article-sync-readstatus/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.

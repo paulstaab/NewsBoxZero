@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Feedfront Items Sync
+  title: NewsBoxZero Items Sync
   version: 1.0.0
   description: >-
     Unread-only item fetch used for read-status reconciliation and unread loading.

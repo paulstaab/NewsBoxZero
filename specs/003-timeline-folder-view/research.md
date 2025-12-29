@@ -10,7 +10,7 @@
 
 **Question**: How should unread articles be persisted locally so folders reload instantly while respecting storage limits?
 
-**Decision**: Store a `TimelineCache` JSON blob under `feedfront.timeline.v1` in `localStorage`, keyed by folder ID with compact article stubs (id, feedId, folderId, title, summary, thumbnail, pubDate, unread, starred, hasFullTextFlag). Retain only the latest 200 items per folder or items not older than 14 days, whichever is smaller.
+**Decision**: Store a `TimelineCache` JSON blob under `newsboxzero.timeline.v1` in `localStorage`, keyed by folder ID with compact article stubs (id, feedId, folderId, title, summary, thumbnail, pubDate, unread, starred, hasFullTextFlag). Retain only the latest 200 items per folder or items not older than 14 days, whichever is smaller.
 
 **Rationale**: Namespacing avoids collisions with existing session/preferences keys and allows future migrations by bumping the suffix. Limiting stored fields keeps the payload under ~200 KB even for heavy folders. Age + count pruning guarantees initial render stays <500 ms and avoids stale data.
 
@@ -106,7 +106,7 @@ Skip is purely client-side (no API call) until the user eventually marks the fol
 
 | Topic | Decision |
 |-------|----------|
-| Local persistence | `feedfront.timeline.v1` localStorage blob with per-folder arrays capped at 200 items / 14 days |
+| Local persistence | `newsboxzero.timeline.v1` localStorage blob with per-folder arrays capped at 200 items / 14 days |
 | Performance metrics | Performance API marks + console/metricsClient reporting |
 | Offline merge | Pending-read tombstones + exponential retry without discarding cache |
 | Folder ordering | Client-side aggregation of cached unread items + `/folders` metadata |

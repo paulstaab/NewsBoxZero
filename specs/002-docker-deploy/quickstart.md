@@ -8,7 +8,7 @@
 
 ## Build the Container
 ```bash
-docker build -t feedfront:latest .
+docker build -t newsboxzero:latest .
 ```
 - Uses the multi-stage Dockerfile (Node 18 builder + runtime).
 - Image should remain ≤150 MB compressed after buildx inspection.
@@ -20,7 +20,7 @@ docker run --rm \
   --read-only \
   --tmpfs /tmp:rw,size=64m \
   -p 8000:8000 \
-  feedfront:latest
+  newsboxzero:latest
 ```
 - Responds on http://localhost:8000 within 30 seconds.
 - Application writes only to `/tmp`; tmpfs mount provides writable space.

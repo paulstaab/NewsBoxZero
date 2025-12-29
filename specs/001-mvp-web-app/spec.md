@@ -31,7 +31,7 @@
 
 As a headless-rss user, I want to log in with my Nextcloud credentials and immediately see an aggregated, chronologically sorted list of unread and recent articles across all of my feeds so I can skim news quickly.
 
-**Why this priority**: This is the primary value of Feedfront—surfacing a single, readable timeline. Without it, the app delivers no user benefit.
+**Why this priority**: This is the primary value of NewsBoxZero—surfacing a single, readable timeline. Without it, the app delivers no user benefit.
 
 **Independent Test**: Launch the static build, provide valid API base URL + app password, and confirm the timeline renders the latest $N$ items with unread badges using only `/index.php/apps/news/api/v1-3/items` and `/feeds` calls.
 
@@ -95,7 +95,7 @@ As a headless-rss user, I want to log in with my Nextcloud credentials and immed
 
 ## Experience & Performance Standards *(mandatory)*
 
-- **UX Consistency**: Use the shared Feedfront token set (`src/styles/tokens.css`) for color/spacing/typography, maintain WCAG 2.1 AA contrast (≥4.5:1) verified via axe-core CI, and ensure keyboard focus order matches visual order (sidebar → timeline → article panel). Microcopy must follow the existing tone in README examples.
+- **UX Consistency**: Use the shared NewsBoxZero token set (`src/styles/tokens.css`) for color/spacing/typography, maintain WCAG 2.1 AA contrast (≥4.5:1) verified via axe-core CI, and ensure keyboard focus order matches visual order (sidebar → timeline → article panel). Microcopy must follow the existing tone in README examples.
 - **Responsive Behavior**: Support breakpoints at 320px (single-column stack), 768px (sidebar collapsible), 1024px (two-column layout), and 1440px (three-panel view). Acceptance involves Percy snapshots at each breakpoint showing intact navigation, readable typography, and overflow handling for long feed names.
 - **Visual Regression Proof**: Capture Percy (or Playwright screenshot) suites covering onboarding, empty state, timeline with media, and read state management. Diffs must be reviewed and approved in PR checklists.
 - **Data Loading Strategy**: Lazy-load article content only when the card scrolls into view, prefetch next batches when 75% scroll depth is reached, and throttle folder/feed refreshes unless triggered manually. Service worker should precache critical assets and implement runtime caching for API responses.

@@ -1,6 +1,6 @@
 # Implementation Plan: Pinned Action Buttons
 
-**Branch**: `006-pinned-action-buttons` | **Date**: 2025-12-29 | **Spec**: `/workspaces/feedfront/specs/006-pinned-action-buttons/spec.md`
+**Branch**: `006-pinned-action-buttons` | **Date**: 2025-12-29 | **Spec**: `/workspaces/newsboxzero/specs/006-pinned-action-buttons/spec.md`
 **Input**: Feature specification from `/specs/006-pinned-action-buttons/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.

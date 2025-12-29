@@ -4,7 +4,7 @@
  */
 
 /** Storage key for debug mode preference */
-const DEBUG_KEY = 'feedfront:debug';
+const DEBUG_KEY = 'newsboxzero:debug';
 
 /**
  * Checks if a URL is secure (HTTPS or localhost for development).
@@ -126,19 +126,19 @@ export const CONFIG = {
   RETRY_BASE_DELAY: 1000,
 
   /** Session storage key */
-  SESSION_KEY: 'feedfront:session',
+  SESSION_KEY: 'newsboxzero:session',
 
   /** Preferences storage key */
-  PREFERENCES_KEY: 'feedfront:preferences',
+  PREFERENCES_KEY: 'newsboxzero:preferences',
 
   /** Metrics/sync storage key */
-  METRICS_KEY: 'feedfront:metrics',
+  METRICS_KEY: 'newsboxzero:metrics',
 
   /** User-Agent header for API requests */
-  USER_AGENT: 'Feedfront/1.0',
+  USER_AGENT: 'newsboxzero/1.0',
 
   /** Timeline cache namespace stored in localStorage */
-  TIMELINE_CACHE_KEY: 'feedfront.timeline.v1',
+  TIMELINE_CACHE_KEY: 'newsboxzero.timeline.v1',
 
   /** Current schema version for the timeline cache envelope */
   TIMELINE_CACHE_VERSION: 1,

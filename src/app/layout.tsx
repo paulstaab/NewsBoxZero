@@ -8,7 +8,7 @@ import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistra
 import { ClientOverlays } from '@/components/ui/ClientOverlays';
 
 export const metadata: Metadata = {
-  title: 'Feedfront',
+  title: 'NewsBoxZero',
   description: 'Static headless RSS reader for Nextcloud News.',
   manifest: '/manifest.json',
   icons: {

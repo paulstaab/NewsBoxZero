@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document defines the API contracts for Feedfront's integration with headless-rss using the Nextcloud News v1.3 API. All endpoints require HTTP Basic authentication over HTTPS.
+This document defines the API contracts for NewsBoxZero's integration with headless-rss using the Nextcloud News v1.3 API. All endpoints require HTTP Basic authentication over HTTPS.
 
 ### Type Constants
 

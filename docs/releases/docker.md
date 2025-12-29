@@ -2,7 +2,7 @@
 
 ## Artifact
 
-- Image: `ghcr.io/paulstaab/feedfront:latest`
+- Image: `ghcr.io/paulstaab/newsboxzero:latest`
 - Digest: Recorded per workflow run in GitHub Actions summary
 - Compressed Size Budget: ≤150 MB (workflow fails if exceeded)
 
@@ -10,21 +10,21 @@
 
 1. Checkout + Node 18 setup
 2. `npm ci && npm run lint && npm run test && npm run build && npm run export`
-3. `docker buildx build --platform linux/amd64 --push ghcr.io/paulstaab/feedfront:latest`
+3. `docker buildx build --platform linux/amd64 --push ghcr.io/paulstaab/newsboxzero:latest`
 4. `docker buildx imagetools inspect` to append digest + size to summary
 5. Publish docs link pointing here for operators
 
 ## Pull & Run Commands
 
 ```bash
-docker pull ghcr.io/paulstaab/feedfront:latest
+docker pull ghcr.io/paulstaab/newsboxzero:latest
 
 docker run --rm \
   --user 1234 \
   --read-only \
   --tmpfs /tmp:rw,size=64m \
   -p 8000:8000 \
-  ghcr.io/paulstaab/feedfront:latest
+  ghcr.io/paulstaab/newsboxzero:latest
 ```
 
 - Replace `1234` with any non-root UID required by your platform.
@@ -58,5 +58,5 @@ docker run --rm \
 | ------------------------------- | -------------------------------------------------------- |
 | Push fails with 401             | Rotate `GHCR_PUSH_TOKEN` and re-run workflow.            |
 | Container cannot bind port      | Ensure host port is free; adjust `-p` mapping.           |
-| Permission errors writing cache | Confirm `--tmpfs /tmp:rw` or `-v /tmp-feedfront:/tmp`.   |
+| Permission errors writing cache | Confirm `--tmpfs /tmp:rw` or `-v /tmp-newsboxzero:/tmp`. |
 | Startup exceeds 30 s            | Inspect logs for missing build artifacts; rebuild image. |
