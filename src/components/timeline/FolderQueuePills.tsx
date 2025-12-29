@@ -32,10 +32,11 @@ export function FolderQueuePills({
 
   return (
     <div className="mt-3">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Folder queue</p>
-        {isLoading && <span className="text-xs text-gray-400">Updating…</span>}
-      </div>
+      {isLoading && (
+        <div className="flex items-center justify-end mb-2">
+          <span className="text-xs text-gray-400">Updating…</span>
+        </div>
+      )}
       <div
         className="flex gap-2 overflow-x-auto pb-2"
         role="tablist"
