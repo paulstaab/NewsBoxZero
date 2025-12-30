@@ -10,6 +10,8 @@ function preview(overrides: Partial<ArticlePreview> = {}): ArticlePreview {
     folderId: overrides.folderId ?? 1,
     feedId: overrides.feedId ?? 1,
     title: overrides.title ?? 'Title',
+    feedName: overrides.feedName ?? 'Feed Title',
+    author: overrides.author ?? 'Author Name',
     summary: overrides.summary ?? 'Summary',
     url: overrides.url ?? 'https://example.com',
     thumbnailUrl: overrides.thumbnailUrl ?? null,

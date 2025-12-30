@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: NewsBoxZero Items API (subset for timeline cards)
+  version: 1.0.0
+servers:
+  - url: https://{baseUrl}/index.php/apps/news/api/v1-3
+    variables:
+      baseUrl:
+        default: example.com
+paths:
+  /items:
+    get:
+      summary: List unread items
+      parameters:
+        - in: query
+          name: batchSize
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: type
+          schema:
+            type: integer
+        - in: query
+          name: id
+          schema:
+            type: integer
+        - in: query
+          name: getRead
+          schema:
+            type: boolean
+        - in: query
+          name: oldestFirst
+          schema:
+            type: boolean
+        - in: query
+          name: lastModified
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Items response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsResponse'
+  /items/{itemId}/read:
+    post:
+      summary: Mark item as read
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Read state updated
+components:
+  schemas:
+    ItemsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+      required:
+        - items
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+        url:
+          type: string
+        body:
+          type: string
+        pubDate:
+          type: integer
+        unread:
+          type: boolean
+        mediaThumbnail:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - url
+        - pubDate
+        - unread

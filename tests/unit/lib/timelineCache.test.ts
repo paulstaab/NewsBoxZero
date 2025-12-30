@@ -16,6 +16,8 @@ function createPreview(overrides: Partial<ArticlePreview> = {}): ArticlePreview 
     folderId: overrides.folderId ?? 1,
     feedId: overrides.feedId ?? 99,
     title: overrides.title ?? 'Sample article',
+    feedName: overrides.feedName ?? 'Sample Feed',
+    author: overrides.author ?? 'Sample Author',
     summary: overrides.summary ?? 'Summary',
     url: overrides.url ?? 'https://example.com/article',
     thumbnailUrl: overrides.thumbnailUrl ?? null,
@@ -222,7 +224,7 @@ describe('mergeItemsIntoCache', () => {
     expect(merged.folders[2].unreadCount).toBe(2);
   });
 
-  it('removes folders with zero unread items after merge', async () => {
+  it('keeps folders with only read items after merge until sync cleanup', async () => {
     const { mergeItemsIntoCache } = await import('@/lib/storage/timelineCache');
     const now = Date.now();
 
@@ -254,8 +256,10 @@ describe('mergeItemsIntoCache', () => {
 
     const merged = mergeItemsIntoCache(existingEnvelope, newArticles, now);
 
-    expect(merged.folders[1]).toBeUndefined();
-    expect(merged.activeFolderId).toBeNull();
+    expect(merged.folders[1]).toBeDefined();
+    expect(merged.folders[1].unreadCount).toBe(0);
+    expect(merged.folders[1].articles).toHaveLength(3);
+    expect(merged.activeFolderId).toBe(1);
   });
 
   it('preserves folder metadata during merge', async () => {

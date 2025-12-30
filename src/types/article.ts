@@ -75,6 +75,12 @@ export interface ArticlePreview {
   /** Display title (fallback applied) */
   title: string;
 
+  /** Feed display name */
+  feedName: string;
+
+  /** Article author name, may be empty */
+  author: string;
+
   /** Plain-text summary used in cards */
   summary: string;
 

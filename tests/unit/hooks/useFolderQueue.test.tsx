@@ -147,6 +147,8 @@ describe('useFolderQueue', () => {
         folderId: 42,
         feedId: 9,
         title: 'Offline Story',
+        feedName: 'Offline Feed',
+        author: 'Offline Author',
         summary: 'Cached summary',
         url: 'https://example.com/offline',
         thumbnailUrl: null,
@@ -338,7 +340,7 @@ describe('useFolderQueue', () => {
     expect(result.current.queue.map((entry) => entry.id)).toEqual([30, 10, 20]);
   });
 
-  it('removes read items from cache and drops empty folders', async () => {
+  it('keeps read items in cache until the next sync reconciliation', async () => {
     mocks.foldersData.value = [{ id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] }];
     mocks.feedsData.value = [buildFeed({ id: 1, folderId: 10 })];
 
@@ -358,7 +360,8 @@ describe('useFolderQueue', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.activeArticles).toHaveLength(1);
+      expect(result.current.activeArticles).toHaveLength(2);
+      expect(result.current.activeArticles[0].unread).toBe(false);
     });
 
     await act(async () => {
@@ -366,8 +369,9 @@ describe('useFolderQueue', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.queue).toHaveLength(0);
-      expect(result.current.activeFolder).toBeNull();
+      expect(result.current.queue).toHaveLength(1);
+      expect(result.current.activeFolder?.id).toBe(10);
+      expect(result.current.activeArticles.every((article) => !article.unread)).toBe(true);
     });
   });
 

@@ -212,6 +212,8 @@ export function pruneArticlePreviews(
 
   return filteredByAge.slice(0, maxItems).map((article) => ({
     ...article,
+    feedName: article.feedName || '',
+    author: article.author || '',
     storedAt: article.storedAt ?? now,
   }));
 }

@@ -1,5 +1,6 @@
 import { CONFIG } from '@/lib/config/env';
 import type { ArticlePreview, FolderQueueEntry, TimelineCacheEnvelope } from '@/types';
+import { UNCATEGORIZED_FOLDER_ID } from '@/types';
 import { pruneArticlePreviews, sortFolderQueueEntries } from '@/lib/utils/unreadAggregator';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -12,7 +13,11 @@ function ensureArrayOfNumbers(value: number[] | undefined): number[] {
 
 function ensureArticlesArray(value: ArticlePreview[] | undefined): ArticlePreview[] {
   if (!Array.isArray(value)) return [];
-  return value;
+  return value.map((article) => ({
+    ...article,
+    feedName: article.feedName || '',
+    author: article.author || '',
+  }));
 }
 
 function rebuildFolderMap(entries: FolderQueueEntry[]): Record<number, FolderQueueEntry> {
@@ -105,13 +110,14 @@ function pruneFolders(
     .map((entry) => {
       const articles = pruneArticlePreviews(entry.articles, { now });
       const unreadCount = articles.filter((article) => article.unread).length;
-      return unreadCount === 0
-        ? null
-        : {
-            ...entry,
-            articles,
-            unreadCount,
-          };
+      if (unreadCount === 0 && articles.length === 0) {
+        return null;
+      }
+      return {
+        ...entry,
+        articles,
+        unreadCount,
+      };
     })
     .filter((entry): entry is FolderQueueEntry => entry !== null);
 
@@ -264,7 +270,8 @@ export function mergeItemsIntoCache(
       if (unreadCount > 0) {
         folders[folderId] = {
           id: folderId,
-          name: `Folder ${String(folderId)}`, // Will be updated by caller with actual metadata
+          name:
+            folderId === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : `Folder ${String(folderId)}`, // Will be updated by caller with actual metadata
           sortOrder: 0,
           status: 'queued',
           unreadCount,
@@ -283,8 +290,7 @@ export function mergeItemsIntoCache(
     const prunedArticles = pruneArticlePreviews(mergedArticles, { now });
     const unreadCount = prunedArticles.filter((a) => a.unread).length;
 
-    if (unreadCount === 0) {
-      // Remove folder if no unread items remain
+    if (unreadCount === 0 && prunedArticles.length === 0) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete folders[folderId];
     } else {

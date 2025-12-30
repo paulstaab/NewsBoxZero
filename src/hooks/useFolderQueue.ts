@@ -64,26 +64,42 @@ function summarize(body: string, fallback: string): string {
   return text.length > 320 ? `${text.slice(0, 317).trim()}…` : text;
 }
 
-function resolveFolderId(article: Article, feedFolderMap: Map<number, number>): number {
+function resolveFolderId(article: Article, feedFolderMap: Map<number, number>): number | null {
   if (typeof article.folderId === 'number' && Number.isFinite(article.folderId)) {
     return article.folderId;
   }
 
-  return feedFolderMap.get(article.feedId) ?? UNCATEGORIZED_FOLDER_ID;
+  if (feedFolderMap.has(article.feedId)) {
+    return feedFolderMap.get(article.feedId) ?? UNCATEGORIZED_FOLDER_ID;
+  }
+
+  return null;
 }
 
-function toArticlePreview(article: Article, folderId: number, cachedAt: number): ArticlePreview {
+function toArticlePreview(
+  article: Article,
+  folderId: number | null,
+  cachedAt: number,
+  feedName: string,
+): ArticlePreview | null {
+  if (folderId === null) {
+    return null;
+  }
   const trimmedTitle = article.title.trim();
   const fallbackTitle = trimmedTitle.length > 0 ? article.title : 'Untitled article';
-  const summary = summarize(article.body, fallbackTitle);
+  const summary = summarize(article.body, '');
   const trimmedUrl = article.url.trim();
   const hasFullText = article.body.trim().length > 0;
+  const trimmedAuthor = article.author.trim();
+  const normalizedFeedName = feedName.trim();
 
   return {
     id: article.id,
     folderId,
     feedId: article.feedId,
     title: fallbackTitle,
+    feedName: normalizedFeedName.length > 0 ? normalizedFeedName : 'Unknown source',
+    author: trimmedAuthor,
     summary,
     url: trimmedUrl.length > 0 ? article.url : '#',
     thumbnailUrl: article.mediaThumbnail,
@@ -141,9 +157,39 @@ function applyFolderNames(
 
   for (const [folderIdStr, folder] of Object.entries(envelope.folders)) {
     const id = Number(folderIdStr);
+    const resolvedName =
+      folderNameMap.get(id) ?? (id === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : folder.name);
     updatedFolders[id] = {
       ...folder,
-      name: folderNameMap.get(id) ?? folder.name,
+      name: resolvedName,
+    };
+  }
+
+  return {
+    ...envelope,
+    folders: updatedFolders,
+  };
+}
+
+function applyFeedNames(
+  envelope: TimelineCacheEnvelope,
+  feedNameMap: Map<number, string>,
+): TimelineCacheEnvelope {
+  if (feedNameMap.size === 0) {
+    return envelope;
+  }
+
+  const updatedFolders: Record<number, FolderQueueEntry> = {};
+
+  for (const [folderIdStr, folder] of Object.entries(envelope.folders)) {
+    const updatedArticles = folder.articles.map((article) => {
+      const resolvedName = feedNameMap.get(article.feedId) ?? article.feedName;
+      return resolvedName !== article.feedName ? { ...article, feedName: resolvedName } : article;
+    });
+
+    updatedFolders[Number(folderIdStr)] = {
+      ...folder,
+      articles: updatedArticles,
     };
   }
 
@@ -184,6 +230,9 @@ export function useFolderQueue(): UseFolderQueueResult {
       feeds.map((feed) => [feed.id, feed.folderId ?? UNCATEGORIZED_FOLDER_ID]),
     );
   }, [feeds]);
+  const feedNameMap = useMemo(() => {
+    return new Map<number, string>(feeds.map((feed) => [feed.id, feed.title]));
+  }, [feeds]);
 
   const {
     allItems,
@@ -199,12 +248,16 @@ export function useFolderQueue(): UseFolderQueueResult {
   const hasLocalUnread = useMemo(() => {
     return Object.values(envelope.folders).some((entry) => entry.unreadCount > 0);
   }, [envelope.folders]);
+  const hasLocalArticles = useMemo(() => {
+    const hasArticles = Object.values(envelope.folders).some((entry) => entry.articles.length > 0);
+    return hasArticles || envelope.pendingReadIds.length > 0;
+  }, [envelope.folders, envelope.pendingReadIds.length]);
 
   // Refresh with error handling (retry logic handled at page level)
   const refresh = useCallback(async (): Promise<void> => {
     setIsSyncing(true);
     try {
-      if (!hasLocalUnread) {
+      if (!hasLocalUnread && !hasLocalArticles) {
         await swrRefresh();
         setLastUpdateError(null);
         return;
@@ -218,12 +271,19 @@ export function useFolderQueue(): UseFolderQueueResult {
 
       setEnvelope((current) => {
         const { envelope: reconciled } = reconcileTimelineCache(current, serverUnreadIds, now);
-        const previews = items.map((article) =>
-          toArticlePreview(article, resolveFolderId(article, feedFolderMap), now),
-        );
+        const previews = items
+          .map((article) =>
+            toArticlePreview(
+              article,
+              resolveFolderId(article, feedFolderMap),
+              now,
+              feedNameMap.get(article.feedId) ?? 'Unknown source',
+            ),
+          )
+          .filter((preview): preview is ArticlePreview => preview !== null);
 
         const merged = mergeItemsIntoCache(reconciled, previews, now);
-        const nextEnvelope = applyFolderNames(merged, foldersData);
+        const nextEnvelope = applyFeedNames(applyFolderNames(merged, foldersData), feedNameMap);
 
         storeTimelineCache(nextEnvelope);
         return nextEnvelope;
@@ -242,7 +302,7 @@ export function useFolderQueue(): UseFolderQueueResult {
     } finally {
       setIsSyncing(false);
     }
-  }, [feedFolderMap, foldersData, hasLocalUnread, swrRefresh]);
+  }, [feedFolderMap, feedNameMap, foldersData, hasLocalArticles, hasLocalUnread, swrRefresh]);
 
   useEffect(() => {
     if (!foldersData || isLoading) return;
@@ -251,18 +311,38 @@ export function useFolderQueue(): UseFolderQueueResult {
 
     setEnvelope((current) => {
       const now = Date.now();
-      const previews = allItems.map((article) =>
-        toArticlePreview(article, resolveFolderId(article, feedFolderMap), now),
-      );
+      const previews = allItems
+        .map((article) =>
+          toArticlePreview(
+            article,
+            resolveFolderId(article, feedFolderMap),
+            now,
+            feedNameMap.get(article.feedId) ?? 'Unknown source',
+          ),
+        )
+        .filter((preview): preview is ArticlePreview => preview !== null);
 
       // Use mergeItemsIntoCache to handle deduplication and pendingReadIds
       const merged = mergeItemsIntoCache(current, previews, now);
-      const nextEnvelope = applyFolderNames(merged, foldersData);
+      const nextEnvelope = applyFeedNames(applyFolderNames(merged, foldersData), feedNameMap);
 
       storeTimelineCache(nextEnvelope);
       return nextEnvelope;
     });
-  }, [foldersData, allItems, feedFolderMap, isLoading]);
+  }, [foldersData, allItems, feedFolderMap, feedNameMap, isLoading]);
+
+  useEffect(() => {
+    if (!isHydrated || feedNameMap.size === 0) return;
+
+    setEnvelope((current) => {
+      const nextEnvelope = applyFeedNames(current, feedNameMap);
+      if (nextEnvelope === current) {
+        return current;
+      }
+      storeTimelineCache(nextEnvelope);
+      return nextEnvelope;
+    });
+  }, [feedNameMap, isHydrated]);
 
   const sortedQueue = useMemo(() => {
     return sortFolderQueueEntries(Object.values(envelope.folders));
@@ -445,23 +525,23 @@ export function useFolderQueue(): UseFolderQueueResult {
       if (targetFolderId === null) return current;
 
       const folder = updatedFolders[targetFolderId];
-      const updatedArticles = folder.articles.filter((a) => a.id !== itemId);
+      const updatedArticles = folder.articles.map((article) =>
+        article.id === itemId ? { ...article, unread: false } : article,
+      );
 
       const unreadCount = updatedArticles.filter((a) => a.unread).length;
 
-      if (unreadCount === 0) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete updatedFolders[targetFolderId];
-      } else {
-        updatedFolders[targetFolderId] = {
-          ...folder,
-          articles: updatedArticles,
-          unreadCount,
-        };
-      }
+      updatedFolders[targetFolderId] = {
+        ...folder,
+        articles: updatedArticles,
+        unreadCount,
+      };
 
       const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
-      const nextActiveId = findNextActiveId(remainingQueue);
+      const nextActiveId =
+        current.activeFolderId === targetFolderId && targetFolderId in updatedFolders
+          ? targetFolderId
+          : findNextActiveId(remainingQueue);
 
       const nextEnvelope: TimelineCacheEnvelope = {
         ...current,

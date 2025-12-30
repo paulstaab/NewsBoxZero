@@ -66,6 +66,8 @@ export default defineConfig([
     '.docs/**',
     '.specify/**',
     'next-env.d.ts',
+    '.env',
+    '.env.*',
     '*.config.js',
     '*.config.cjs',
     '*.config.mjs',

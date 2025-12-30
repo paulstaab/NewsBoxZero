@@ -35,6 +35,8 @@ const mockArticle: ArticlePreview = {
   feedId: 10,
   folderId: 100,
   title: 'Test Article Title',
+  feedName: 'Example Feed',
+  author: 'Test Author',
   summary: 'This is a summary of the article.',
   url: 'https://example.com/article',
   thumbnailUrl: 'https://example.com/image.jpg',
@@ -46,11 +48,18 @@ const mockArticle: ArticlePreview = {
 };
 
 const mockFullArticle: Article = {
-  ...mockArticle,
+  id: mockArticle.id,
   guid: 'guid-1',
   guidHash: 'hash-1',
+  title: mockArticle.title,
   author: 'Author',
+  url: mockArticle.url,
   body: '<p>This is the full body content.</p>',
+  feedId: mockArticle.feedId,
+  folderId: 100,
+  unread: mockArticle.unread,
+  starred: mockArticle.starred,
+  pubDate: mockArticle.pubDate,
   lastModified: 1700000000,
   enclosureLink: null,
   enclosureMime: null,
@@ -59,7 +68,6 @@ const mockFullArticle: Article = {
   mediaThumbnail: null,
   mediaDescription: null,
   rtl: false,
-  folderId: 100,
 };
 
 describe('ArticleCard', () => {
@@ -102,10 +110,11 @@ describe('ArticleCard', () => {
     // Should call onMarkRead
     expect(onMarkRead).toHaveBeenCalledWith(mockArticle.id);
 
-    // Should show full content (mocked SWR returns it)
+    // Should show full content (mocked SWR returns it) and hide summary
     await waitFor(() => {
       expect(screen.getByText('This is the full body content.')).toBeDefined();
     });
+    expect(screen.queryByText('This is a summary of the article.')).toBeNull();
   });
 
   it('shows loading state when expanding and fetching', () => {

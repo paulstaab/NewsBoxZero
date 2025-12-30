@@ -312,6 +312,62 @@ test.describe('Timeline update and persistence (US5)', () => {
     );
   });
 
+  test('sync removes expanded read items after refresh', async ({ page }) => {
+    const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
+    let itemsCallCount = 0;
+
+    await page.route(`${apiBase}/items/*/read`, async (route) => {
+      await route.fulfill({ status: 200 });
+    });
+
+    const singleItem = getMockItems().find((item) => item.unread);
+    if (!singleItem) {
+      throw new Error('No unread mock items available');
+    }
+
+    await page.route(`${apiBase}/items**`, async (route) => {
+      itemsCallCount++;
+      if (itemsCallCount <= 2) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ items: [singleItem] }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items: [] }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      localStorage.removeItem('newsboxzero.timeline.v1');
+    });
+
+    await page.goto('/timeline');
+    await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
+
+    const articleCard = page.getByRole('article').first();
+    await expect(articleCard).toBeVisible({ timeout: 5000 });
+
+    const titleText = (await articleCard.getByRole('link').textContent())?.trim() ?? '';
+    expect(titleText).toBeTruthy();
+
+    const targetCard = page.getByRole('article').filter({ hasText: titleText }).first();
+    await targetCard.click();
+    await expect(targetCard).toHaveAttribute('aria-label', /read/i);
+
+    const updateButton = page.getByRole('button', { name: /update|refresh/i });
+    await expect(updateButton).toBeVisible();
+    await updateButton.click();
+    await expect(updateButton).toBeEnabled({ timeout: 5000 });
+
+    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(0);
+  });
+
   test('supports hotkeys for refresh, skip, and mark all read', async ({ page }) => {
     const apiBase = `${TEST_SERVER_URL}/index.php/apps/news/api/v1-3`;
     let updateCallCount = 0;
@@ -442,7 +498,8 @@ test.describe('Timeline update and persistence (US5)', () => {
     // Verify mark read was called
     expect(markReadCalled).toBe(true);
 
-    // Verify the read item is removed from the unread-only timeline
-    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(0);
+    // Verify the read item remains visible until the next sync reconciliation
+    await expect(targetCard).toHaveAttribute('aria-label', /read/i);
+    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(1);
   });
 });
