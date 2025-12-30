@@ -8,7 +8,7 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests & Evidence**: The constitution requires right-sized verification for every user story. List the minimal automated tests or manual smoke checks needed for risky flows, call out when no extra verification is necessary, and skip release runbooks or recorded evidence unless a dependency demands it. Remember that features must adhere to the Unread-Only Focus principle—ensure test scenarios verify that read articles are never loaded and are immediately evicted from cache/storage when marked as read.
+**Tests & Evidence**: The constitution requires right-sized verification for every user story. List the minimal automated tests or manual smoke checks needed for risky flows, call out when no extra verification is necessary, and skip release runbooks or recorded evidence unless a dependency demands it. Remember that features must adhere to the Unread-Only Focus principle—ensure test scenarios verify that read articles are never loaded and are evicted from cache/storage once read state is confirmed or after the next sync, while items just marked as unread may remain until that sync completes.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 

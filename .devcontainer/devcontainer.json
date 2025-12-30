@@ -22,7 +22,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && npm install && npx playwright install --with-deps",
+	"postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && npm install -g @openai/codex && npm install --include=dev && npx playwright install --with-deps",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

@@ -1,7 +1,5 @@
 model = "gpt-5.2-codex"
 model_reasoning_effort = "medium"
-[projects."/workspaces/newsboxzero"]
-trust_level = "trusted"
 
-[projects."/workspaces/feedfront"]
+[projects."/workspaces/newsboxzero"]
 trust_level = "trusted"

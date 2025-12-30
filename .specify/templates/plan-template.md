@@ -36,7 +36,7 @@
 3. **Static Delivery Mandate** — Clarify how the feature compiles to static assets (SSG/export commands, data prefetch strategy) and why no new runtime compute is introduced. Include RFC links if exceptions are proposed.
 4. **Right-Sized Tests** — List the automated tests you will add before implementation for risky flows, call out any manual smoke tests that will stand in, and note that recordings are not required.
 5. **Experience Consistency** — Describe the design tokens, accessibility checks, and responsive viewports the work touches, including screenshot diff coverage.
-6. **Unread-Only Focus** — Confirm the feature never loads, displays, or retains read articles. Explain cache/storage eviction strategy when articles transition to read state.
+6. **Unread-Only Focus** — Confirm the feature never loads, displays, or retains read articles, except for items just marked as unread locally until the next sync. Explain cache/storage eviction once read state is confirmed or sync completes.
 
 ## Project Structure
 

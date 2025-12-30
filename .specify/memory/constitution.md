@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report
-- Version: 2.0.0 → 2.1.0
-- Modified Principles: None
-- Added Sections: Core Principle VI. Unread-Only Focus
+- Version: 2.1.0 → 2.1.1
+- Modified Principles: VI. Unread-Only Focus
+- Added Sections: None
 - Removed Sections: None
-- Templates Updated: ✅ .specify/templates/plan-template.md (new gate added), ✅ .specify/templates/tasks-template.md (guidance updated), ✅ .specify/templates/spec-template.md (no changes needed)
+- Templates Updated: ✅ .specify/templates/plan-template.md, ✅ .specify/templates/tasks-template.md, ✅ .specify/templates/spec-template.md (no changes needed)
 - Follow-ups: None
 -->
 
@@ -38,10 +38,17 @@ Verification MUST exist, but it must match risk—not bureaucracy.
 UI work MUST use the shared design tokens, typography scale, and spacing system, remain responsive between 320px and 1440px, and meet WCAG 2.1 AA contrast and keyboard navigation rules.
 
 ### VI. Unread-Only Focus
-The application MUST exclusively work with unread articles; read articles have no place in the user experience or persistence layer.
-- The application MUST NOT load, fetch, or display articles marked as read.
-- Articles MUST be removed from local storage, cache, and all in-memory state immediately upon being marked as read.
-- API queries MUST explicitly filter for unread status when possible; prefetching or background sync operations MUST NOT retrieve read articles.
+The application MUST exclusively work with unread articles, with a narrow exception
+for items just marked as unread locally until the next sync reconciliation.
+- The application MUST NOT load, fetch, or display articles marked as read, except
+  when a user just marked an item as unread locally and the next sync has not run yet.
+- Articles marked as read MUST be removed from local storage, cache, and in-memory
+  state once the read state is confirmed or after the next sync reconciliation.
+- Articles just marked as unread MAY remain visible and stored until the next sync
+  so users can finish reading without interruption; after sync they MUST follow the
+  unread-only rules.
+- API queries MUST explicitly filter for unread status when possible; prefetching or
+  background sync operations MUST NOT retrieve read articles.
 - UI components MUST NOT render read article data, even during transitions or animations.
 
 **Rationale**: NewsBoxZero exists to surface unread content efficiently. Retaining read articles wastes storage, complicates state management, and risks surfacing stale content. Immediate eviction on read ensures the solo operator's limited storage and cognitive bandwidth stay focused on actionable items.
@@ -60,4 +67,4 @@ The application MUST exclusively work with unread articles; read articles have n
 2. **Spec**: User stories must include UX acceptance criteria and describe the verification approach (automated or manual) expected for each flow.
 3. **Tasks**: Each user story receives implementation tasks plus right-sized verification tasks so reviewers can see exactly what proof will accompany the change.
 
-**Version**: 2.1.0 | **Ratified**: 2025-12-12 | **Last Amended**: 2025-12-23
+**Version**: 2.1.1 | **Ratified**: 2025-12-12 | **Last Amended**: 2025-12-30
