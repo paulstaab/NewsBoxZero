@@ -98,7 +98,7 @@ export function TimelineList({
     <div className="space-y-4">
       {showActions && renderActionRow()}
       {items.map((article) => (
-        <ArticleCard key={article.id} article={article} onMarkRead={onMarkRead} />
+        <ArticleCard key={`${article.id}-${article.feedId}`} article={article} onMarkRead={onMarkRead} />
       ))}
       {showActions && renderActionRow()}
     </div>

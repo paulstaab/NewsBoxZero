@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import useSWR from 'swr';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,6 +26,11 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
     ? formatDistanceToNow(publishedDate, { addSuffix: true }).replace(/^about\\s+/i, '')
     : null;
   const summary = article.summary.trim();
+
+  // Reset expanded state when article changes to prevent showing wrong content
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [article.id]);
 
   const {
     data: fullArticle,

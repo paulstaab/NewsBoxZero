@@ -139,4 +139,41 @@ describe('ArticleCard', () => {
 
     expect(screen.getByText(/failed to load/i)).toBeDefined();
   });
+
+  it('collapses when article prop changes to prevent showing wrong content', async () => {
+    const onMarkRead = vi.fn();
+    mockSWRResponse.data = mockFullArticle;
+    mockSWRResponse.isLoading = false;
+
+    // Render with first article
+    const { rerender } = render(<ArticleCard article={mockArticle} onMarkRead={onMarkRead} />);
+
+    // Expand the first article
+    const card = screen.getByRole('article');
+    fireEvent.click(card);
+
+    // Wait for content to be displayed
+    await waitFor(() => {
+      expect(screen.getByText('This is the full body content.')).toBeDefined();
+    });
+
+    // Create a different article
+    const differentArticle: ArticlePreview = {
+      ...mockArticle,
+      id: 2, // Different ID
+      title: 'Different Article Title',
+      summary: 'Different summary text.',
+      feedId: 11, // Different feed
+    };
+
+    // Rerender with different article - should collapse
+    rerender(<ArticleCard article={differentArticle} onMarkRead={onMarkRead} />);
+
+    // Should show the new article's summary (collapsed state)
+    expect(screen.getByText('Different Article Title')).toBeDefined();
+    expect(screen.getByText('Different summary text.')).toBeDefined();
+
+    // Should not show the old article's body
+    expect(screen.queryByText('This is the full body content.')).toBeNull();
+  });
 });
