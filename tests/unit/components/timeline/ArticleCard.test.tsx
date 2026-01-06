@@ -144,9 +144,21 @@ describe('ArticleCard', () => {
     const onMarkRead = vi.fn();
     mockSWRResponse.data = mockFullArticle;
     mockSWRResponse.isLoading = false;
+    mockSWRResponse.error = null;
+
+    // Wrapper component that applies key based on article.id (simulating TimelineList behavior)
+    const Wrapper = ({ article }: { article: ArticlePreview }) => (
+      <div>
+        <ArticleCard
+          key={`${String(article.id)}-${String(article.feedId)}`}
+          article={article}
+          onMarkRead={onMarkRead}
+        />
+      </div>
+    );
 
     // Render with first article
-    const { rerender } = render(<ArticleCard article={mockArticle} onMarkRead={onMarkRead} />);
+    const { rerender } = render(<Wrapper article={mockArticle} />);
 
     // Expand the first article
     const card = screen.getByRole('article');
@@ -166,8 +178,8 @@ describe('ArticleCard', () => {
       feedId: 11, // Different feed
     };
 
-    // Rerender with different article - should collapse
-    rerender(<ArticleCard article={differentArticle} onMarkRead={onMarkRead} />);
+    // Rerender with different article - React will unmount old and mount new due to key change
+    rerender(<Wrapper article={differentArticle} />);
 
     // Should show the new article's summary (collapsed state)
     expect(screen.getByText('Different Article Title')).toBeDefined();
