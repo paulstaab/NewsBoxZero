@@ -188,4 +188,53 @@ describe('ArticleCard', () => {
     // Should not show the old article's body
     expect(screen.queryByText('This is the full body content.')).toBeNull();
   });
+
+  it('resets expansion state when article prop changes without remounting', async () => {
+    const onMarkRead = vi.fn();
+    mockSWRResponse.data = mockFullArticle;
+    mockSWRResponse.isLoading = false;
+    mockSWRResponse.error = null;
+
+    // Render first article. By not using a key prop, we're testing the scenario
+    // where React reuses the same component instance when the article prop changes
+    // (e.g., when the list updates but the component stays at the same position).
+    const { rerender } = render(<ArticleCard article={mockArticle} onMarkRead={onMarkRead} />);
+
+    // Expand the first article
+    const card = screen.getByRole('article');
+    fireEvent.click(card);
+
+    // Wait for content to be displayed
+    await waitFor(() => {
+      expect(screen.getByText('This is the full body content.')).toBeDefined();
+    });
+
+    // Create a different article with different ID
+    const differentArticle: ArticlePreview = {
+      ...mockArticle,
+      id: 2, // Different ID
+      title: 'Different Article Title',
+      summary: 'Different summary text.',
+    };
+
+    // Update mock for the new article
+    const differentFullArticle: Article = {
+      ...mockFullArticle,
+      id: 2,
+      title: 'Different Article Title',
+      body: '<p>This is different content.</p>',
+    };
+    mockSWRResponse.data = differentFullArticle;
+
+    // Rerender with different article - component instance is reused
+    rerender(<ArticleCard article={differentArticle} onMarkRead={onMarkRead} />);
+
+    // Should show the new article's summary (collapsed state)
+    expect(screen.getByText('Different Article Title')).toBeDefined();
+    expect(screen.getByText('Different summary text.')).toBeDefined();
+
+    // Should NOT show expanded content (should be collapsed)
+    expect(screen.queryByText('This is different content.')).toBeNull();
+    expect(screen.queryByText('This is the full body content.')).toBeNull();
+  });
 });

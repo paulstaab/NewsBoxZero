@@ -18,7 +18,14 @@ interface ArticleCardProps {
  * Expands to show full content on click.
  */
 export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Track the article ID in state alongside expansion state to reset when article changes.
+  // This pattern is recommended by React docs for deriving state from props:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [expandState, setExpandState] = useState({
+    articleId: article.id,
+    isExpanded: false,
+  });
+
   const publishedDate = article.pubDate ? new Date(article.pubDate * 1000) : null;
   const author = article.author.trim();
   const feedName = article.feedName.trim() || 'Unknown source';
@@ -26,6 +33,10 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
     ? formatDistanceToNow(publishedDate, { addSuffix: true }).replace(/^about\\s+/i, '')
     : null;
   const summary = article.summary.trim();
+
+  // Derive expansion state, resetting it when article changes.
+  // If the stored article ID doesn't match the current article, default to collapsed.
+  const isExpanded = expandState.articleId === article.id ? expandState.isExpanded : false;
 
   const {
     data: fullArticle,
@@ -38,10 +49,10 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
 
   const handleExpand = () => {
     if (!isExpanded) {
-      setIsExpanded(true);
+      setExpandState({ articleId: article.id, isExpanded: true });
       onMarkRead?.(article.id);
     } else {
-      setIsExpanded(false);
+      setExpandState({ articleId: article.id, isExpanded: false });
     }
   };
 
