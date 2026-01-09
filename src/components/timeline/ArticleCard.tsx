@@ -18,7 +18,9 @@ interface ArticleCardProps {
  * Expands to show full content on click.
  */
 export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
-  // Track the article ID in state alongside expansion state to reset when article changes
+  // Track the article ID in state alongside expansion state to reset when article changes.
+  // This pattern is recommended by React docs for deriving state from props:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   const [expandState, setExpandState] = useState({
     articleId: article.id,
     isExpanded: false,
@@ -32,7 +34,8 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
     : null;
   const summary = article.summary.trim();
 
-  // Derive expansion state, resetting it when article changes
+  // Derive expansion state, resetting it when article changes.
+  // If the stored article ID doesn't match the current article, default to collapsed.
   const isExpanded = expandState.articleId === article.id ? expandState.isExpanded : false;
 
   const {

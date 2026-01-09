@@ -195,7 +195,9 @@ describe('ArticleCard', () => {
     mockSWRResponse.isLoading = false;
     mockSWRResponse.error = null;
 
-    // Render with first article (no key, so component won't remount on prop change)
+    // Render first article. By not using a key prop, we're testing the scenario
+    // where React reuses the same component instance when the article prop changes
+    // (e.g., when the list updates but the component stays at the same position).
     const { rerender } = render(<ArticleCard article={mockArticle} onMarkRead={onMarkRead} />);
 
     // Expand the first article
