@@ -83,7 +83,9 @@ textarea:focus-visible {
   }
 
   .article-card--unread {
-    box-shadow: 0 0 0 2px hsl(var(--color-accent) / 0.5), var(--shadow-md);
+    box-shadow:
+      0 0 0 2px hsl(var(--color-accent) / 0.5),
+      var(--shadow-md);
   }
 
   .article-card__media {
@@ -213,7 +215,6 @@ textarea:focus-visible {
   .article-card__content a {
     color: hsl(var(--color-accent));
   }
-
 }
 
 .folder-pills {
@@ -235,9 +236,16 @@ textarea:focus-visible {
   display: flex;
   gap: var(--space-3);
   overflow-x: auto;
-  padding-bottom: var(--space-2);
+  padding: 0.4rem 0.6rem 0.6rem;
+  overflow-y: visible;
+  scroll-padding-left: 0.6rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  cursor: grab;
+}
+
+.folder-pills__list:active {
+  cursor: grabbing;
 }
 
 .folder-pills__list::-webkit-scrollbar {
@@ -254,6 +262,7 @@ textarea:focus-visible {
   padding: 0.5rem 1.1rem;
   font-size: 0.95rem;
   font-weight: 600;
+  line-height: 1;
   color: hsl(var(--color-text));
   background: hsl(var(--color-surface));
   transition:
@@ -290,6 +299,7 @@ textarea:focus-visible {
   transform: translateY(-2px) scale(1.03);
   box-shadow: var(--shadow-md);
   font-size: 1.05rem;
+  line-height: 1;
   padding: 0.6rem 1.4rem;
 }
 

@@ -38,8 +38,7 @@ if (!serverUrl || !username || !password) {
   throw new Error('Missing TEST_SERVER, TEST_USER, or TEST_PASSWORD in .env or environment.');
 }
 
-const appBaseUrl =
-  process.env.APP_BASE_URL ?? envFile.APP_BASE_URL ?? 'http://127.0.0.1:3000';
+const appBaseUrl = process.env.APP_BASE_URL ?? envFile.APP_BASE_URL ?? 'http://127.0.0.1:3000';
 const outputDir = path.join(ROOT_DIR, 'screenshots');
 const outputs = {
   full: path.join(outputDir, 'timeline-full.png'),
@@ -56,21 +55,91 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 
-await page.goto(`${appBaseUrl}/login/`, { waitUntil: 'domcontentloaded' });
-await page.getByLabel(/server url/i).fill(serverUrl);
-await page.getByRole('button', { name: /^continue$/i }).click();
+if (!serverUrl.startsWith('https://')) {
+  throw new Error('TEST_SERVER must be an https:// URL to pass login validation.');
+}
 
-await page.getByLabel(/username/i).waitFor({ state: 'visible' });
-await page.getByLabel(/username/i).fill(username);
-await page.getByLabel(/password/i).fill(password);
-await page.getByRole('button', { name: /log.*in|sign.*in/i }).click();
+await page.goto(`${appBaseUrl}/login/?plain=1`, { waitUntil: 'domcontentloaded' });
 
-await page.waitForURL(/\/timeline/);
-await page.getByRole('heading', { name: /newsboxzero/i }).waitFor();
+const serverInput = page.getByLabel(/server url/i);
+const usernameInput = page.getByLabel(/username/i);
+const passwordInput = page.getByLabel(/password/i);
+const errorBox = page.locator('.bg-red-50');
+
+await Promise.race([
+  serverInput.waitFor({ state: 'visible' }),
+  errorBox.waitFor({ state: 'visible' }),
+  page.waitForTimeout(15000),
+]).catch(() => {});
+
+if (await errorBox.isVisible()) {
+  const errorText = await errorBox.innerText();
+  throw new Error(`Login form error: ${errorText.trim()}`);
+}
+
+if (await serverInput.isVisible()) {
+  await serverInput.fill(serverUrl);
+  await usernameInput.fill(username);
+  await passwordInput.fill(password);
+  await page.getByRole('button', { name: /log.*in|sign.*in/i }).click();
+} else {
+  throw new Error('Login form did not render.');
+}
+
+try {
+  await page.waitForFunction(
+    (sessionKey) => {
+      return window.localStorage.getItem(sessionKey) || window.sessionStorage.getItem(sessionKey);
+    },
+    'newsboxzero:session',
+    { timeout: 20000 },
+  );
+} catch {
+  throw new Error('Session storage not set after login. Check credentials or server.');
+}
+
+if (!/\/timeline/.test(page.url())) {
+  await page.goto(`${appBaseUrl}/timeline/`, { waitUntil: 'domcontentloaded' });
+}
+
+try {
+  await page.waitForURL(/\/timeline/, { timeout: 15000 });
+} catch {
+  throw new Error(
+    `Failed to reach timeline. Current URL: ${page.url()}. Check TEST_SERVER/TEST_USER/TEST_PASSWORD.`,
+  );
+}
+
+const serverInputVisible = await page
+  .getByLabel(/server url/i)
+  .isVisible()
+  .catch(() => false);
+
+if (serverInputVisible) {
+  throw new Error('Redirected back to login; timeline requires authentication.');
+}
+
+let timelineReady = false;
+try {
+  await page
+    .locator('[role="tablist"][aria-label="Unread folder queue"]')
+    .waitFor({ state: 'visible', timeout: 15000 });
+  timelineReady = true;
+} catch {
+  try {
+    await page.locator('[role="article"]').first().waitFor({ state: 'visible', timeout: 15000 });
+    timelineReady = true;
+  } catch {
+    timelineReady = false;
+  }
+}
+
+if (!timelineReady) {
+  throw new Error('Timeline did not render expected content.');
+}
 await page.waitForLoadState('networkidle');
 
 const viewport = page.viewportSize() ?? { width: 1280, height: 720 };
-const fullHeight = await page.evaluate(() => document.documentElement.scrollHeight);
 const topHeight = Math.min(600, viewport.height);
 
 await page.evaluate(() => window.scrollTo(0, 0));

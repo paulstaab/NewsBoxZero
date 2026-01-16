@@ -129,14 +129,8 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
           )}
         </div>
 
-        {summary && (
-          <p
-            className={`article-card__excerpt${
-              isExpanded ? '' : ' article-card__excerpt--clamped'
-            }`}
-          >
-            {summary}
-          </p>
+        {!isExpanded && summary && (
+          <p className="article-card__excerpt article-card__excerpt--clamped">{summary}</p>
         )}
 
         {isExpanded && (

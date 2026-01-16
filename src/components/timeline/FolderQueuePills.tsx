@@ -17,6 +17,8 @@ export function FolderQueuePills({
   isLoading = false,
 }: FolderQueuePillsProps) {
   const pillRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const dragState = useRef({ isDragging: false, startX: 0, scrollLeft: 0, moved: false });
 
   useEffect(() => {
     if (typeof activeFolderId !== 'number') return;
@@ -37,7 +39,43 @@ export function FolderQueuePills({
           <span className="folder-pills__status-text">Updating…</span>
         </div>
       )}
-      <div className="folder-pills__list" role="tablist" aria-label="Unread folder queue">
+      <div
+        ref={listRef}
+        className="folder-pills__list"
+        role="tablist"
+        aria-label="Unread folder queue"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          const target = listRef.current;
+          if (!target) return;
+          dragState.current = {
+            isDragging: true,
+            startX: event.clientX,
+            scrollLeft: target.scrollLeft,
+            moved: false,
+          };
+        }}
+        onPointerMove={(event) => {
+          const target = listRef.current;
+          if (!target || !dragState.current.isDragging) return;
+          const delta = event.clientX - dragState.current.startX;
+          if (Math.abs(delta) > 4) {
+            dragState.current.moved = true;
+          }
+          target.scrollLeft = dragState.current.scrollLeft - delta;
+        }}
+        onPointerUp={() => {
+          if (!dragState.current.isDragging) return;
+          dragState.current.isDragging = false;
+        }}
+        onPointerLeave={() => {
+          if (!dragState.current.isDragging) return;
+          dragState.current.isDragging = false;
+        }}
+        onPointerCancel={() => {
+          dragState.current.isDragging = false;
+        }}
+      >
         {queue.map((entry) => {
           const isActive = entry.id === activeFolderId;
           const label = `${entry.name} (${String(entry.unreadCount)})`;
@@ -53,6 +91,10 @@ export function FolderQueuePills({
               aria-selected={isActive}
               aria-label={label}
               onClick={() => {
+                if (dragState.current.moved) {
+                  dragState.current.moved = false;
+                  return;
+                }
                 onSelect(entry.id);
               }}
               className={`folder-pill${isActive ? ' folder-pill--active' : ''}${
