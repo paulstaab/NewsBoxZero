@@ -71,7 +71,7 @@ export function TimelineList({
   const actionDisabled = disableActions ?? isUpdating;
 
   const renderActionRow = () => (
-    <div className="flex items-center justify-end gap-2">
+    <div className="timeline-list__actions">
       {onSkipFolder && (
         <TimelineActionButton
           icon={<skipConfig.Icon className="h-5 w-5" />}
@@ -95,7 +95,7 @@ export function TimelineList({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="timeline-list">
       {showActions && renderActionRow()}
       {items.map((article) => (
         <ArticleCard

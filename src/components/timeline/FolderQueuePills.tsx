@@ -31,17 +31,13 @@ export function FolderQueuePills({
   }
 
   return (
-    <div className="mt-3">
+    <div className="folder-pills">
       {isLoading && (
-        <div className="flex items-center justify-end mb-2">
-          <span className="text-xs text-gray-400">Updating…</span>
+        <div className="folder-pills__status">
+          <span className="folder-pills__status-text">Updating…</span>
         </div>
       )}
-      <div
-        className="flex gap-2 overflow-x-auto pb-2"
-        role="tablist"
-        aria-label="Unread folder queue"
-      >
+      <div className="folder-pills__list" role="tablist" aria-label="Unread folder queue">
         {queue.map((entry) => {
           const isActive = entry.id === activeFolderId;
           const label = `${entry.name} (${String(entry.unreadCount)})`;
@@ -59,17 +55,13 @@ export function FolderQueuePills({
               onClick={() => {
                 onSelect(entry.id);
               }}
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                isActive
-                  ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              } ${isSkipped ? 'opacity-70' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
+              className={`folder-pill${isActive ? ' folder-pill--active' : ''}${
+                isSkipped ? ' folder-pill--skipped' : ''
+              }`}
               data-testid={`folder-pill-${String(entry.id)}`}
             >
-              <span className="truncate max-w-[160px]">{entry.name}</span>
-              <span className={isActive ? 'text-blue-100' : 'text-gray-500'}>
-                ({entry.unreadCount})
-              </span>
+              <span className="folder-pill__name">{entry.name}</span>
+              <span className="folder-pill__count">({entry.unreadCount})</span>
             </button>
           );
         })}

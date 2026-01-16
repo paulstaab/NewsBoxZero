@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useFolderQueue } from '@/hooks/useFolderQueue';
 import { FolderQueuePills } from '@/components/timeline/FolderQueuePills';
-import { FolderStepper } from '@/components/timeline/FolderStepper';
 import { TimelineList } from '@/components/timeline/TimelineList';
 import { EmptyState } from '@/components/timeline/EmptyState';
 import { PinnedActionCluster } from '@/components/timeline/PinnedActionCluster';
@@ -149,8 +148,6 @@ function TimelineContent() {
 
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <FolderStepper activeFolder={activeFolder} />
-
         {showEmptyState ? (
           <EmptyState
             type={emptyStateType}

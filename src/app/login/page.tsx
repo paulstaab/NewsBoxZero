@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { getVersion } from '@/lib/api/version';
 import { NetworkError, ApiError } from '@/lib/api/client';
@@ -27,7 +27,9 @@ enum LoginStep {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, error } = useAuth();
+  const isPlain = searchParams.get('plain') === '1';
 
   const [step, setStep] = useState<LoginStep>(LoginStep.SERVER_URL);
   const [serverUrl, setServerUrl] = useState('');
@@ -120,6 +122,51 @@ export default function LoginPage() {
     }
   };
 
+  const handlePlainSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setValidationError(null);
+
+    const trimmedUrl = serverUrl.trim();
+
+    if (!trimmedUrl) {
+      setValidationError('Server URL is required');
+      return;
+    }
+
+    if (!trimmedUrl.startsWith('https://')) {
+      setValidationError('Server URL must use HTTPS');
+      return;
+    }
+
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      setValidationError('Please enter a valid URL');
+      return;
+    }
+
+    if (!username.trim()) {
+      setValidationError('Username is required');
+      return;
+    }
+
+    if (!password) {
+      setValidationError('Password is required');
+      return;
+    }
+
+    setStep(LoginStep.AUTHENTICATING);
+
+    try {
+      await getVersion(trimmedUrl);
+      await login(trimmedUrl, username, password, rememberDevice);
+      router.push('/timeline');
+    } catch (err) {
+      setStep(LoginStep.SERVER_URL);
+      setValidationError(err instanceof Error ? err.message : 'Authentication failed');
+    }
+  };
+
   const handleBack = () => {
     setValidationError(null);
     if (step === LoginStep.CREDENTIALS) {
@@ -165,8 +212,94 @@ export default function LoginPage() {
             </div>
           )}
 
+          {isPlain && (
+            <form
+              onSubmit={(e) => {
+                void handlePlainSubmit(e);
+              }}
+              className="space-y-6"
+            >
+              <div>
+                <label htmlFor="serverUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                  Server URL
+                </label>
+                <input
+                  type="url"
+                  id="serverUrl"
+                  value={serverUrl}
+                  onChange={(e) => {
+                    setServerUrl(e.target.value);
+                  }}
+                  placeholder="https://rss.example.com"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoFocus
+                  required
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Must be an HTTPS URL to your headless-rss instance
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  autoComplete="username"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="rememberDevice"
+                  checked={rememberDevice}
+                  onChange={(e) => {
+                    setRememberDevice(e.target.checked);
+                  }}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="rememberDevice" className="ml-2 text-sm text-gray-700">
+                  Remember this device
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Sign in
+              </button>
+            </form>
+          )}
+
           {/* Step 1: Server URL */}
-          {step === LoginStep.SERVER_URL && (
+          {!isPlain && step === LoginStep.SERVER_URL && (
             <form
               onSubmit={(e) => {
                 void handleServerUrlSubmit(e);
