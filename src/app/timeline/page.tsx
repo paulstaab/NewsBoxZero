@@ -159,7 +159,7 @@ function TimelineContent() {
                 ? {
                     label: 'Retry',
                     onClick: () => {
-                      void refresh();
+                      void refresh({ forceSync: true });
                     },
                   }
                 : emptyStateType === 'all-viewed'
@@ -194,7 +194,7 @@ function TimelineContent() {
       <PinnedActionCluster
         onSync={() => {
           markTimelineUpdateStart();
-          void refresh()
+          void refresh({ forceSync: true })
             .then(() => {
               markTimelineUpdateComplete();
             })
