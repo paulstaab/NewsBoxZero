@@ -143,6 +143,9 @@ function TimelineContent() {
             onSelect={setActiveFolder}
             isLoading={isUpdating}
           />
+          <span className="sr-only" data-testid="active-folder-name">
+            {activeFolder?.name ?? 'All caught up'}
+          </span>
         </div>
       </header>
 
