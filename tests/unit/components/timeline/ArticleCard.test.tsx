@@ -6,12 +6,16 @@ import type { ArticlePreview, Article } from '@/types';
 
 // Mock next/image
 /* eslint-disable @next/next/no-img-element */
-type MockImageProps = React.ImgHTMLAttributes<HTMLImageElement> & { unoptimized?: boolean };
+type MockImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
+  unoptimized?: boolean;
+  fill?: boolean;
+};
 
 vi.mock('next/image', () => ({
   default: (props: MockImageProps) => {
-    const { unoptimized, ...rest } = props;
+    const { unoptimized, fill, ...rest } = props;
     void unoptimized;
+    void fill;
     return <img alt="" {...rest} />;
   },
 }));

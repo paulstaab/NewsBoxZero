@@ -17,6 +17,8 @@ export function FolderQueuePills({
   isLoading = false,
 }: FolderQueuePillsProps) {
   const pillRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const dragState = useRef({ isDragging: false, startX: 0, scrollLeft: 0, moved: false });
 
   useEffect(() => {
     if (typeof activeFolderId !== 'number') return;
@@ -31,16 +33,48 @@ export function FolderQueuePills({
   }
 
   return (
-    <div className="mt-3">
+    <div className="folder-pills">
       {isLoading && (
-        <div className="flex items-center justify-end mb-2">
-          <span className="text-xs text-gray-400">Updating…</span>
+        <div className="folder-pills__status">
+          <span className="folder-pills__status-text">Updating…</span>
         </div>
       )}
       <div
-        className="flex gap-2 overflow-x-auto pb-2"
+        ref={listRef}
+        className="folder-pills__list"
         role="tablist"
         aria-label="Unread folder queue"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          const target = listRef.current;
+          if (!target) return;
+          dragState.current = {
+            isDragging: true,
+            startX: event.clientX,
+            scrollLeft: target.scrollLeft,
+            moved: false,
+          };
+        }}
+        onPointerMove={(event) => {
+          const target = listRef.current;
+          if (!target || !dragState.current.isDragging) return;
+          const delta = event.clientX - dragState.current.startX;
+          if (Math.abs(delta) > 4) {
+            dragState.current.moved = true;
+          }
+          target.scrollLeft = dragState.current.scrollLeft - delta;
+        }}
+        onPointerUp={() => {
+          if (!dragState.current.isDragging) return;
+          dragState.current.isDragging = false;
+        }}
+        onPointerLeave={() => {
+          if (!dragState.current.isDragging) return;
+          dragState.current.isDragging = false;
+        }}
+        onPointerCancel={() => {
+          dragState.current.isDragging = false;
+        }}
       >
         {queue.map((entry) => {
           const isActive = entry.id === activeFolderId;
@@ -57,19 +91,19 @@ export function FolderQueuePills({
               aria-selected={isActive}
               aria-label={label}
               onClick={() => {
+                if (dragState.current.moved) {
+                  dragState.current.moved = false;
+                  return;
+                }
                 onSelect(entry.id);
               }}
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                isActive
-                  ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-              } ${isSkipped ? 'opacity-70' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
+              className={`folder-pill${isActive ? ' folder-pill--active' : ''}${
+                isSkipped ? ' folder-pill--skipped' : ''
+              }`}
               data-testid={`folder-pill-${String(entry.id)}`}
             >
-              <span className="truncate max-w-[160px]">{entry.name}</span>
-              <span className={isActive ? 'text-blue-100' : 'text-gray-500'}>
-                ({entry.unreadCount})
-              </span>
+              <span className="folder-pill__name">{entry.name}</span>
+              <span className="folder-pill__count">({entry.unreadCount})</span>
             </button>
           );
         })}

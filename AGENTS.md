@@ -45,4 +45,10 @@ TypeScript 5.9 on Node.js 20 (Next.js App Router): Follow standard conventions
 - 005-article-sync-readstatus: Added TypeScript 5.9 on Node.js 20 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
 
 <!-- MANUAL ADDITIONS START -->
+
+## Screenshots
+
+Use the capture scripts `./scripts/capture-timeline.sh` and `./scripts/capture-login-page.sh` to create screenshot.
+This requires network access and must run outside ouf any sandbox.
+
 <!-- MANUAL ADDITIONS END -->
