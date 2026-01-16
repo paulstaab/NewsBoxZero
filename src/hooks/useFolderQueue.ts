@@ -41,13 +41,17 @@ interface UseFolderQueueResult {
   isUpdating: boolean;
   isRefreshing: boolean;
   error: Error | null;
-  refresh: () => Promise<void>;
+  refresh: (options?: RefreshOptions) => Promise<void>;
   setActiveFolder: (folderId: number) => void;
   markFolderRead: (folderId: number) => Promise<void>;
   markItemRead: (itemId: number) => Promise<void>;
   skipFolder: (folderId: number) => Promise<void>;
   restart: () => Promise<void>;
   lastUpdateError: string | null;
+}
+
+interface RefreshOptions {
+  forceSync?: boolean;
 }
 
 function stripHtml(input: string): string {
@@ -254,55 +258,59 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, [envelope.folders, envelope.pendingReadIds.length]);
 
   // Refresh with error handling (retry logic handled at page level)
-  const refresh = useCallback(async (): Promise<void> => {
-    setIsSyncing(true);
-    try {
-      if (!hasLocalUnread && !hasLocalArticles) {
-        await swrRefresh();
+  const refresh = useCallback(
+    async (options: RefreshOptions = {}): Promise<void> => {
+      const { forceSync = false } = options;
+      setIsSyncing(true);
+      try {
+        if (!forceSync && !hasLocalUnread && !hasLocalArticles) {
+          await swrRefresh();
+          setLastUpdateError(null);
+          return;
+        }
+
+        const { items, serverUnreadIds } = await withTimeout(
+          fetchUnreadItemsForSync(),
+          SYNC_TIMEOUT_MS,
+        );
+        const now = Date.now();
+
+        setEnvelope((current) => {
+          const { envelope: reconciled } = reconcileTimelineCache(current, serverUnreadIds, now);
+          const previews = items
+            .map((article) =>
+              toArticlePreview(
+                article,
+                resolveFolderId(article, feedFolderMap),
+                now,
+                feedNameMap.get(article.feedId) ?? 'Unknown source',
+              ),
+            )
+            .filter((preview): preview is ArticlePreview => preview !== null);
+
+          const merged = mergeItemsIntoCache(reconciled, previews, now);
+          const nextEnvelope = applyFeedNames(applyFolderNames(merged, foldersData), feedNameMap);
+
+          storeTimelineCache(nextEnvelope);
+          return nextEnvelope;
+        });
+
         setLastUpdateError(null);
-        return;
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Update failed';
+        setLastUpdateError(errorMessage);
+
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('❌ Timeline update failed:', errorMessage);
+        }
+
+        throw error;
+      } finally {
+        setIsSyncing(false);
       }
-
-      const { items, serverUnreadIds } = await withTimeout(
-        fetchUnreadItemsForSync(),
-        SYNC_TIMEOUT_MS,
-      );
-      const now = Date.now();
-
-      setEnvelope((current) => {
-        const { envelope: reconciled } = reconcileTimelineCache(current, serverUnreadIds, now);
-        const previews = items
-          .map((article) =>
-            toArticlePreview(
-              article,
-              resolveFolderId(article, feedFolderMap),
-              now,
-              feedNameMap.get(article.feedId) ?? 'Unknown source',
-            ),
-          )
-          .filter((preview): preview is ArticlePreview => preview !== null);
-
-        const merged = mergeItemsIntoCache(reconciled, previews, now);
-        const nextEnvelope = applyFeedNames(applyFolderNames(merged, foldersData), feedNameMap);
-
-        storeTimelineCache(nextEnvelope);
-        return nextEnvelope;
-      });
-
-      setLastUpdateError(null);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Update failed';
-      setLastUpdateError(errorMessage);
-
-      if (process.env.NODE_ENV === 'development') {
-        console.debug('❌ Timeline update failed:', errorMessage);
-      }
-
-      throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [feedFolderMap, feedNameMap, foldersData, hasLocalArticles, hasLocalUnread, swrRefresh]);
+    },
+    [feedFolderMap, feedNameMap, foldersData, hasLocalArticles, hasLocalUnread, swrRefresh],
+  );
 
   useEffect(() => {
     if (!foldersData || isLoading) return;
