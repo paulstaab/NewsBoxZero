@@ -103,7 +103,9 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
             style={{ backgroundColor: fallbackColor }}
           />
         )}
-        <div className="article-card__overlay" />
+      </div>
+
+      <div className="article-card__body">
         <a
           href={article.url}
           target="_blank"
@@ -113,9 +115,6 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
         >
           {article.title || 'Untitled article'}
         </a>
-      </div>
-
-      <div className="article-card__body">
         <div className="article-card__meta">
           <span>
             {feedName}
