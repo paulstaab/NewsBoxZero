@@ -238,7 +238,7 @@ test.describe('US1: Login and Timeline', () => {
 
     test('should display timeline with articles', async ({ page }) => {
       // Should show article cards
-      await expect(page.getByRole('article').first()).toBeVisible();
+      await expect(page.getByRole('option').first()).toBeVisible();
 
       // Should show article titles
       await expect(page.getByRole('heading').first()).toBeVisible();
@@ -251,10 +251,10 @@ test.describe('US1: Login and Timeline', () => {
 
     test('should support infinite scroll', async ({ page }) => {
       // Wait for initial articles to render
-      await expect(page.getByRole('article').first()).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole('option').first()).toBeVisible({ timeout: 10_000 });
 
       // Get initial article count
-      const initialCount = await page.getByRole('article').count();
+      const initialCount = await page.getByRole('option').count();
 
       // Scroll to bottom
       await page.evaluate(() => {
@@ -264,7 +264,7 @@ test.describe('US1: Login and Timeline', () => {
       // Wait for more articles to load
       await page.waitForTimeout(1000); // Give time for prefetch
 
-      const newCount = await page.getByRole('article').count();
+      const newCount = await page.getByRole('option').count();
 
       // Should keep existing articles visible after scrolling
       expect(newCount).toBeGreaterThanOrEqual(initialCount);
@@ -272,7 +272,7 @@ test.describe('US1: Login and Timeline', () => {
 
     test('should lazy-load article body content', async ({ page }) => {
       // First article should be visible
-      const firstArticle = page.getByRole('article').first();
+      const firstArticle = page.getByRole('option').first();
       await expect(firstArticle).toBeVisible();
 
       // Article body should be collapsed by default or loaded on scroll

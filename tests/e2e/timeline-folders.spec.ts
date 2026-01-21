@@ -350,13 +350,13 @@ test.describe('Timeline update and persistence (US5)', () => {
     await page.goto('/timeline');
     await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
 
-    const articleCard = page.getByRole('article').first();
+    const articleCard = page.getByRole('option').first();
     await expect(articleCard).toBeVisible({ timeout: 5000 });
 
     const titleText = (await articleCard.getByRole('link').textContent())?.trim() ?? '';
     expect(titleText).toBeTruthy();
 
-    const targetCard = page.getByRole('article').filter({ hasText: titleText }).first();
+    const targetCard = page.getByRole('option').filter({ hasText: titleText }).first();
     await targetCard.click();
     await expect(targetCard).toHaveAttribute('aria-label', /read/i);
 
@@ -365,7 +365,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     await updateButton.click();
     await expect(updateButton).toBeEnabled({ timeout: 5000 });
 
-    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(0);
+    await expect(page.getByRole('option').filter({ hasText: titleText })).toHaveCount(0);
   });
 
   test('supports hotkeys for refresh, skip, and mark all read', async ({ page }) => {
@@ -402,6 +402,8 @@ test.describe('Timeline update and persistence (US5)', () => {
 
     const refreshButton = page.getByRole('button', { name: /refresh/i });
     await expect(refreshButton).toBeEnabled({ timeout: 5000 });
+
+    await page.click('body');
 
     const initialUpdateCount = updateCallCount;
     await page.keyboard.press('r');
@@ -478,13 +480,13 @@ test.describe('Timeline update and persistence (US5)', () => {
     await expect(page.getByTestId('active-folder-name')).toBeVisible({ timeout: 5000 });
 
     // Wait for the first article card to be present
-    const articleCard = page.getByRole('article').first();
+    const articleCard = page.getByRole('option').first();
     await expect(articleCard).toBeVisible({ timeout: 5000 });
 
     const titleText = (await articleCard.getByRole('link').textContent())?.trim() ?? '';
     expect(titleText).toBeTruthy();
 
-    const targetCard = page.getByRole('article').filter({ hasText: titleText }).first();
+    const targetCard = page.getByRole('option').filter({ hasText: titleText }).first();
     await expect(targetCard).toBeVisible({ timeout: 5000 });
 
     // Verify title is a link
@@ -500,6 +502,6 @@ test.describe('Timeline update and persistence (US5)', () => {
 
     // Verify the read item remains visible until the next sync reconciliation
     await expect(targetCard).toHaveAttribute('aria-label', /read/i);
-    await expect(page.getByRole('article').filter({ hasText: titleText })).toHaveCount(1);
+    await expect(page.getByRole('option').filter({ hasText: titleText })).toHaveCount(1);
   });
 });

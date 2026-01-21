@@ -12,6 +12,8 @@ interface TimelineListProps {
   isLoading?: boolean;
   emptyMessage?: string;
   onMarkRead?: (id: number) => void;
+  registerArticle?: (id: number) => (node: HTMLElement | null) => void;
+  selectedArticleId?: number | null;
   onMarkAllRead?: () => Promise<void>;
   onSkipFolder?: () => Promise<void>;
   isUpdating?: boolean;
@@ -26,6 +28,8 @@ export function TimelineList({
   isLoading,
   emptyMessage,
   onMarkRead,
+  registerArticle,
+  selectedArticleId,
   onMarkAllRead,
   onSkipFolder,
   isUpdating,
@@ -97,13 +101,17 @@ export function TimelineList({
   return (
     <div className="timeline-list">
       {showActions && renderActionRow()}
-      {items.map((article) => (
-        <ArticleCard
-          key={`${String(article.id)}-${String(article.feedId)}`}
-          article={article}
-          onMarkRead={onMarkRead}
-        />
-      ))}
+      <div className="timeline-list__items" role="listbox" aria-label="Timeline articles">
+        {items.map((article) => (
+          <ArticleCard
+            key={`${String(article.id)}-${String(article.feedId)}`}
+            article={article}
+            onMarkRead={onMarkRead}
+            registerArticle={registerArticle}
+            isSelected={article.id === selectedArticleId}
+          />
+        ))}
+      </div>
       {showActions && renderActionRow()}
     </div>
   );

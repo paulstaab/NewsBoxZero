@@ -1,14 +1,18 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useFolderQueue } from '@/hooks/useFolderQueue';
+import { useFolderQueueDocking } from '@/hooks/useFolderQueueDocking';
+import { useAutoMarkReadOnScroll } from '@/hooks/useAutoMarkReadOnScroll';
+import { useTimelineSelection } from '@/hooks/useTimelineSelection';
 import { FolderQueuePills } from '@/components/timeline/FolderQueuePills';
 import { TimelineList } from '@/components/timeline/TimelineList';
 import { EmptyState } from '@/components/timeline/EmptyState';
 import { PinnedActionCluster } from '@/components/timeline/PinnedActionCluster';
 import { RequestStateToast, useToast } from '@/components/ui/RequestStateToast';
+import { handleTimelineKeyDown } from '@/lib/timeline/keyboard-handler';
 import {
   markTimelineCacheLoadStart,
   markTimelineCacheReady,
@@ -48,7 +52,43 @@ function TimelineContent() {
     lastUpdateError,
   } = useFolderQueue();
 
+  const { isDocked, dockedHeight, queueRef, sentinelRef } = useFolderQueueDocking();
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  const { selectedArticleId, setSelectedArticleId } = useTimelineSelection(activeArticles);
+  const unreadIdSet = useMemo(
+    () => new Set(activeArticles.filter((article) => article.unread).map((article) => article.id)),
+    [activeArticles],
+  );
+
+  const { registerArticle } = useAutoMarkReadOnScroll({
+    items: activeArticles,
+    topOffset: isDocked ? dockedHeight : 0,
+    onMarkRead: (id) => {
+      void markItemRead(id);
+    },
+  });
+
   const { toasts, showToast, dismissToast } = useToast();
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      handleTimelineKeyDown(event, {
+        timelineRef,
+        selectedId: selectedArticleId,
+        onSelect: setSelectedArticleId,
+        onMarkRead: (id) => {
+          if (!unreadIdSet.has(id)) return;
+          void markItemRead(id);
+        },
+      });
+    };
+
+    window.addEventListener('keydown', handler, { passive: false });
+    return () => {
+      window.removeEventListener('keydown', handler);
+    };
+  }, [selectedArticleId, unreadIdSet, markItemRead, setSelectedArticleId]);
 
   useEffect(() => {
     if (!isInitializing && !isAuthenticated) {
@@ -129,14 +169,28 @@ function TimelineContent() {
     emptyStateType = 'all-viewed';
   }
 
+  const timelineStyle = {
+    '--timeline-offset': `${isDocked ? String(dockedHeight) : '0'}px`,
+  } as CSSProperties;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white sticky top-0 z-10">
+      <header className="bg-white">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">NewsBoxZero</h1>
           </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Folder queue */}
+        <div ref={sentinelRef} aria-hidden="true" className="folder-queue-sentinel" />
+        <div
+          ref={queueRef}
+          className={`folder-queue-dock${isDocked ? ' folder-queue-dock--sticky' : ''}`}
+        >
           <FolderQueuePills
             queue={queue}
             activeFolderId={activeFolder ? activeFolder.id : null}
@@ -147,49 +201,53 @@ function TimelineContent() {
             {activeFolder?.name ?? 'All caught up'}
           </span>
         </div>
-      </header>
 
-      {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        {showEmptyState ? (
-          <EmptyState
-            type={emptyStateType}
-            action={
-              emptyStateType === 'error'
-                ? {
-                    label: 'Retry',
-                    onClick: () => {
-                      void refresh({ forceSync: true });
-                    },
-                  }
-                : emptyStateType === 'all-viewed'
+        {/* Main content */}
+        <main className="py-6" style={timelineStyle}>
+          {showEmptyState ? (
+            <EmptyState
+              type={emptyStateType}
+              action={
+                emptyStateType === 'error'
                   ? {
-                      label: 'Restart',
+                      label: 'Retry',
                       onClick: () => {
-                        void restart();
+                        void refresh({ forceSync: true });
                       },
                     }
-                  : undefined
-            }
-          />
-        ) : (
-          <TimelineList
-            items={activeArticles}
-            isLoading={isUpdating && activeArticles.length === 0}
-            emptyMessage={`No unread articles left in ${activeFolder.name}.`}
-            onMarkRead={(id) => {
-              void markItemRead(id);
-            }}
-            isUpdating={isUpdating}
-            disableActions={!hasUnread}
-          />
-        )}
-        {lastUpdatedLabel && (
-          <div className="mt-10 text-center text-sm text-gray-500">
-            Last updated at {lastUpdatedLabel}
-          </div>
-        )}
-      </main>
+                  : emptyStateType === 'all-viewed'
+                    ? {
+                        label: 'Restart',
+                        onClick: () => {
+                          void restart();
+                        },
+                      }
+                    : undefined
+              }
+            />
+          ) : (
+            <div ref={timelineRef} role="region" aria-label="Timeline" tabIndex={0}>
+              <TimelineList
+                items={activeArticles}
+                isLoading={isUpdating && activeArticles.length === 0}
+                emptyMessage={`No unread articles left in ${activeFolder.name}.`}
+                onMarkRead={(id) => {
+                  void markItemRead(id);
+                }}
+                registerArticle={registerArticle}
+                selectedArticleId={selectedArticleId}
+                isUpdating={isUpdating}
+                disableActions={!hasUnread}
+              />
+            </div>
+          )}
+          {lastUpdatedLabel && (
+            <div className="mt-14 text-center text-sm text-gray-500">
+              Last updated at {lastUpdatedLabel}
+            </div>
+          )}
+        </main>
+      </div>
 
       <PinnedActionCluster
         onSync={() => {
