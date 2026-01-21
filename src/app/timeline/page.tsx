@@ -242,7 +242,7 @@ function TimelineContent() {
             </div>
           )}
           {lastUpdatedLabel && (
-            <div className="mt-10 text-center text-sm text-gray-500">
+            <div className="mt-14 text-center text-sm text-gray-500">
               Last updated at {lastUpdatedLabel}
             </div>
           )}
