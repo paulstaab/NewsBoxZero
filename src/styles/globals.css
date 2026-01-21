@@ -54,6 +54,12 @@ textarea:focus-visible {
     gap: var(--space-6);
   }
 
+  .timeline-list__items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
   .timeline-list__actions {
     display: flex;
     align-items: center;
@@ -70,6 +76,7 @@ textarea:focus-visible {
     transition:
       transform 160ms ease,
       box-shadow 160ms ease;
+    scroll-margin-top: calc(var(--timeline-offset, 0px) + var(--space-4));
   }
 
   .article-card:hover {
@@ -82,10 +89,21 @@ textarea:focus-visible {
     outline-offset: 2px;
   }
 
+  .article-card--selected:focus-visible {
+    outline-color: hsl(var(--color-selection));
+  }
+
   .article-card--unread {
     box-shadow:
       0 0 0 2px hsl(var(--color-accent) / 0.5),
       var(--shadow-md);
+  }
+
+  .article-card--selected {
+    box-shadow:
+      0 0 0 2px hsl(var(--color-selection) / 0.8),
+      var(--shadow-md);
+    background: hsl(var(--color-selection-bg));
   }
 
   .article-card__media {
@@ -219,6 +237,23 @@ textarea:focus-visible {
 
 .folder-pills {
   margin-top: var(--space-4);
+}
+
+.folder-queue-sentinel {
+  height: 1px;
+  width: 100%;
+}
+
+.folder-queue-dock {
+  position: relative;
+}
+
+.folder-queue-dock--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: hsl(var(--color-surface));
+  padding-bottom: var(--space-3);
 }
 
 .folder-pills__status {

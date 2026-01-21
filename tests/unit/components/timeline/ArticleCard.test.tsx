@@ -108,7 +108,7 @@ describe('ArticleCard', () => {
     expect(screen.queryByText('This is the full body content.')).toBeNull();
 
     // Click to expand
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('option');
     fireEvent.click(card);
 
     // Should call onMarkRead
@@ -127,7 +127,7 @@ describe('ArticleCard', () => {
 
     render(<ArticleCard article={mockArticle} onMarkRead={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('article'));
+    fireEvent.click(screen.getByRole('option'));
 
     expect(screen.getByText(/loading/i)).toBeDefined();
   });
@@ -139,7 +139,7 @@ describe('ArticleCard', () => {
 
     render(<ArticleCard article={mockArticle} onMarkRead={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('article'));
+    fireEvent.click(screen.getByRole('option'));
 
     expect(screen.getByText(/failed to load/i)).toBeDefined();
   });
@@ -165,7 +165,7 @@ describe('ArticleCard', () => {
     const { rerender } = render(<Wrapper article={mockArticle} />);
 
     // Expand the first article
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('option');
     fireEvent.click(card);
 
     // Wait for content to be displayed
@@ -205,7 +205,7 @@ describe('ArticleCard', () => {
     const { rerender } = render(<ArticleCard article={mockArticle} onMarkRead={onMarkRead} />);
 
     // Expand the first article
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('option');
     fireEvent.click(card);
 
     // Wait for content to be displayed

@@ -54,3 +54,14 @@ export {
   deserializeRollbackData,
   DEFAULT_MAX_RETRIES,
 } from './mutation';
+
+// Timeline feature types
+export type {
+  TimelineViewportState,
+  ArticleWithSessionState,
+  FolderQueueDockingState,
+  SelectionNavigationState,
+  SelectionActions,
+  LocalReadState,
+  KeyboardContext,
+} from './timeline';

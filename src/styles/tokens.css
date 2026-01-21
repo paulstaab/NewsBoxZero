@@ -4,6 +4,8 @@
   --color-surface-muted: 220 14% 16%;
   --color-accent: 199 89% 48%;
   --color-accent-strong: 199 100% 62%;
+  --color-selection: 199 100% 62%;
+  --color-selection-bg: 199 100% 62% / 0.12;
   --color-text: 210 40% 98%;
   --color-text-muted: 218 17% 65%;
   --color-border: 217 16% 24%;
@@ -52,6 +54,8 @@
     --color-surface-muted: 214 30% 92%;
     --color-accent: 213 94% 34%;
     --color-accent-strong: 210 92% 50%;
+    --color-selection: 210 92% 50%;
+    --color-selection-bg: 210 92% 50% / 0.12;
     --color-text: 224 33% 12%;
     --color-text-muted: 225 12% 44%;
     --color-border: 220 14% 85%;

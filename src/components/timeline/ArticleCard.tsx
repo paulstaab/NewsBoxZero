@@ -10,6 +10,8 @@ import { getArticle } from '@/lib/api/items';
 interface ArticleCardProps {
   article: ArticlePreview;
   onMarkRead?: (id: number) => void;
+  registerArticle?: (id: number) => (node: HTMLElement | null) => void;
+  isSelected?: boolean;
 }
 
 /**
@@ -17,7 +19,12 @@ interface ArticleCardProps {
  * Shows title, summary, thumbnail, and publication time.
  * Expands to show full content on click.
  */
-export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
+export function ArticleCard({
+  article,
+  onMarkRead,
+  registerArticle,
+  isSelected = false,
+}: ArticleCardProps) {
   // Track the article ID in state alongside expansion state to reset when article changes.
   // This pattern is recommended by React docs for deriving state from props:
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
@@ -79,14 +86,19 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
 
   return (
     <div
-      className={`article-card${article.unread ? ' article-card--unread' : ''}`}
+      className={`article-card${article.unread ? ' article-card--unread' : ''}${
+        isSelected ? ' article-card--selected' : ''
+      }`}
+      ref={registerArticle ? registerArticle(article.id) : undefined}
+      data-article-id={article.id}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      role="article"
-      aria-label={`${article.title || 'Untitled article'}, ${
-        article.unread ? 'unread' : 'read'
-      }. Click to ${isExpanded ? 'collapse' : 'expand'}.`}
+      role="option"
+      aria-selected={isSelected}
+      aria-label={`Article: ${article.title || 'Untitled article'}${
+        author ? ` by ${author}` : ''
+      } (${article.unread ? 'unread' : 'read'})`}
     >
       <div className="article-card__media">
         {article.thumbnailUrl ? (
