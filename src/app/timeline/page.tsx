@@ -63,12 +63,32 @@ function TimelineContent() {
 
   const { registerArticle } = useAutoMarkReadOnScroll({
     items: activeArticles,
+    topOffset: isDocked ? dockedHeight : 0,
     onMarkRead: (id) => {
       void markItemRead(id);
     },
   });
 
   const { toasts, showToast, dismissToast } = useToast();
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      handleTimelineKeyDown(event, {
+        timelineRef,
+        selectedId: selectedArticleId,
+        onSelect: setSelectedArticleId,
+        onMarkRead: (id) => {
+          if (!unreadIdSet.has(id)) return;
+          void markItemRead(id);
+        },
+      });
+    };
+
+    window.addEventListener('keydown', handler, { passive: false });
+    return () => {
+      window.removeEventListener('keydown', handler);
+    };
+  }, [selectedArticleId, unreadIdSet, markItemRead, setSelectedArticleId]);
 
   useEffect(() => {
     if (!isInitializing && !isAuthenticated) {
@@ -164,8 +184,8 @@ function TimelineContent() {
         </div>
       </header>
 
-      {/* Folder queue */}
       <div className="max-w-4xl mx-auto px-4">
+        {/* Folder queue */}
         <div ref={sentinelRef} aria-hidden="true" className="folder-queue-sentinel" />
         <div
           ref={queueRef}
@@ -181,69 +201,53 @@ function TimelineContent() {
             {activeFolder?.name ?? 'All caught up'}
           </span>
         </div>
-      </div>
 
-      {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 py-6" style={timelineStyle}>
-        {showEmptyState ? (
-          <EmptyState
-            type={emptyStateType}
-            action={
-              emptyStateType === 'error'
-                ? {
-                    label: 'Retry',
-                    onClick: () => {
-                      void refresh({ forceSync: true });
-                    },
-                  }
-                : emptyStateType === 'all-viewed'
+        {/* Main content */}
+        <main className="py-6" style={timelineStyle}>
+          {showEmptyState ? (
+            <EmptyState
+              type={emptyStateType}
+              action={
+                emptyStateType === 'error'
                   ? {
-                      label: 'Restart',
+                      label: 'Retry',
                       onClick: () => {
-                        void restart();
+                        void refresh({ forceSync: true });
                       },
                     }
-                  : undefined
-            }
-          />
-        ) : (
-          <div
-            ref={timelineRef}
-            role="region"
-            aria-label="Timeline"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              handleTimelineKeyDown(event, {
-                timelineRef,
-                selectedId: selectedArticleId,
-                onSelect: setSelectedArticleId,
-                onMarkRead: (id) => {
-                  if (!unreadIdSet.has(id)) return;
-                  void markItemRead(id);
-                },
-              });
-            }}
-          >
-            <TimelineList
-              items={activeArticles}
-              isLoading={isUpdating && activeArticles.length === 0}
-              emptyMessage={`No unread articles left in ${activeFolder.name}.`}
-              onMarkRead={(id) => {
-                void markItemRead(id);
-              }}
-              registerArticle={registerArticle}
-              selectedArticleId={selectedArticleId}
-              isUpdating={isUpdating}
-              disableActions={!hasUnread}
+                  : emptyStateType === 'all-viewed'
+                    ? {
+                        label: 'Restart',
+                        onClick: () => {
+                          void restart();
+                        },
+                      }
+                    : undefined
+              }
             />
-          </div>
-        )}
-        {lastUpdatedLabel && (
-          <div className="mt-10 text-center text-sm text-gray-500">
-            Last updated at {lastUpdatedLabel}
-          </div>
-        )}
-      </main>
+          ) : (
+            <div ref={timelineRef} role="region" aria-label="Timeline" tabIndex={0}>
+              <TimelineList
+                items={activeArticles}
+                isLoading={isUpdating && activeArticles.length === 0}
+                emptyMessage={`No unread articles left in ${activeFolder.name}.`}
+                onMarkRead={(id) => {
+                  void markItemRead(id);
+                }}
+                registerArticle={registerArticle}
+                selectedArticleId={selectedArticleId}
+                isUpdating={isUpdating}
+                disableActions={!hasUnread}
+              />
+            </div>
+          )}
+          {lastUpdatedLabel && (
+            <div className="mt-10 text-center text-sm text-gray-500">
+              Last updated at {lastUpdatedLabel}
+            </div>
+          )}
+        </main>
+      </div>
 
       <PinnedActionCluster
         onSync={() => {

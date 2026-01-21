@@ -5,6 +5,7 @@ export interface AutoMarkReadOptions<T extends { id: number } = { id: number }> 
   items: T[];
   onMarkRead: (id: number) => void;
   root?: Element | null;
+  topOffset?: number;
   debounceMs?: number;
 }
 
@@ -16,6 +17,7 @@ export function useAutoMarkReadOnScroll<T extends { id: number }>({
   items,
   onMarkRead,
   root,
+  topOffset = 0,
   debounceMs = 100,
 }: AutoMarkReadOptions<T>): AutoMarkReadResult {
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -59,7 +61,8 @@ export function useAutoMarkReadOnScroll<T extends { id: number }>({
       },
       {
         root: root ?? null,
-        threshold: [1],
+        rootMargin: `${String(-Math.max(0, Math.round(topOffset)))}px 0px 0px 0px`,
+        threshold: [0],
       },
     );
 
@@ -72,7 +75,7 @@ export function useAutoMarkReadOnScroll<T extends { id: number }>({
       observer.disconnect();
       observerRef.current = null;
     };
-  }, [root]);
+  }, [root, topOffset]);
 
   useEffect(() => {
     // Keep ref map in sync with items list

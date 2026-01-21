@@ -1,4 +1,4 @@
-import type { KeyboardEvent, RefObject } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
 import { getNextSelectionId, getPreviousSelectionId } from './selection';
 
 const DEFAULT_EXCLUDE_SELECTORS = ['input', 'textarea', 'select', '[contenteditable="true"]'];
@@ -39,8 +39,10 @@ function getTopmostVisibleId(container: HTMLElement): number | null {
   return best?.id ?? null;
 }
 
+type AnyKeyboardEvent = KeyboardEvent | ReactKeyboardEvent<HTMLElement>;
+
 export function handleTimelineKeyDown(
-  event: KeyboardEvent<HTMLElement>,
+  event: AnyKeyboardEvent,
   {
     timelineRef,
     selectedId,
@@ -55,7 +57,11 @@ export function handleTimelineKeyDown(
   if (!container) return;
 
   const activeElement = document.activeElement;
-  if (!container.contains(activeElement)) return;
+  const isBodyFocus =
+    activeElement === null ||
+    activeElement === document.body ||
+    activeElement === document.documentElement;
+  if (!isBodyFocus && !container.contains(activeElement)) return;
   if (isExcludedFocus(activeElement, excludeSelectors)) return;
 
   const elements = getOrderedArticleElements(container);
