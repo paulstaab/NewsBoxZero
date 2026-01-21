@@ -103,30 +103,33 @@ export function ArticleCard({ article, onMarkRead }: ArticleCardProps) {
             style={{ backgroundColor: fallbackColor }}
           />
         )}
-        <div className="article-card__overlay" />
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="article-card__title"
-          aria-label={`Open ${article.title || 'article'} in new tab`}
-        >
-          {article.title || 'Untitled article'}
-        </a>
       </div>
 
       <div className="article-card__body">
-        <div className="article-card__meta">
-          <span>
-            {feedName}
-            {author ? ` · ${author}` : ''}
-          </span>
-          {ageLabel && publishedDate && (
-            <>
-              <span aria-hidden="true"> · </span>
-              <time dateTime={publishedDate.toISOString()}>{ageLabel}</time>
-            </>
-          )}
+        <div className="article-card__heading">
+          <h3 className="article-card__title">
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="article-card__title-link"
+              aria-label={`Open ${article.title || 'article'} in new tab`}
+            >
+              {article.title || 'Untitled article'}
+            </a>
+          </h3>
+          <div className="article-card__meta">
+            <span>
+              {feedName}
+              {author ? ` · ${author}` : ''}
+            </span>
+            {ageLabel && publishedDate && (
+              <>
+                <span aria-hidden="true"> · </span>
+                <time dateTime={publishedDate.toISOString()}>{ageLabel}</time>
+              </>
+            )}
+          </div>
         </div>
 
         {!isExpanded && summary && (
