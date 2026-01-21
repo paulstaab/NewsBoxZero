@@ -3,13 +3,23 @@
 
 # NewsBoxZero
 
-An Inbox-Zero Workflow inspired RSS Feedreader that focuses on skimming through new articles quickly.
+NewsBoxZero is an inbox-zero style RSS feed reader designed for fast triage. It helps you skim new
+articles, act quickly, and keep your queue clean without losing track of what you already reviewed.
 
-Can use [headless-rss](https://github.com/paulstaab/headless-rss) and maybe other RSS aggregators
-that use the Nextcloud News v1.3 protocol as backend.
+It works with [headless-rss](https://github.com/paulstaab/headless-rss) and other aggregators that
+speak the Nextcloud News v1.3 protocol (untested).
 
 > **✨ Vibe-coded with [spec-kit](https://github.com/github/spec-kit)** — This entire application was built using AI-driven specification-first development, from requirements through implementation.
 > Code-quality will not be stellar.
+
+## Features
+
+- Inbox-zero workflow focused on rapid skimming and decision-making
+- Article cards optimized for quick scanning and clearer metadata
+- Pinned action buttons for consistent, fast access to key actions
+- Folder and queue pills for fast filtering and navigation
+- Read/unread status sync with the backend
+- Local caching via browser storage for snappy navigation and preferences
 
 ## Development Setup
 
