@@ -259,8 +259,8 @@ export function useFolderQueue(): UseFolderQueueResult {
 
   // Refresh with error handling (retry logic handled at page level)
   const refresh = useCallback(
-    async (options: RefreshOptions = {}): Promise<void> => {
-      const { forceSync = false } = options;
+    async (options?: RefreshOptions): Promise<void> => {
+      const { forceSync = false } = options ?? {};
       setIsSyncing(true);
       try {
         if (!forceSync && !hasLocalUnread && !hasLocalArticles) {
