@@ -89,6 +89,7 @@ Generated from `npm run build` after implementing Phase 3 (User Story 1).
 - Client-side data fetching via SWR
 - Lazy loading implemented for article bodies
 - Prefetch triggers at 75% scroll threshold
+- 2026-01-23: Article pop-out UI added; bundle metrics not yet recalculated
 
 ---
 

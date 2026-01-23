@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-10
 - TypeScript 5.x on Node 20 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests (003-timeline-folder-view)
 - TypeScript 5.9 (Node.js 20), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy (008-timeline-scroll-hotkeys)
 - sessionStorage (default) + opt-in localStorage for credentials/preferences; IndexedDB for offline mutation queue (queued read/star actions) (008-timeline-scroll-hotkeys)
+- TypeScript 5.9 (Node.js 20) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (009-article-popout-view)
+- Browser localStorage + sessionStorage (timeline cache, session/preferences) (009-article-popout-view)
 
 
 - TypeScript 5.x, Node 20 LTS + Next.js 14 (static export), React 18, TailwindCSS (or CSS Modules), SWR (client fetch caching) (001-static-rss-app)
@@ -53,9 +55,9 @@ docs/               # Release notes, metrics, other docs
 TypeScript 5.x, Node 20 LTS: Follow standard conventions
 
 ## Recent Changes
+- 009-article-popout-view: Added TypeScript 5.9 (Node.js 20) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
 - 008-timeline-scroll-hotkeys: Added TypeScript 5.9 (Node.js 20), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy
 - 003-timeline-folder-view: Added TypeScript 5.x on Node 20 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests
-- 002-docker-deploy: Added TypeScript / Next.js 14 built with Node.js 18 LTS (runtime base: `node:18-alpine` multi-stage) + Next.js App Router, SWR, TailwindCSS, Docker multi-stage build, GitHub Actions workflow
 
 
 <!-- MANUAL ADDITIONS START -->

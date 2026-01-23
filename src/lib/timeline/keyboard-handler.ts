@@ -7,6 +7,7 @@ export interface TimelineKeydownOptions {
   timelineRef: RefObject<HTMLElement | null>;
   selectedId: number | null;
   onSelect: (id: number) => void;
+  onActivate?: (id: number, element: HTMLElement | null) => void;
   onMarkRead?: (id: number) => void;
   excludeSelectors?: string[];
 }
@@ -47,12 +48,11 @@ export function handleTimelineKeyDown(
     timelineRef,
     selectedId,
     onSelect,
+    onActivate,
     onMarkRead,
     excludeSelectors = DEFAULT_EXCLUDE_SELECTORS,
   }: TimelineKeydownOptions,
 ): void {
-  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
   const container = timelineRef.current;
   if (!container) return;
 
@@ -64,6 +64,11 @@ export function handleTimelineKeyDown(
   if (!isBodyFocus && !container.contains(activeElement)) return;
   if (isExcludedFocus(activeElement, excludeSelectors)) return;
 
+  const key = event.key;
+  const isArrow = key === 'ArrowDown' || key === 'ArrowUp';
+  const isSpace = key === ' ' || key === 'Spacebar';
+  if (!isArrow && !isSpace) return;
+
   const elements = getOrderedArticleElements(container);
   const orderedIds = elements
     .map((element) => Number(element.dataset.articleId))
@@ -71,12 +76,21 @@ export function handleTimelineKeyDown(
 
   event.preventDefault();
 
+  if (isSpace) {
+    const resolvedId = selectedId ?? getTopmostVisibleId(container);
+    if (resolvedId === null || typeof resolvedId === 'undefined') return;
+    const target =
+      elements.find((element) => Number(element.dataset.articleId) === resolvedId) ?? null;
+    onActivate?.(resolvedId, target);
+    return;
+  }
+
   const nextId = (() => {
     if (selectedId === null) {
       return getTopmostVisibleId(container);
     }
 
-    if (event.key === 'ArrowDown') {
+    if (key === 'ArrowDown') {
       return getNextSelectionId(selectedId, orderedIds);
     }
 
