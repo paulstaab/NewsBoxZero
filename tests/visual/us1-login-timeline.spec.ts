@@ -88,7 +88,7 @@ test.describe('Visual: Timeline', () => {
       await page.setViewportSize({ width: breakpoint.width, height: breakpoint.height });
 
       // Wait for articles to load
-      await page.waitForSelector('article', { timeout: 5000 });
+      await page.waitForSelector('[data-article-id]', { timeout: 5000 });
 
       // Capture timeline view
       await expect(page).toHaveScreenshot(`timeline-unread-${breakpoint.name}.png`, {
@@ -127,15 +127,15 @@ test.describe('Visual: Timeline', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
 
     // Wait for articles
-    await page.waitForSelector('article', { timeout: 5000 });
+    await page.waitForSelector('[data-article-id]', { timeout: 5000 });
 
-    // Click on first article to expand (if applicable)
-    const firstArticle = page.getByRole('article').first();
+    // Click on first article to open the pop-out
+    const firstArticle = page.getByRole('option').first();
     await firstArticle.click();
-    await page.waitForTimeout(300);
+    await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 5000 });
 
-    // Capture expanded state
-    await expect(page).toHaveScreenshot('timeline-article-expanded-tablet.png', {
+    // Capture pop-out state
+    await expect(page).toHaveScreenshot('timeline-article-popout-tablet.png', {
       fullPage: false,
       clip: { x: 0, y: 0, width: 768, height: 600 },
       animations: 'disabled',

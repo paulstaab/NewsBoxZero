@@ -9,10 +9,13 @@ import {
 export interface UseTimelineSelectionResult extends SelectionActions {
   selectedArticleId: number | null;
   setSelectedArticleId: (id: number | null) => void;
+  selectedArticleElement: HTMLElement | null;
+  setSelectedArticleElement: (element: HTMLElement | null) => void;
 }
 
 export function useTimelineSelection(articles: { id: number }[]): UseTimelineSelectionResult {
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
+  const [selectedArticleElement, setSelectedArticleElement] = useState<HTMLElement | null>(null);
 
   const orderedIds = useMemo(() => articles.map((article) => article.id), [articles]);
 
@@ -39,11 +42,14 @@ export function useTimelineSelection(articles: { id: number }[]): UseTimelineSel
 
   const deselect = useCallback(() => {
     setSelectedArticleId(null);
+    setSelectedArticleElement(null);
   }, []);
 
   return {
     selectedArticleId,
     setSelectedArticleId,
+    selectedArticleElement,
+    setSelectedArticleElement,
     selectTopmost,
     selectNext,
     selectPrevious,

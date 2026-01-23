@@ -11,7 +11,7 @@ interface TimelineListProps {
   items: ArticlePreview[];
   isLoading?: boolean;
   emptyMessage?: string;
-  onMarkRead?: (id: number) => void;
+  onOpenArticle?: (article: ArticlePreview, opener: HTMLElement) => void;
   registerArticle?: (id: number) => (node: HTMLElement | null) => void;
   selectedArticleId?: number | null;
   onMarkAllRead?: () => Promise<void>;
@@ -27,7 +27,7 @@ export function TimelineList({
   items,
   isLoading,
   emptyMessage,
-  onMarkRead,
+  onOpenArticle,
   registerArticle,
   selectedArticleId,
   onMarkAllRead,
@@ -106,7 +106,7 @@ export function TimelineList({
           <ArticleCard
             key={`${String(article.id)}-${String(article.feedId)}`}
             article={article}
-            onMarkRead={onMarkRead}
+            onOpen={onOpenArticle}
             registerArticle={registerArticle}
             isSelected={article.id === selectedArticleId}
           />

@@ -16,7 +16,7 @@ description: "Task list for Article Pop-out View"
 
 **Purpose**: Establish shared UI building blocks used across stories
 
-- [ ] T001 [P] Create pop-out component shell in src/components/timeline/ArticlePopout.tsx
+- [x] T001 [P] Create pop-out component shell in src/components/timeline/ArticlePopout.tsx
 
 ---
 
@@ -24,8 +24,8 @@ description: "Task list for Article Pop-out View"
 
 **Purpose**: Core state management needed for all user stories
 
-- [ ] T002 Create pop-out state + focus restore hook in src/hooks/useArticlePopout.ts
-- [ ] T003 Update selection plumbing to expose selected article + opener element in src/hooks/useTimelineSelection.ts
+- [x] T002 Create pop-out state + focus restore hook in src/hooks/useArticlePopout.ts
+- [x] T003 Update selection plumbing to expose selected article + opener element in src/hooks/useTimelineSelection.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -39,13 +39,13 @@ description: "Task list for Article Pop-out View"
 
 ### Tests & Checks for User Story 1 (Right-Sized)
 
-- [ ] T004 [P] [US1] Add unit test for pop-out content rendering in tests/unit/components/articlePopout.test.tsx
+- [x] T004 [P] [US1] Add unit test for pop-out content rendering in tests/unit/components/articlePopout.test.tsx
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Implement pop-out content layout + scroll container in src/components/timeline/ArticlePopout.tsx
-- [ ] T006 [US1] Wire pop-out open/render flow in src/components/timeline/TimelineList.tsx
-- [ ] T007 [US1] Ensure timeline page passes selected article data to pop-out in src/app/timeline/page.tsx
+- [x] T005 [P] [US1] Implement pop-out content layout + scroll container in src/components/timeline/ArticlePopout.tsx
+- [x] T006 [US1] Wire pop-out open/render flow in src/components/timeline/TimelineList.tsx
+- [x] T007 [US1] Ensure timeline page passes selected article data to pop-out in src/app/timeline/page.tsx
 
 **Checkpoint**: User Story 1 is independently functional
 
@@ -59,13 +59,13 @@ description: "Task list for Article Pop-out View"
 
 ### Tests & Checks for User Story 2 (Right-Sized)
 
-- [ ] T008 [P] [US2] Add unit test for close interactions (button + overlay + Escape) in tests/unit/components/articlePopout.test.tsx
+- [x] T008 [P] [US2] Add unit test for close interactions (button + overlay + Escape) in tests/unit/components/articlePopout.test.tsx
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Add overlay + close button handlers in src/components/timeline/ArticlePopout.tsx
-- [ ] T010 [US2] Implement focus trap + Escape handling in src/hooks/useArticlePopout.ts
-- [ ] T011 [US2] Add swipe-to-dismiss hook in src/hooks/useSwipeDismiss.ts and integrate in src/components/timeline/ArticlePopout.tsx
+- [x] T009 [US2] Add overlay + close button handlers in src/components/timeline/ArticlePopout.tsx
+- [x] T010 [US2] Implement focus trap + Escape handling in src/hooks/useArticlePopout.ts
+- [x] T011 [US2] Add swipe-to-dismiss hook in src/hooks/useSwipeDismiss.ts and integrate in src/components/timeline/ArticlePopout.tsx
 
 **Checkpoint**: User Story 2 is independently functional
 
@@ -79,12 +79,12 @@ description: "Task list for Article Pop-out View"
 
 ### Tests & Checks for User Story 3 (Right-Sized)
 
-- [ ] T012 [US3] Document manual scroll-lock verification steps in specs/009-article-popout-view/quickstart.md
+- [x] T012 [US3] Document manual scroll-lock verification steps in specs/009-article-popout-view/quickstart.md
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Lock background scroll + disable timeline pointer events in src/app/timeline/page.tsx
-- [ ] T014 [US3] Add overscroll containment for pop-out scroll area in src/components/timeline/ArticlePopout.tsx
+- [x] T013 [US3] Lock background scroll + disable timeline pointer events in src/app/timeline/page.tsx
+- [x] T014 [US3] Add overscroll containment for pop-out scroll area in src/components/timeline/ArticlePopout.tsx
 
 **Checkpoint**: User Story 3 is independently functional
 
@@ -92,8 +92,8 @@ description: "Task list for Article Pop-out View"
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T015 [P] Update visual regression notes in docs/metrics/bundle.md when UI changes affect snapshots
-- [ ] T016 [P] Validate quickstart steps in specs/009-article-popout-view/quickstart.md
+- [x] T015 [P] Update visual regression notes in docs/metrics/bundle.md when UI changes affect snapshots
+- [x] T016 [P] Validate quickstart steps in specs/009-article-popout-view/quickstart.md
 
 ---
 
