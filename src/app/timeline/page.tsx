@@ -54,6 +54,7 @@ function TimelineContent() {
 
   const { isDocked, dockedHeight, queueRef, sentinelRef } = useFolderQueueDocking();
   const timelineRef = useRef<HTMLDivElement>(null);
+  const scrollToTopOnNextFolderRef = useRef(false);
 
   const { selectedArticleId, setSelectedArticleId } = useTimelineSelection(activeArticles);
   const unreadIdSet = useMemo(
@@ -133,6 +134,12 @@ function TimelineContent() {
       });
     }
   }, [lastUpdateError, showToast]);
+
+  useEffect(() => {
+    if (!scrollToTopOnNextFolderRef.current) return;
+    scrollToTopOnNextFolderRef.current = false;
+    window.scrollTo({ top: 0, left: 0 });
+  }, [activeFolder]);
 
   // Show loading state while checking authentication
   if (isInitializing || !isHydrated) {
@@ -266,6 +273,7 @@ function TimelineContent() {
         }}
         onMarkAllRead={async () => {
           if (!activeFolder) return;
+          scrollToTopOnNextFolderRef.current = true;
           await markFolderRead(activeFolder.id);
         }}
         disableSkip={!hasUnread}
