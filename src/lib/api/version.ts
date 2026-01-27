@@ -5,15 +5,9 @@
  * Re-exports from the centralized API client for backward compatibility.
  */
 
-import { api } from './apiClient';
+import { api, type VersionResponse } from './apiClient';
 
-/**
- * Version response from Nextcloud News API.
- */
-export interface VersionResponse {
-  version: string;
-  apiLevels: string[];
-}
+export type { VersionResponse };
 
 /**
  * Checks server connectivity and API version without authentication.

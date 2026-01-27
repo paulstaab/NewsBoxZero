@@ -1,10 +1,11 @@
 /**
  * Centralized API client with endpoint groups for cleaner architecture and better testability.
- * Provides api.feeds.getAll(), api.items.update(), etc. interface.
+ * Provides api.feeds.getAll(), api.items.markRead(), etc. interface.
  */
 
 import {
-  apiRequest,
+  ApiError,
+  NetworkError,
   apiGet as baseApiGet,
   apiPost as baseApiPost,
   apiPut as baseApiPut,
@@ -27,7 +28,14 @@ import {
   normalizeArticle,
 } from '@/types';
 import { CONFIG } from '@/lib/config/env';
-import { type VersionResponse } from './version';
+
+/**
+ * Version response from Nextcloud News API.
+ */
+export interface VersionResponse {
+  version: string;
+  apiLevels: string[];
+}
 
 /**
  * Feeds endpoint group.
@@ -404,7 +412,6 @@ class ApiClientImpl implements ApiClient {
 
           // Handle error responses
           if (!response.ok) {
-            const { ApiError } = await import('./client');
             throw new ApiError(response.status, response.statusText);
           }
 
@@ -414,7 +421,6 @@ class ApiClientImpl implements ApiClient {
         } catch (error) {
           // CORS errors (typically TypeError with specific message patterns)
           if (error instanceof TypeError) {
-            const { NetworkError } = await import('./client');
             const errorMessage = error.message.toLowerCase();
 
             // Check for common CORS error patterns
@@ -436,13 +442,11 @@ class ApiClientImpl implements ApiClient {
           }
 
           // Re-throw ApiError as-is
-          const { ApiError } = await import('./client');
           if (error instanceof ApiError) {
             throw error;
           }
 
           // Unknown errors
-          const { NetworkError } = await import('./client');
           throw new NetworkError('An unexpected error occurred while connecting to the server.');
         }
       },
