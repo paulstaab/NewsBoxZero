@@ -362,14 +362,7 @@ function TimelineContent() {
 }
 
 /**
- * Timeline page - aggregated article feed
- *
- * Features:
- * - Unread/All toggle with URL synchronization
- * - Infinite scroll with 75% prefetch
- * - Empty states (no items, offline, etc.)
- * - Offline-friendly guardrails
- * - Read/star actions
+ * Timeline page wrapper with suspense fallback.
  */
 export default function TimelinePage() {
   return (

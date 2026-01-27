@@ -10,6 +10,9 @@ interface MarkAllReadButtonProps {
   className?: string;
 }
 
+/**
+ * Button that triggers mark-all-read for the active folder.
+ */
 export function MarkAllReadButton({ onMarkAllRead, disabled, className }: MarkAllReadButtonProps) {
   const [isMarkingRead, setIsMarkingRead] = useState(false);
   const { Icon, label, tooltip } = timelineActionConfig.markAllRead;

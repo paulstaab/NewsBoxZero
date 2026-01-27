@@ -12,9 +12,7 @@ interface ArticleCardProps {
 }
 
 /**
- * Lightweight article preview card for the folder-first timeline.
- * Shows title, summary, thumbnail, and publication time.
- * Opens article in a pop-out on click.
+ * Displays an article preview card in the timeline.
  */
 export function ArticleCard({
   article,

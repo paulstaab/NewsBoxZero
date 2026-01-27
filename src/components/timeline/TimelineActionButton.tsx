@@ -7,6 +7,9 @@ interface TimelineActionButtonProps extends ButtonHTMLAttributes<HTMLButtonEleme
   isLoading?: boolean;
 }
 
+/**
+ * Base button used for timeline actions.
+ */
 export function TimelineActionButton({
   icon,
   label,

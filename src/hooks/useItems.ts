@@ -19,6 +19,9 @@ export interface UseItemsResult {
   refresh: () => Promise<Article[] | undefined>;
 }
 
+/**
+ * Fetches items and exposes filtered and full lists for the timeline.
+ */
 export function useItems(options: UseItemsOptions = {}): UseItemsResult {
   const { activeFolderId } = options;
   const { isAuthenticated, isInitializing } = useAuth();

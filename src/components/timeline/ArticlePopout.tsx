@@ -15,6 +15,9 @@ interface ArticlePopoutProps {
   closeButtonRef: RefObject<HTMLButtonElement | null>;
 }
 
+/**
+ * Renders the expanded article popout dialog.
+ */
 export function ArticlePopout({
   isOpen,
   article,

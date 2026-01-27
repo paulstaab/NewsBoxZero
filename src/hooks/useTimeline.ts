@@ -225,6 +225,9 @@ function applyFeedNames(
   };
 }
 
+/**
+ * Manages timeline state, cache reconciliation, and read actions.
+ */
 export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
   const { root, topOffset = 0, debounceMs = 100 } = options;
   const [envelope, setEnvelope] = useState<TimelineCacheEnvelope>(createEmptyTimelineCache);

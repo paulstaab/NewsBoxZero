@@ -6,6 +6,9 @@ interface FolderStepperProps {
   activeFolder: FolderQueueEntry | null;
 }
 
+/**
+ * Shows a compact stepper for the active folder.
+ */
 export function FolderStepper({ activeFolder }: FolderStepperProps) {
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">

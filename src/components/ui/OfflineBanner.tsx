@@ -16,7 +16,7 @@ export interface OfflineBannerProps {
 }
 
 /**
- * Hook to track online/offline status.
+ * Tracks browser online/offline state.
  */
 export function useOnlineStatus(): boolean {
   // Use lazy initialization to set the initial state based on navigator.onLine
@@ -48,7 +48,7 @@ export function useOnlineStatus(): boolean {
 }
 
 /**
- * Banner displayed when the user is offline.
+ * Shows an offline status banner.
  */
 export function OfflineBanner({
   message = 'You are currently offline. Some features may be unavailable.',

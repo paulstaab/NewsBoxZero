@@ -8,7 +8,7 @@ interface UnreadSummaryProps {
 }
 
 /**
- * Unread summary for the folder-first timeline experience.
+ * Shows unread counts and metadata for the active folder.
  */
 export function UnreadSummary({
   totalUnread,
@@ -56,9 +56,7 @@ interface UnreadBadgeProps {
 }
 
 /**
- * Unread count badge component
- *
- * Displays a numerical badge for unread items
+ * Displays a compact unread badge.
  */
 export function UnreadBadge({ count, size = 'md', variant = 'default' }: UnreadBadgeProps) {
   if (count === 0) return null;

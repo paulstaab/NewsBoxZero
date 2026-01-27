@@ -10,6 +10,9 @@ interface FolderQueuePillsProps {
   isLoading?: boolean;
 }
 
+/**
+ * Renders selectable folder queue pills.
+ */
 export function FolderQueuePills({
   queue,
   activeFolderId,

@@ -13,6 +13,9 @@ interface PinnedActionClusterProps {
   isSyncing?: boolean;
 }
 
+/**
+ * Renders floating timeline action buttons.
+ */
 export function PinnedActionCluster({
   onSync,
   onSkip,

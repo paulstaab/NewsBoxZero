@@ -9,8 +9,7 @@ import { useEffect } from 'react';
 import { registerServiceWorker } from '@/lib/sw/register';
 
 /**
- * Component that registers the service worker on mount.
- * Renders nothing visible.
+ * Registers the service worker on client mount.
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {

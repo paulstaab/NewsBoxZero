@@ -21,7 +21,7 @@ interface TimelineListProps {
 }
 
 /**
- * Folder-scoped article list with lightweight loading and empty-state handling.
+ * Renders the list of timeline article cards.
  */
 export function TimelineList({
   items,

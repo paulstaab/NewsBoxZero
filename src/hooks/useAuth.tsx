@@ -56,6 +56,9 @@ function encodeCredentials(username: string, password: string): string {
   return btoa(`${username}:${password}`);
 }
 
+/**
+ * Provides authentication state and actions to the app.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSessionConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -207,8 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Hook to access authentication context
- * Must be used within AuthProvider
+ * Access the current auth context.
+ * Must be used within `AuthProvider`.
  */
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
