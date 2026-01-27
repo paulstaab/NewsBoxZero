@@ -3,11 +3,31 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useItems } from '@/hooks/useItems';
 import { getItems } from '@/lib/api/items';
 import { UNCATEGORIZED_FOLDER_ID } from '@/types';
+import type { UserSessionConfig } from '@/types';
 
-const mockUseAuth = vi.fn();
+interface MockAuthReturn {
+  isAuthenticated: boolean;
+  isInitializing: boolean;
+  session: UserSessionConfig | null;
+}
+
+let mockAuthReturn: MockAuthReturn = {
+  isAuthenticated: true,
+  isInitializing: false,
+  session: {
+    baseUrl: 'https://rss.example.com',
+    username: 'user',
+    credentials: 'dXNlcjpwYXNz',
+    rememberDevice: false,
+    viewMode: 'card',
+    sortOrder: 'newest',
+    showRead: false,
+    lastSyncAt: null,
+  },
+};
 
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => mockUseAuth(),
+  useAuth: (): MockAuthReturn => mockAuthReturn,
 }));
 
 vi.mock('@/lib/api/items', () => ({
@@ -17,21 +37,39 @@ vi.mock('@/lib/api/items', () => ({
 const mockedGetItems = vi.mocked(getItems);
 
 beforeEach(() => {
-  mockUseAuth.mockReturnValue({
+  mockAuthReturn = {
     isAuthenticated: true,
     isInitializing: false,
-    session: { baseUrl: 'https://rss.example.com', username: 'user', token: 'token' },
-  });
+    session: {
+      baseUrl: 'https://rss.example.com',
+      username: 'user',
+      credentials: 'dXNlcjpwYXNz',
+      rememberDevice: false,
+      viewMode: 'card',
+      sortOrder: 'newest',
+      showRead: false,
+      lastSyncAt: null,
+    },
+  };
   mockedGetItems.mockClear();
 });
 
 describe('useItems', () => {
   it('filters items by activeFolderId while preserving allItems', async () => {
-    mockUseAuth.mockReturnValue({
+    mockAuthReturn = {
       isAuthenticated: true,
       isInitializing: false,
-      session: { baseUrl: 'https://rss.example.com', username: 'user1', token: 'token' },
-    });
+      session: {
+        baseUrl: 'https://rss.example.com',
+        username: 'user1',
+        credentials: 'dXNlcjE6cGFzcw==',
+        rememberDevice: false,
+        viewMode: 'card',
+        sortOrder: 'newest',
+        showRead: false,
+        lastSyncAt: null,
+      },
+    };
 
     mockedGetItems.mockResolvedValueOnce([
       {
@@ -91,11 +129,20 @@ describe('useItems', () => {
   });
 
   it('treats null folderId as UNCATEGORIZED_FOLDER_ID', async () => {
-    mockUseAuth.mockReturnValue({
+    mockAuthReturn = {
       isAuthenticated: true,
       isInitializing: false,
-      session: { baseUrl: 'https://rss.example.com', username: 'user2', token: 'token' },
-    });
+      session: {
+        baseUrl: 'https://rss.example.com',
+        username: 'user2',
+        credentials: 'dXNlcjI6cGFzcw==',
+        rememberDevice: false,
+        viewMode: 'card',
+        sortOrder: 'newest',
+        showRead: false,
+        lastSyncAt: null,
+      },
+    };
 
     mockedGetItems.mockResolvedValueOnce([
       {
