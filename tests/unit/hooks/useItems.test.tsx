@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { SWRConfig } from 'swr';
 import { useItems } from '@/hooks/useItems';
 import { getItems } from '@/lib/api/items';
 import { UNCATEGORIZED_FOLDER_ID } from '@/types';
@@ -19,6 +20,9 @@ vi.mock('@/lib/api/items', () => ({
 const mockedGetItems = vi.mocked(getItems);
 
 describe('useItems', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it('filters items by activeFolderId while preserving allItems', async () => {
     mockedGetItems.mockResolvedValueOnce([
       {
@@ -67,7 +71,11 @@ describe('useItems', () => {
       },
     ]);
 
-    const { result } = renderHook(() => useItems({ activeFolderId: 10 }));
+    const { result } = renderHook(() => useItems({ activeFolderId: 10 }), {
+      wrapper: ({ children }) => (
+        <SWRConfig value={{ provider: () => new Map() }}>{children}</SWRConfig>
+      ),
+    });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(1);
@@ -125,7 +133,11 @@ describe('useItems', () => {
       },
     ]);
 
-    const { result } = renderHook(() => useItems({ activeFolderId: UNCATEGORIZED_FOLDER_ID }));
+    const { result } = renderHook(() => useItems({ activeFolderId: UNCATEGORIZED_FOLDER_ID }), {
+      wrapper: ({ children }) => (
+        <SWRConfig value={{ provider: () => new Map() }}>{children}</SWRConfig>
+      ),
+    });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(1);
