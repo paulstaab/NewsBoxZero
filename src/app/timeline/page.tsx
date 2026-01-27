@@ -3,11 +3,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useFolderQueue } from '@/hooks/useFolderQueue';
+import { useTimeline } from '@/hooks/useTimeline';
 import { useFolderQueueDocking } from '@/hooks/useFolderQueueDocking';
-import { useAutoMarkReadOnScroll } from '@/hooks/useAutoMarkReadOnScroll';
 import { useArticlePopout } from '@/hooks/useArticlePopout';
-import { useTimelineSelection } from '@/hooks/useTimelineSelection';
 import { FolderQueuePills } from '@/components/timeline/FolderQueuePills';
 import { TimelineList } from '@/components/timeline/TimelineList';
 import { EmptyState } from '@/components/timeline/EmptyState';
@@ -36,6 +34,8 @@ function TimelineContent() {
     markTimelineCacheLoadStart();
   }, []);
 
+  const { isDocked, dockedHeight, queueRef, sentinelRef } = useFolderQueueDocking();
+
   const {
     queue,
     activeFolder,
@@ -53,14 +53,17 @@ function TimelineContent() {
     skipFolder,
     restart,
     lastUpdateError,
-  } = useFolderQueue();
+    selectedArticleId,
+    setSelectedArticleId,
+    setSelectedArticleElement,
+    registerArticle,
+  } = useTimeline({
+    topOffset: isDocked ? dockedHeight : 0,
+  });
 
-  const { isDocked, dockedHeight, queueRef, sentinelRef } = useFolderQueueDocking();
   const timelineRef = useRef<HTMLDivElement>(null);
   const scrollToTopOnNextFolderRef = useRef(false);
 
-  const { selectedArticleId, setSelectedArticleId, setSelectedArticleElement } =
-    useTimelineSelection(activeArticles);
   const {
     isOpen: isPopoutOpen,
     articleKey: popoutArticleKey,
@@ -83,14 +86,6 @@ function TimelineContent() {
       ) ?? null
     );
   }, [activeArticles, isPopoutOpen, popoutArticleKey]);
-
-  const { registerArticle } = useAutoMarkReadOnScroll({
-    items: activeArticles,
-    topOffset: isDocked ? dockedHeight : 0,
-    onMarkRead: (id) => {
-      void markItemRead(id);
-    },
-  });
 
   const { toasts, showToast, dismissToast } = useToast();
 
@@ -175,7 +170,7 @@ function TimelineContent() {
           markTimelineUpdateComplete();
         })
         .catch(() => {
-          // Error already logged and retried in useFolderQueue
+          // Error already logged and retried in useTimeline
           // Just mark the update as complete (with error)
           markTimelineUpdateComplete();
         });

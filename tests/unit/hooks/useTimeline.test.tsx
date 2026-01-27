@@ -1,23 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { Article, Folder, Feed, ArticlePreview, FolderQueueEntry } from '@/types';
-import { useFolderQueue } from '@/hooks/useFolderQueue';
+import { useTimeline } from '@/hooks/useTimeline';
 import { CONFIG } from '@/lib/config/env';
 import { createEmptyTimelineCache } from '@/lib/storage';
-import { getItems } from '@/lib/api/items';
 
 // Mock SWR immutable hook to return deterministic folder/feed payloads
 const mocks = vi.hoisted(() => ({
   foldersData: { value: [] as Folder[] | undefined },
   feedsData: { value: [] as Feed[] },
-  useItemsResult: {
-    items: [] as Article[],
-    allItems: [] as Article[],
-    isLoading: false,
-    isValidating: false,
-    error: null,
-    refresh: vi.fn(),
-  },
+  unreadItems: [] as Article[],
 }));
 
 vi.mock('swr/immutable', () => {
@@ -34,9 +26,16 @@ vi.mock('swr/immutable', () => {
   };
 });
 
-vi.mock('@/hooks/useItems', () => ({
-  useItems: () => mocks.useItemsResult,
-}));
+vi.mock('@/lib/sync', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/sync')>();
+  return {
+    ...actual,
+    fetchUnreadItemsForSync: vi.fn(async () => ({
+      items: mocks.unreadItems,
+      serverUnreadIds: new Set(mocks.unreadItems.map((item) => item.id)),
+    })),
+  };
+});
 
 vi.mock('@/lib/api/folders', () => ({
   getFolders: vi.fn(),
@@ -47,7 +46,6 @@ vi.mock('@/lib/api/feeds', () => ({
 }));
 
 vi.mock('@/lib/api/items', () => ({
-  getItems: vi.fn().mockResolvedValue([]),
   markItemsRead: vi.fn().mockResolvedValue(undefined),
   markItemRead: vi.fn().mockResolvedValue(undefined),
 }));
@@ -77,6 +75,49 @@ function buildArticle(partial: Partial<Article>): Article {
   };
 }
 
+function buildPreview(partial: Partial<ArticlePreview>): ArticlePreview {
+  return {
+    id: partial.id ?? Math.floor(Math.random() * 10_000),
+    folderId: partial.folderId ?? 1,
+    feedId: partial.feedId ?? 1,
+    title: partial.title ?? 'Test Article',
+    feedName: partial.feedName ?? 'Sample Feed',
+    author: partial.author ?? 'NewsBoxZero',
+    summary: partial.summary ?? 'Summary',
+    url: partial.url ?? 'https://example.com/article',
+    thumbnailUrl: partial.thumbnailUrl ?? null,
+    pubDate: partial.pubDate ?? 1_700_000_000,
+    unread: partial.unread ?? true,
+    starred: partial.starred ?? false,
+    hasFullText: partial.hasFullText ?? false,
+    storedAt: partial.storedAt ?? Date.now(),
+  };
+}
+
+function buildEntry(
+  partial: Partial<FolderQueueEntry> & { id: number; articles: ArticlePreview[] },
+) {
+  const unreadCount = partial.articles.filter((article) => article.unread).length;
+  return {
+    id: partial.id,
+    name: partial.name ?? `Folder ${partial.id}`,
+    sortOrder: partial.sortOrder ?? 0,
+    status: partial.status ?? 'queued',
+    unreadCount,
+    articles: partial.articles,
+    lastUpdated: partial.lastUpdated ?? Date.now(),
+  } satisfies FolderQueueEntry;
+}
+
+function setCache(entries: FolderQueueEntry[], activeFolderId: number | null = null) {
+  const cachedEnvelope = createEmptyTimelineCache();
+  for (const entry of entries) {
+    cachedEnvelope.folders[entry.id] = entry;
+  }
+  cachedEnvelope.activeFolderId = activeFolderId;
+  localStorage.setItem(CONFIG.TIMELINE_CACHE_KEY, JSON.stringify(cachedEnvelope));
+}
+
 function buildFeed(partial: Partial<Feed>): Feed {
   return {
     id: partial.id ?? 1,
@@ -94,20 +135,12 @@ function buildFeed(partial: Partial<Feed>): Feed {
   };
 }
 
-function setItems(items: Article[]) {
-  mocks.useItemsResult.items = items;
-  mocks.useItemsResult.allItems = items;
-}
-
-describe('useFolderQueue', () => {
+describe('useTimeline', () => {
   beforeEach(() => {
     localStorage.clear();
-    setItems([]);
-    mocks.useItemsResult.isLoading = false;
-    mocks.useItemsResult.isValidating = false;
-    mocks.useItemsResult.error = null;
     mocks.foldersData.value = [];
     mocks.feedsData.value = [];
+    mocks.unreadItems = [];
   });
 
   it('prioritizes folders by unread count and exposes active articles', async () => {
@@ -120,13 +153,26 @@ describe('useFolderQueue', () => {
       buildFeed({ id: 2, title: 'Design Feed', folderId: 20 }),
     ];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
-      buildArticle({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
-      buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [
+            buildPreview({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
+            buildPreview({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
+          ],
+        }),
+        buildEntry({
+          id: 20,
+          name: 'Design Notes',
+          articles: [buildPreview({ id: 3, feedId: 2, folderId: 20, title: 'Design A' })],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.queue.length).toBe(2);
@@ -140,7 +186,6 @@ describe('useFolderQueue', () => {
   });
 
   it('hydrates from cached envelope when network data is unavailable', async () => {
-    const cachedEnvelope = createEmptyTimelineCache();
     const cachedArticles: ArticlePreview[] = [
       {
         id: 99,
@@ -170,15 +215,10 @@ describe('useFolderQueue', () => {
       lastUpdated: Date.now(),
     };
 
-    cachedEnvelope.folders[cachedEntry.id] = cachedEntry;
-    cachedEnvelope.activeFolderId = 42;
-
-    localStorage.setItem(CONFIG.TIMELINE_CACHE_KEY, JSON.stringify(cachedEnvelope));
-
     mocks.foldersData.value = undefined;
-    setItems([]);
+    setCache([cachedEntry], 42);
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(42);
@@ -200,16 +240,27 @@ describe('useFolderQueue', () => {
       buildFeed({ id: 2, folderId: 20 }),
     ];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
-      buildArticle({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
-      buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' }),
-    ]);
-    vi.mocked(getItems).mockResolvedValue([
-      buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [
+            buildPreview({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
+            buildPreview({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
+          ],
+        }),
+        buildEntry({
+          id: 20,
+          name: 'Design Notes',
+          articles: [buildPreview({ id: 3, feedId: 2, folderId: 20, title: 'Design A' })],
+        }),
+      ],
+      10,
+    );
+    mocks.unreadItems = [buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' })];
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(10);
@@ -234,12 +285,21 @@ describe('useFolderQueue', () => {
     mocks.foldersData.value = [{ id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] }];
     mocks.feedsData.value = [buildFeed({ id: 1, folderId: 10 })];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10 }),
-      buildArticle({ id: 2, feedId: 1, folderId: 10 }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [
+            buildPreview({ id: 1, feedId: 1, folderId: 10 }),
+            buildPreview({ id: 2, feedId: 1, folderId: 10 }),
+          ],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(10);
@@ -276,12 +336,23 @@ describe('useFolderQueue', () => {
       buildFeed({ id: 2, folderId: 20 }),
     ];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
-      buildArticle({ id: 3, feedId: 2, folderId: 20, title: 'Design A' }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [buildPreview({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' })],
+        }),
+        buildEntry({
+          id: 20,
+          name: 'Design Notes',
+          articles: [buildPreview({ id: 3, feedId: 2, folderId: 20, title: 'Design A' })],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(10);
@@ -315,15 +386,34 @@ describe('useFolderQueue', () => {
       buildFeed({ id: 3, folderId: 30 }),
     ];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10 }),
-      buildArticle({ id: 2, feedId: 1, folderId: 10 }),
-      buildArticle({ id: 3, feedId: 2, folderId: 20 }),
-      buildArticle({ id: 4, feedId: 2, folderId: 20 }),
-      buildArticle({ id: 5, feedId: 3, folderId: 30 }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [
+            buildPreview({ id: 1, feedId: 1, folderId: 10 }),
+            buildPreview({ id: 2, feedId: 1, folderId: 10 }),
+          ],
+        }),
+        buildEntry({
+          id: 20,
+          name: 'Design Notes',
+          articles: [
+            buildPreview({ id: 3, feedId: 2, folderId: 20 }),
+            buildPreview({ id: 4, feedId: 2, folderId: 20 }),
+          ],
+        }),
+        buildEntry({
+          id: 30,
+          name: 'Growth',
+          articles: [buildPreview({ id: 5, feedId: 3, folderId: 30 })],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.queue[0]?.id).toBe(10);
@@ -344,12 +434,21 @@ describe('useFolderQueue', () => {
     mocks.foldersData.value = [{ id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] }];
     mocks.feedsData.value = [buildFeed({ id: 1, folderId: 10 })];
 
-    setItems([
-      buildArticle({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
-      buildArticle({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
-    ]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [
+            buildPreview({ id: 1, feedId: 1, folderId: 10, title: 'Dev A' }),
+            buildPreview({ id: 2, feedId: 1, folderId: 10, title: 'Dev B' }),
+          ],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeArticles).toHaveLength(2);
@@ -378,9 +477,18 @@ describe('useFolderQueue', () => {
   it('restarts the queue when all folders are skipped', async () => {
     mocks.foldersData.value = [{ id: 10, name: 'Dev Updates', unreadCount: 0, feedIds: [] }];
     mocks.feedsData.value = [buildFeed({ id: 1, folderId: 10 })];
-    setItems([buildArticle({ id: 1, feedId: 1, folderId: 10 })]);
+    setCache(
+      [
+        buildEntry({
+          id: 10,
+          name: 'Dev Updates',
+          articles: [buildPreview({ id: 1, feedId: 1, folderId: 10 })],
+        }),
+      ],
+      10,
+    );
 
-    const { result } = renderHook(() => useFolderQueue());
+    const { result } = renderHook(() => useTimeline());
 
     await waitFor(() => {
       expect(result.current.activeFolder?.id).toBe(10);
