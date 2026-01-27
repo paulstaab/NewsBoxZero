@@ -60,14 +60,10 @@ export interface UseTimelineResult extends SelectionActions {
   skipFolder: (folderId: number) => Promise<void>;
   restart: () => Promise<void>;
   lastUpdateError: string | null;
-
-  // From useTimelineSelection
   selectedArticleId: number | null;
   setSelectedArticleId: (id: number | null) => void;
   selectedArticleElement: HTMLElement | null;
   setSelectedArticleElement: (element: HTMLElement | null) => void;
-
-  // From useAutoMarkReadOnScroll
   registerArticle: (id: number) => (node: HTMLElement | null) => void;
 }
 
@@ -149,6 +145,11 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
 }
 
 const SYNC_TIMEOUT_MS = 8000;
+const MIN_SYNC_INDICATOR_MS = 350;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -260,25 +261,13 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     return new Map<number, string>(feeds.map((feed) => [feed.id, feed.title]));
   }, [feeds]);
 
-  const hasLocalUnread = useMemo(() => {
-    return Object.values(envelope.folders).some((entry) => entry.unreadCount > 0);
-  }, [envelope.folders]);
-  const hasLocalArticles = useMemo(() => {
-    const hasArticles = Object.values(envelope.folders).some((entry) => entry.articles.length > 0);
-    return hasArticles || envelope.pendingReadIds.length > 0;
-  }, [envelope.folders, envelope.pendingReadIds.length]);
-
   // Refresh with error handling (retry logic handled at page level)
   const refresh = useCallback(
-    async (options?: RefreshOptions): Promise<void> => {
-      const { forceSync = false } = options ?? {};
+    async (_options?: RefreshOptions): Promise<void> => {
+      void _options;
+      const startedAt = Date.now();
       setIsSyncing(true);
       try {
-        if (!forceSync && !hasLocalUnread && !hasLocalArticles) {
-          setLastUpdateError(null);
-          return;
-        }
-
         const { items, serverUnreadIds } = await withTimeout(
           fetchUnreadItemsForSync(),
           SYNC_TIMEOUT_MS,
@@ -316,10 +305,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
         throw error;
       } finally {
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < MIN_SYNC_INDICATOR_MS) {
+          await delay(MIN_SYNC_INDICATOR_MS - elapsed);
+        }
         setIsSyncing(false);
       }
     },
-    [feedFolderMap, feedNameMap, foldersData, hasLocalArticles, hasLocalUnread],
+    [feedFolderMap, feedNameMap, foldersData],
   );
 
   useEffect(() => {
@@ -334,6 +327,46 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
       return nextEnvelope;
     });
   }, [feedNameMap, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated || !foldersData || foldersData.length === 0) return;
+
+    const folderNameMap = new Map<number, string>(
+      foldersData.map((folder) => [folder.id, folder.name]),
+    );
+
+    setEnvelope((current) => {
+      let hasUpdates = false;
+      const updatedFolders: Record<number, FolderQueueEntry> = {};
+
+      for (const [folderIdStr, folder] of Object.entries(current.folders)) {
+        const id = Number(folderIdStr);
+        const resolvedName =
+          folderNameMap.get(id) ?? (id === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : folder.name);
+        if (folder.name !== resolvedName) {
+          hasUpdates = true;
+        }
+        updatedFolders[id] =
+          folder.name === resolvedName
+            ? folder
+            : {
+                ...folder,
+                name: resolvedName,
+              };
+      }
+
+      if (!hasUpdates) {
+        return current;
+      }
+
+      const nextEnvelope: TimelineCacheEnvelope = {
+        ...current,
+        folders: updatedFolders,
+      };
+      storeTimelineCache(nextEnvelope);
+      return nextEnvelope;
+    });
+  }, [foldersData, isHydrated, envelope.folders]);
 
   const sortedQueue = useMemo(() => {
     return sortFolderQueueEntries(Object.values(envelope.folders));
@@ -554,7 +587,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }, []);
 
-  // --- Start of useTimelineSelection logic ---
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
   const [selectedArticleElement, setSelectedArticleElement] = useState<HTMLElement | null>(null);
 
@@ -585,9 +617,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     setSelectedArticleId(null);
     setSelectedArticleElement(null);
   }, []);
-  // --- End of useTimelineSelection logic ---
 
-  // --- Start of useAutoMarkReadOnScroll logic ---
   const observerRef = useRef<IntersectionObserver | null>(null);
   const elementsRef = useRef<Map<number, HTMLElement>>(new Map());
   const seenRef = useRef<Set<number>>(new Set());
@@ -666,7 +696,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     },
     [],
   );
-  // --- End of useAutoMarkReadOnScroll logic ---
 
   return {
     queue: orderedQueue,

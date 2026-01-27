@@ -12,28 +12,16 @@ const mocks = vi.hoisted(() => ({
   unreadItems: [] as Article[],
 }));
 
-vi.mock('swr/immutable', () => {
+vi.mock('@/lib/sync', async () => {
+  const actual = await import('@/lib/sync');
   return {
-    default: (key: string) => {
-      if (key === 'folders') {
-        return { data: mocks.foldersData.value, error: null, isLoading: false };
-      }
-      if (key === 'feeds') {
-        return { data: { feeds: mocks.feedsData.value }, error: null, isLoading: false };
-      }
-      return { data: undefined, error: null, isLoading: false };
-    },
-  };
-});
-
-vi.mock('@/lib/sync', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/sync')>();
-  return {
-    ...actual,
-    fetchUnreadItemsForSync: vi.fn(async () => ({
-      items: mocks.unreadItems,
-      serverUnreadIds: new Set(mocks.unreadItems.map((item) => item.id)),
-    })),
+    fetchUnreadItemsForSync: vi.fn(() =>
+      Promise.resolve({
+        items: mocks.unreadItems,
+        serverUnreadIds: new Set(mocks.unreadItems.map((item) => item.id)),
+      }),
+    ),
+    reconcileTimelineCache: actual.reconcileTimelineCache,
   };
 });
 
@@ -100,7 +88,7 @@ function buildEntry(
   const unreadCount = partial.articles.filter((article) => article.unread).length;
   return {
     id: partial.id,
-    name: partial.name ?? `Folder ${partial.id}`,
+    name: partial.name ?? `Folder ${String(partial.id)}`,
     sortOrder: partial.sortOrder ?? 0,
     status: partial.status ?? 'queued',
     unreadCount,
