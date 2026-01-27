@@ -1,15 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useItems } from '@/hooks/useItems';
 import { getItems } from '@/lib/api/items';
 import { UNCATEGORIZED_FOLDER_ID } from '@/types';
 
+const mockUseAuth = vi.fn();
+
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    isAuthenticated: true,
-    isInitializing: false,
-    session: { baseUrl: 'https://rss.example.com', username: 'user', token: 'token' },
-  }),
+  useAuth: () => mockUseAuth(),
 }));
 
 vi.mock('@/lib/api/items', () => ({
@@ -18,8 +16,23 @@ vi.mock('@/lib/api/items', () => ({
 
 const mockedGetItems = vi.mocked(getItems);
 
+beforeEach(() => {
+  mockUseAuth.mockReturnValue({
+    isAuthenticated: true,
+    isInitializing: false,
+    session: { baseUrl: 'https://rss.example.com', username: 'user', token: 'token' },
+  });
+  mockedGetItems.mockClear();
+});
+
 describe('useItems', () => {
   it('filters items by activeFolderId while preserving allItems', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isInitializing: false,
+      session: { baseUrl: 'https://rss.example.com', username: 'user1', token: 'token' },
+    });
+
     mockedGetItems.mockResolvedValueOnce([
       {
         id: 1,
@@ -78,6 +91,12 @@ describe('useItems', () => {
   });
 
   it('treats null folderId as UNCATEGORIZED_FOLDER_ID', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isInitializing: false,
+      session: { baseUrl: 'https://rss.example.com', username: 'user2', token: 'token' },
+    });
+
     mockedGetItems.mockResolvedValueOnce([
       {
         id: 1,
