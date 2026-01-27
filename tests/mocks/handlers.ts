@@ -338,16 +338,16 @@ export const handlers: HttpHandler[] = [
     return new HttpResponse(null, { status: 200 });
   }),
 
-  // PUT /feeds/:feedId/move
-  http.put(`${BASE_URL}/feeds/:feedId/move`, ({ request }) => {
+  // POST /feeds/:feedId/move
+  http.post(`${BASE_URL}/feeds/:feedId/move`, ({ request }) => {
     if (!isAuthorized(request)) {
       return new HttpResponse(null, { status: 401 });
     }
     return new HttpResponse(null, { status: 200 });
   }),
 
-  // PUT /feeds/:feedId/rename
-  http.put(`${BASE_URL}/feeds/:feedId/rename`, ({ request }) => {
+  // POST /feeds/:feedId/rename
+  http.post(`${BASE_URL}/feeds/:feedId/rename`, ({ request }) => {
     if (!isAuthorized(request)) {
       return new HttpResponse(null, { status: 401 });
     }
