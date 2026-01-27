@@ -46,7 +46,7 @@ TypeScript 5.9 on Node.js 20 (Next.js App Router): Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 
-## Comments and Dokumentation
+## Comments and Documentation
 
 - Use short comments to indicate the purpose of code blocks
 - Use JSDoc/TSDoc comments above functions, classes, and React components to document parameters, returns, and behavior.

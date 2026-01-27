@@ -25,11 +25,15 @@ export interface UseItemsResult {
  */
 export function useItems(options: UseItemsOptions = {}): UseItemsResult {
   const { activeFolderId } = options;
-  const { isAuthenticated, isInitializing } = useAuth();
+  const { isAuthenticated, isInitializing, session } = useAuth();
 
-  const shouldFetch = isAuthenticated && !isInitializing;
+  // Scope SWR key by session identity to prevent data leakage across accounts
+  const swrKey =
+    isAuthenticated && !isInitializing && session
+      ? ['items', session.baseUrl, session.username]
+      : null;
   const { data, error, isLoading, isValidating, mutate } = useSWRImmutable<Article[], Error>(
-    shouldFetch ? 'items' : null,
+    swrKey,
     getItems,
   );
 
