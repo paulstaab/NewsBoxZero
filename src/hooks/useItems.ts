@@ -5,6 +5,7 @@ import useSWRImmutable from 'swr/immutable';
 import { getItems } from '@/lib/api/items';
 import { useAuth } from '@/hooks/useAuth';
 import type { Article } from '@/types';
+import { UNCATEGORIZED_FOLDER_ID } from '@/types';
 
 export interface UseItemsOptions {
   activeFolderId?: number | null;
@@ -37,7 +38,10 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
     if (typeof activeFolderId !== 'number') {
       return allItems;
     }
-    return allItems.filter((item) => item.folderId === activeFolderId);
+    return allItems.filter((item) => {
+      const itemFolderId = item.folderId ?? UNCATEGORIZED_FOLDER_ID;
+      return itemFolderId === activeFolderId;
+    });
   }, [activeFolderId, allItems]);
 
   const refresh = useCallback(() => mutate(), [mutate]);

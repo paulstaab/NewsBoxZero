@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useItems } from '@/hooks/useItems';
 import { getItems } from '@/lib/api/items';
+import { UNCATEGORIZED_FOLDER_ID } from '@/types';
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
@@ -73,6 +74,65 @@ describe('useItems', () => {
     });
 
     expect(result.current.items[0]?.id).toBe(1);
+    expect(result.current.allItems).toHaveLength(2);
+  });
+
+  it('treats null folderId as UNCATEGORIZED_FOLDER_ID', async () => {
+    mockedGetItems.mockResolvedValueOnce([
+      {
+        id: 1,
+        guid: 'guid-1',
+        guidHash: 'hash-1',
+        title: 'Uncategorized Item',
+        author: 'Author',
+        url: 'https://example.com/1',
+        body: 'Body',
+        feedId: 101,
+        folderId: null,
+        unread: true,
+        starred: false,
+        pubDate: 1_700_000_000,
+        lastModified: 1_700_000_000,
+        enclosureLink: null,
+        enclosureMime: null,
+        fingerprint: 'fp-1',
+        contentHash: 'ch-1',
+        mediaThumbnail: null,
+        mediaDescription: null,
+        rtl: false,
+      },
+      {
+        id: 2,
+        guid: 'guid-2',
+        guidHash: 'hash-2',
+        title: 'Categorized Item',
+        author: 'Author',
+        url: 'https://example.com/2',
+        body: 'Body',
+        feedId: 201,
+        folderId: 20,
+        unread: true,
+        starred: false,
+        pubDate: 1_700_000_000,
+        lastModified: 1_700_000_000,
+        enclosureLink: null,
+        enclosureMime: null,
+        fingerprint: 'fp-2',
+        contentHash: 'ch-2',
+        mediaThumbnail: null,
+        mediaDescription: null,
+        rtl: false,
+      },
+    ]);
+
+    const { result } = renderHook(() => useItems({ activeFolderId: UNCATEGORIZED_FOLDER_ID }));
+
+    await waitFor(() => {
+      expect(result.current.items).toHaveLength(1);
+    });
+
+    expect(result.current.items[0]?.id).toBe(1);
+    expect(result.current.items[0]?.title).toBe('Uncategorized Item');
     expect(result.current.allItems).toHaveLength(2);
   });
 });
