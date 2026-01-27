@@ -27,8 +27,10 @@ export function useItems(options: UseItemsOptions = {}): UseItemsResult {
   const { isAuthenticated, isInitializing, session } = useAuth();
 
   // Scope SWR key by session identity to prevent data leakage across accounts
-  const shouldFetch = isAuthenticated && !isInitializing && session;
-  const swrKey = shouldFetch ? ['items', session.baseUrl, session.username] : null;
+  const swrKey =
+    isAuthenticated && !isInitializing && session
+      ? ['items', session.baseUrl, session.username]
+      : null;
   const { data, error, isLoading, isValidating, mutate } = useSWRImmutable<Article[], Error>(
     swrKey,
     getItems,
