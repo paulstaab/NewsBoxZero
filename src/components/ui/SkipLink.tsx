@@ -15,7 +15,7 @@ export interface SkipLinkProps {
 }
 
 /**
- * Visually hidden skip link that becomes visible on focus.
+ * Renders an accessible skip-to-content link.
  */
 export function SkipLink({ href, children }: SkipLinkProps) {
   return (

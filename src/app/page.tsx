@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
- * Home page - redirects to timeline or login based on authentication status
+ * Home page that redirects to timeline or login based on auth state.
  */
 export default function HomePage() {
   const router = useRouter();

@@ -8,6 +8,9 @@ import { SkipLink } from '@/components/ui/SkipLink';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
 import { ClientOverlays } from '@/components/ui/ClientOverlays';
 
+/**
+ * App metadata for the root layout.
+ */
 export const metadata: Metadata = {
   title: 'NewsBoxZero',
   description: 'Static headless RSS reader for Nextcloud News.',
@@ -18,6 +21,9 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Viewport configuration for the root layout.
+ */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

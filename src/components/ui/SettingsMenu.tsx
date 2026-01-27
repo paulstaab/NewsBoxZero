@@ -21,6 +21,9 @@ export interface SettingsMenuProps {
   className?: string;
 }
 
+/**
+ * Renders the settings menu trigger and panel.
+ */
 export function SettingsMenu({ position = 'top-right', className = '' }: SettingsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);

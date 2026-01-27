@@ -5,6 +5,9 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { SettingsMenu } from '@/components/ui/SettingsMenu';
 
+/**
+ * Hosts client-only overlay UI such as banners and toasts.
+ */
 export function ClientOverlays() {
   const [isMounted, setIsMounted] = useState(false);
 

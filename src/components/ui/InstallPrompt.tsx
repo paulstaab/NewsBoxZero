@@ -29,6 +29,9 @@ export interface InstallPromptProps {
   showDuringActivity?: boolean;
 }
 
+/**
+ * Shows the PWA install prompt when eligible.
+ */
 export function InstallPrompt({ delayMs = 3000, showDuringActivity = false }: InstallPromptProps) {
   const [show, setShow] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);

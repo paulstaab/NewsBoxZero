@@ -22,13 +22,7 @@ interface RequestStateToastProps {
 }
 
 /**
- * Toast component for request state feedback
- *
- * Displays actionable error messages during:
- * - Exponential backoff (FR-012)
- * - Rate limiting/throttling
- * - Network errors
- * - Authentication failures
+ * Displays a single request state toast.
  */
 export function RequestStateToast({ message, onDismiss }: RequestStateToastProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -181,7 +175,7 @@ export function RequestStateToast({ message, onDismiss }: RequestStateToastProps
 }
 
 /**
- * Hook for managing toast queue
+ * Manages toast queue state for requests.
  */
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -258,7 +252,7 @@ export function useToast() {
 }
 
 /**
- * Toast container component for rendering multiple toasts
+ * Renders the toast container with transitions.
  */
 export function ToastContainer() {
   const { toasts, dismissToast } = useToast();

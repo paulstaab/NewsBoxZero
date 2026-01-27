@@ -2,10 +2,7 @@
 
 import { APP_BASE_PATH } from '@/lib/config/env';
 
-/**
- * Service worker registration utility.
- * Handles SW lifecycle events and provides registration helpers.
- */
+// Service worker registration utilities.
 
 /**
  * Registration status for the service worker.

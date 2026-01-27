@@ -9,6 +9,9 @@ export interface TimelineActionConfig {
   Icon: (props: { className?: string }) => JSX.Element;
 }
 
+/**
+ * Configuration for timeline action buttons.
+ */
 export const timelineActionConfig: Record<TimelineActionKey, TimelineActionConfig> = {
   sync: {
     label: 'Refresh',

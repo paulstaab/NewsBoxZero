@@ -47,6 +47,6 @@ tests/e2e/.auth
 .codex/skills
 .codex/sessions
 .codex/tmp
+.codex/*cache.json
 tests/e2e/.*
 screenshots/
-

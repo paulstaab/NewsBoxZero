@@ -263,10 +263,7 @@ export function measure(name: string, startMark: string, endMark?: string): numb
   return null;
 }
 
-/**
- * Timeline-specific performance tracking (US5).
- * Marks and measures key timeline operations.
- */
+// Timeline-specific performance tracking (US5).
 
 /**
  * Mark timeline cache load start.

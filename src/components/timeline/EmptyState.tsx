@@ -13,9 +13,7 @@ interface EmptyStateProps {
 }
 
 /**
- * Empty state component for timeline
- *
- * Displays contextual messages when timeline has no content
+ * Displays timeline empty or error state messaging.
  */
 export function EmptyState({ type, message, action }: EmptyStateProps) {
   const getContent = () => {

@@ -18,7 +18,7 @@ export interface LoadingFallbackProps {
 }
 
 /**
- * Default loading fallback component.
+ * Default loading UI for async boundaries.
  */
 export function LoadingFallback({ message = 'Loading...' }: LoadingFallbackProps) {
   return (
@@ -47,7 +47,7 @@ export interface ErrorFallbackProps {
 }
 
 /**
- * Default error fallback component.
+ * Default error UI for async boundaries.
  */
 export function ErrorFallback({ error, onRetry, onReset }: ErrorFallbackProps) {
   return (
@@ -204,8 +204,7 @@ export interface AsyncBoundaryProps {
 }
 
 /**
- * Combined async boundary with Suspense and ErrorBoundary.
- * Handles both loading and error states for async operations.
+ * Wraps children with suspense and error boundary behavior.
  */
 export function AsyncBoundary({
   children,

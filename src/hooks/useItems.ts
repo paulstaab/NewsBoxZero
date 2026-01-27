@@ -1,211 +1,61 @@
 'use client';
 
-import useSWR, { type SWRConfiguration } from 'swr';
-import { useAuth } from './useAuth';
+import { useCallback, useMemo } from 'react';
+import useSWRImmutable from 'swr/immutable';
 import { getItems } from '@/lib/api/items';
+import { useAuth } from '@/hooks/useAuth';
 import type { Article } from '@/types';
 import { UNCATEGORIZED_FOLDER_ID } from '@/types';
-import { useState, useLayoutEffect, useCallback, useEffect, useMemo } from 'react';
 
-interface ItemsParams {
-  type?: number;
-  id?: number;
-  getRead?: boolean;
-  oldestFirst?: boolean;
-  batchSize?: number;
-  offset?: number;
-}
-
-interface UseItemsOptions extends ItemsParams {
-  /** Enable infinite scroll behavior */
-  infiniteScroll?: boolean;
-  /** Prefetch next batch when this percentage of current batch is visible */
-  prefetchThreshold?: number;
-  /** Filter items to a single folder after fetch */
+export interface UseItemsOptions {
   activeFolderId?: number | null;
 }
 
-interface UseItemsResult {
+export interface UseItemsResult {
   items: Article[];
   allItems: Article[];
   isLoading: boolean;
   isValidating: boolean;
   error: Error | null;
-  hasMore: boolean;
-  loadMore: () => void;
-  refresh: () => Promise<void>;
-  mutate: (
-    data?: Article[] | Promise<Article[]>,
-    shouldRevalidate?: boolean,
-  ) => Promise<Article[] | undefined>;
+  refresh: () => Promise<Article[] | undefined>;
 }
 
-const DEFAULT_BATCH_SIZE = 50;
-const DEFAULT_PREFETCH_THRESHOLD = 0.75;
-
 /**
- * Hook for fetching and managing timeline items with pagination
- *
- * Features:
- * - Batch fetching with configurable size
- * - Infinite scroll support with automatic prefetch
- * - Offline short-circuiting via SWR
- * - Client-side caching and deduplication
+ * Fetches items and exposes filtered and full lists for the timeline.
  */
 export function useItems(options: UseItemsOptions = {}): UseItemsResult {
-  const { session, isAuthenticated } = useAuth();
-  const {
-    type = 3, // All items by default
-    id = 0,
-    getRead = false, // Unread only by default
-    oldestFirst = false,
-    batchSize = DEFAULT_BATCH_SIZE,
-    activeFolderId,
-  } = options;
+  const { activeFolderId } = options;
+  const { isAuthenticated, isInitializing, session } = useAuth();
 
-  const [offset, setOffset] = useState(0);
-  const [allItems, setAllItems] = useState<Article[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-
-  // Build SWR key
-  const key =
-    isAuthenticated && session
-      ? ['items', session.baseUrl, type, id, getRead, oldestFirst, offset, batchSize]
+  // Scope SWR key by session identity to prevent data leakage across accounts
+  const swrKey =
+    isAuthenticated && !isInitializing && session
+      ? ['items', session.baseUrl, session.username]
       : null;
-
-  // Fetcher function
-  const fetcher = useCallback(async () => {
-    if (!session) throw new Error('Not authenticated');
-
-    const items = await getItems({
-      type,
-      id,
-      getRead,
-      oldestFirst,
-      batchSize,
-      offset,
-    });
-
-    return items;
-  }, [session, type, id, getRead, oldestFirst, batchSize, offset]);
-
-  // SWR configuration with offline support
-  const swrConfig: SWRConfiguration = {
-    revalidateOnFocus: false, // Don't auto-revalidate on focus for timeline
-    dedupingInterval: 5000, // Dedupe requests within 5s
-    errorRetryCount: 3, // Retry 3 times on error
-    errorRetryInterval: 1000, // Start with 1s retry interval
-    onErrorRetry: (error, _key, _config, revalidate, { retryCount }) => {
-      // Exponential backoff: 1s, 2s, 4s
-      const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-      setTimeout(() => {
-        void revalidate({ retryCount });
-      }, delay);
-    },
-  };
-
-  const { data, error, isLoading, isValidating, mutate } = useSWR<Article[], Error>(
-    key,
-    fetcher,
-    swrConfig,
+  const { data, error, isLoading, isValidating, mutate } = useSWRImmutable<Article[], Error>(
+    swrKey,
+    getItems,
   );
 
-  // Accumulate items for infinite scroll
-  useLayoutEffect(() => {
-    if (data) {
-      if (offset === 0) {
-        // First page - replace all items
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setAllItems(data);
-      } else {
-        // Subsequent pages - append items
-
-        setAllItems((prev) => [...prev, ...data]);
-      }
-
-      // Check if there are more items to load
-
-      setHasMore(data.length === batchSize);
-    }
-  }, [data, offset, batchSize]);
-
-  // Reset when filter parameters change
-  useLayoutEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOffset(0);
-
-    setAllItems([]);
-
-    setHasMore(true);
-  }, [type, id, getRead, oldestFirst]);
-
-  const loadMore = useCallback(() => {
-    if (!isLoading && !isValidating && hasMore) {
-      setOffset((prev) => prev + batchSize);
-    }
-  }, [isLoading, isValidating, hasMore, batchSize]);
-
-  const refresh = useCallback(async () => {
-    setOffset(0);
-    setAllItems([]);
-    setHasMore(true);
-    await mutate();
-  }, [mutate]);
-
-  const filteredItems = useMemo(() => {
+  const allItems = useMemo(() => data ?? [], [data]);
+  const items = useMemo(() => {
     if (typeof activeFolderId !== 'number') {
       return allItems;
     }
-
-    return allItems.filter((item) => (item.folderId ?? UNCATEGORIZED_FOLDER_ID) === activeFolderId);
+    return allItems.filter((item) => {
+      const itemFolderId = item.folderId ?? UNCATEGORIZED_FOLDER_ID;
+      return itemFolderId === activeFolderId;
+    });
   }, [activeFolderId, allItems]);
 
+  const refresh = useCallback(() => mutate(), [mutate]);
+
   return {
-    items: filteredItems,
+    items,
     allItems,
     isLoading,
     isValidating,
     error: error ?? null,
-    hasMore,
-    loadMore,
     refresh,
-    mutate: mutate as (
-      data?: Article[] | Promise<Article[]>,
-      shouldRevalidate?: boolean,
-    ) => Promise<Article[] | undefined>,
   };
-}
-
-/**
- * Hook for detecting when to trigger prefetch based on scroll position
- *
- * Triggers loadMore when user scrolls past the prefetch threshold
- */
-export function useInfiniteScrollTrigger(
-  hasMore: boolean,
-  loadMore: () => void,
-  threshold = DEFAULT_PREFETCH_THRESHOLD,
-) {
-  useEffect(() => {
-    if (!hasMore) return;
-
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-
-      const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-
-      // Trigger prefetch when scrolled past threshold (default 75%)
-      if (scrollPercentage >= threshold) {
-        loadMore();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [hasMore, loadMore, threshold]);
 }

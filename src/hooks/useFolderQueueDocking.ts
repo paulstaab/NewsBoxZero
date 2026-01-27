@@ -8,6 +8,9 @@ export interface FolderQueueDockingResult {
   sentinelRef: RefObject<HTMLDivElement | null>;
 }
 
+/**
+ * Tracks folder queue docking state with observers.
+ */
 export function useFolderQueueDocking(): FolderQueueDockingResult {
   const queueRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);

@@ -30,6 +30,9 @@ export interface UseArticlePopoutResult {
   closePopout: () => void;
 }
 
+/**
+ * Controls the article popout dialog state and focus management.
+ */
 export function useArticlePopout(): UseArticlePopoutResult {
   const [articleKey, setArticleKey] = useState<ArticlePopoutKey | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);

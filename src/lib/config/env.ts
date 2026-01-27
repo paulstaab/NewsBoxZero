@@ -1,7 +1,4 @@
-/**
- * Runtime environment guards and configuration.
- * Enforces HTTPS hosts, exposes feature flags, and provides actionable error copy.
- */
+// Runtime environment guards and configuration.
 
 /** Storage key for debug mode preference */
 const DEBUG_KEY = 'newsboxzero:debug';

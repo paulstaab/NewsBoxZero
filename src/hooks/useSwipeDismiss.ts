@@ -14,6 +14,9 @@ interface SwipeDismissOptions {
   maxDurationMs?: number;
 }
 
+/**
+ * Enables swipe-to-dismiss handling on touch devices.
+ */
 export function useSwipeDismiss({
   enabled,
   onDismiss,

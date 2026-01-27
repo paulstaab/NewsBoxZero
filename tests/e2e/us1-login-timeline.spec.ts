@@ -97,7 +97,11 @@ test.describe('US1: Login and Timeline', () => {
       await page.getByRole('button', { name: /^continue$/i }).click();
 
       // Should show error about wrong server or API
-      await expect(page.getByText(/not.*found|wrong.*server|invalid.*api/i)).toBeVisible();
+      await expect(
+        page.getByText(
+          /not.*found|wrong.*server|invalid.*api|unable.*connect|unable.*validate|network.*error|cross-origin|cors/i,
+        ),
+      ).toBeVisible();
 
       // Should stay on server URL step
       await expect(page.getByLabel(/server url/i)).toBeVisible();

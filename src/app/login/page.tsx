@@ -446,6 +446,9 @@ function LoginContent() {
   );
 }
 
+/**
+ * Login wizard page for server validation and authentication.
+ */
 export default function LoginPage() {
   return (
     <Suspense

@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import useSWRImmutable from 'swr/immutable';
-import { useItems } from './useItems';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
 import { markItemsRead, markItemRead as apiMarkItemRead } from '@/lib/api/items';
@@ -21,6 +20,7 @@ import {
   type FolderQueueEntry,
   type TimelineCacheEnvelope,
   UNCATEGORIZED_FOLDER_ID,
+  type SelectionActions,
 } from '@/types';
 import {
   createEmptyTimelineCache,
@@ -28,10 +28,22 @@ import {
   mergeItemsIntoCache,
   storeTimelineCache,
 } from '@/lib/storage';
+import {
+  getNextSelectionId,
+  getPreviousSelectionId,
+  getTopmostVisibleId,
+} from '@/lib/timeline/selection';
+import { createReadBatcher } from '@/lib/timeline/read-batching';
 
 type FeedsSummary = Awaited<ReturnType<typeof getFeeds>>;
 
-interface UseFolderQueueResult {
+export interface UseTimelineOptions {
+  root?: Element | null;
+  topOffset?: number;
+  debounceMs?: number;
+}
+
+export interface UseTimelineResult extends SelectionActions {
   queue: FolderQueueEntry[];
   activeFolder: FolderQueueEntry | null;
   activeArticles: ArticlePreview[];
@@ -48,6 +60,11 @@ interface UseFolderQueueResult {
   skipFolder: (folderId: number) => Promise<void>;
   restart: () => Promise<void>;
   lastUpdateError: string | null;
+  selectedArticleId: number | null;
+  setSelectedArticleId: (id: number | null) => void;
+  selectedArticleElement: HTMLElement | null;
+  setSelectedArticleElement: (element: HTMLElement | null) => void;
+  registerArticle: (id: number) => (node: HTMLElement | null) => void;
 }
 
 interface RefreshOptions {
@@ -128,6 +145,11 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
 }
 
 const SYNC_TIMEOUT_MS = 8000;
+const MIN_SYNC_INDICATOR_MS = 350;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -203,7 +225,11 @@ function applyFeedNames(
   };
 }
 
-export function useFolderQueue(): UseFolderQueueResult {
+/**
+ * Manages timeline state, cache reconciliation, and read actions.
+ */
+export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult {
+  const { root, topOffset = 0, debounceMs = 100 } = options;
   const [envelope, setEnvelope] = useState<TimelineCacheEnvelope>(createEmptyTimelineCache);
   const [isHydrated, setIsHydrated] = useState(false);
   const [lastUpdateError, setLastUpdateError] = useState<string | null>(null);
@@ -238,37 +264,13 @@ export function useFolderQueue(): UseFolderQueueResult {
     return new Map<number, string>(feeds.map((feed) => [feed.id, feed.title]));
   }, [feeds]);
 
-  const {
-    allItems,
-    isLoading,
-    isValidating,
-    error: itemsError,
-    refresh: swrRefresh,
-  } = useItems({
-    getRead: false,
-    oldestFirst: false,
-  });
-
-  const hasLocalUnread = useMemo(() => {
-    return Object.values(envelope.folders).some((entry) => entry.unreadCount > 0);
-  }, [envelope.folders]);
-  const hasLocalArticles = useMemo(() => {
-    const hasArticles = Object.values(envelope.folders).some((entry) => entry.articles.length > 0);
-    return hasArticles || envelope.pendingReadIds.length > 0;
-  }, [envelope.folders, envelope.pendingReadIds.length]);
-
   // Refresh with error handling (retry logic handled at page level)
   const refresh = useCallback(
-    async (options?: RefreshOptions): Promise<void> => {
-      const { forceSync = false } = options ?? {};
+    async (_options?: RefreshOptions): Promise<void> => {
+      void _options;
+      const startedAt = Date.now();
       setIsSyncing(true);
       try {
-        if (!forceSync && !hasLocalUnread && !hasLocalArticles) {
-          await swrRefresh();
-          setLastUpdateError(null);
-          return;
-        }
-
         const { items, serverUnreadIds } = await withTimeout(
           fetchUnreadItemsForSync(),
           SYNC_TIMEOUT_MS,
@@ -306,38 +308,15 @@ export function useFolderQueue(): UseFolderQueueResult {
 
         throw error;
       } finally {
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < MIN_SYNC_INDICATOR_MS) {
+          await delay(MIN_SYNC_INDICATOR_MS - elapsed);
+        }
         setIsSyncing(false);
       }
     },
-    [feedFolderMap, feedNameMap, foldersData, hasLocalArticles, hasLocalUnread, swrRefresh],
+    [feedFolderMap, feedNameMap, foldersData],
   );
-
-  useEffect(() => {
-    if (!foldersData || isLoading) return;
-
-    // Persist refreshed queue into the cache whenever SWR returns new data.
-
-    setEnvelope((current) => {
-      const now = Date.now();
-      const previews = allItems
-        .map((article) =>
-          toArticlePreview(
-            article,
-            resolveFolderId(article, feedFolderMap),
-            now,
-            feedNameMap.get(article.feedId) ?? 'Unknown source',
-          ),
-        )
-        .filter((preview): preview is ArticlePreview => preview !== null);
-
-      // Use mergeItemsIntoCache to handle deduplication and pendingReadIds
-      const merged = mergeItemsIntoCache(current, previews, now);
-      const nextEnvelope = applyFeedNames(applyFolderNames(merged, foldersData), feedNameMap);
-
-      storeTimelineCache(nextEnvelope);
-      return nextEnvelope;
-    });
-  }, [foldersData, allItems, feedFolderMap, feedNameMap, isLoading]);
 
   useEffect(() => {
     if (!isHydrated || feedNameMap.size === 0) return;
@@ -351,6 +330,46 @@ export function useFolderQueue(): UseFolderQueueResult {
       return nextEnvelope;
     });
   }, [feedNameMap, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated || !foldersData || foldersData.length === 0) return;
+
+    const folderNameMap = new Map<number, string>(
+      foldersData.map((folder) => [folder.id, folder.name]),
+    );
+
+    setEnvelope((current) => {
+      let hasUpdates = false;
+      const updatedFolders: Record<number, FolderQueueEntry> = {};
+
+      for (const [folderIdStr, folder] of Object.entries(current.folders)) {
+        const id = Number(folderIdStr);
+        const resolvedName =
+          folderNameMap.get(id) ?? (id === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : folder.name);
+        if (folder.name !== resolvedName) {
+          hasUpdates = true;
+        }
+        updatedFolders[id] =
+          folder.name === resolvedName
+            ? folder
+            : {
+                ...folder,
+                name: resolvedName,
+              };
+      }
+
+      if (!hasUpdates) {
+        return current;
+      }
+
+      const nextEnvelope: TimelineCacheEnvelope = {
+        ...current,
+        folders: updatedFolders,
+      };
+      storeTimelineCache(nextEnvelope);
+      return nextEnvelope;
+    });
+  }, [foldersData, isHydrated, envelope.folders]);
 
   const sortedQueue = useMemo(() => {
     return sortFolderQueueEntries(Object.values(envelope.folders));
@@ -373,13 +392,15 @@ export function useFolderQueue(): UseFolderQueueResult {
     return deriveFolderProgress(orderedQueue, activeFolder ? activeFolder.id : null);
   }, [orderedQueue, activeFolder]);
 
-  const activeArticles = activeFolder ? activeFolder.articles : [];
+  const activeArticles = useMemo(() => {
+    return activeFolder ? activeFolder.articles : [];
+  }, [activeFolder]);
   const totalUnread = useMemo(() => {
     return sortedQueue.reduce((sum, entry) => sum + entry.unreadCount, 0);
   }, [sortedQueue]);
 
-  const error = itemsError ?? foldersError ?? feedsError ?? null;
-  const isUpdating = isSyncing || isValidating || isFoldersLoading || isLoading;
+  const error = foldersError ?? feedsError ?? null;
+  const isUpdating = isSyncing || isFoldersLoading;
 
   const setActiveFolder = useCallback((folderId: number) => {
     setEnvelope((current) => {
@@ -409,19 +430,17 @@ export function useFolderQueue(): UseFolderQueueResult {
 
   const markFolderRead = useCallback(
     async (folderId: number) => {
-      const folder = envelope.folders[folderId];
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!folder) {
+      if (!(folderId in envelope.folders)) {
         return;
       }
 
+      const folder = envelope.folders[folderId];
+
       const itemIds = folder.articles.map((article) => article.id);
 
-      // Optimistically update the cache
       setEnvelope((current) => {
-        const updatedFolders = { ...current.folders };
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete updatedFolders[folderId];
+        const { [folderId]: _removed, ...updatedFolders } = current.folders;
+        void _removed;
 
         const remainingQueue = sortFolderQueueEntries(Object.values(updatedFolders));
         const nextActiveId = findNextActiveId(remainingQueue);
@@ -437,11 +456,9 @@ export function useFolderQueue(): UseFolderQueueResult {
         return nextEnvelope;
       });
 
-      // Call the API to mark items as read
       try {
         await markItemsRead(itemIds);
 
-        // Remove from pendingReadIds on success
         setEnvelope((current) => {
           const nextEnvelope: TimelineCacheEnvelope = {
             ...current,
@@ -450,11 +467,8 @@ export function useFolderQueue(): UseFolderQueueResult {
           storeTimelineCache(nextEnvelope);
           return nextEnvelope;
         });
-
-        // Trigger a refresh to get updated data from the server
         await refresh();
       } catch (error: unknown) {
-        // On error, keep the pendingReadIds for retry
         console.error('Failed to mark items as read:', error);
         throw error;
       }
@@ -515,11 +529,9 @@ export function useFolderQueue(): UseFolderQueueResult {
   }, []);
 
   const markItemRead = useCallback(async (itemId: number) => {
-    // Optimistically update cache
     setEnvelope((current) => {
       const updatedFolders = { ...current.folders };
 
-      // Find which folder has this item
       let targetFolderId: number | null = null;
       for (const folderIdStr in updatedFolders) {
         const fid = Number(folderIdStr);
@@ -565,7 +577,6 @@ export function useFolderQueue(): UseFolderQueueResult {
     try {
       await apiMarkItemRead(itemId);
 
-      // Remove from pendingReadIds on success
       setEnvelope((current) => {
         const nextEnvelope: TimelineCacheEnvelope = {
           ...current,
@@ -576,9 +587,118 @@ export function useFolderQueue(): UseFolderQueueResult {
       });
     } catch (error) {
       console.error('Failed to mark item as read:', error);
-      // Keep in pendingReadIds for retry
     }
   }, []);
+
+  const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
+  const [selectedArticleElement, setSelectedArticleElement] = useState<HTMLElement | null>(null);
+
+  const orderedIds = useMemo(() => activeArticles.map((article) => article.id), [activeArticles]);
+
+  const selectTopmost = useCallback(
+    (topmostId?: number | null) => {
+      const resolvedId = topmostId ?? getTopmostVisibleId(orderedIds);
+      if (resolvedId === null || typeof resolvedId === 'undefined') return;
+      setSelectedArticleId(resolvedId);
+    },
+    [orderedIds],
+  );
+
+  const selectNext = useCallback(() => {
+    const nextId = getNextSelectionId(selectedArticleId, orderedIds);
+    if (nextId === null) return;
+    setSelectedArticleId(nextId);
+  }, [orderedIds, selectedArticleId]);
+
+  const selectPrevious = useCallback(() => {
+    const prevId = getPreviousSelectionId(selectedArticleId, orderedIds);
+    if (prevId === null) return;
+    setSelectedArticleId(prevId);
+  }, [orderedIds, selectedArticleId]);
+
+  const deselect = useCallback(() => {
+    setSelectedArticleId(null);
+    setSelectedArticleElement(null);
+  }, []);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const elementsRef = useRef<Map<number, HTMLElement>>(new Map());
+  const seenRef = useRef<Set<number>>(new Set());
+  const batcherRef = useRef<ReturnType<typeof createReadBatcher> | null>(null);
+  const unreadMapRef = useRef<Map<number, boolean>>(new Map());
+
+  useEffect(() => {
+    batcherRef.current?.clear();
+    batcherRef.current = createReadBatcher({
+      debounceMs: debounceMs,
+      onFlush: (ids) => {
+        ids.forEach((id) => {
+          void markItemRead(id);
+        });
+      },
+    });
+
+    return () => {
+      batcherRef.current?.clear();
+      batcherRef.current = null;
+    };
+  }, [debounceMs, markItemRead]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const target = entry.target as HTMLElement;
+          const id = Number(target.dataset.articleId);
+          if (!Number.isFinite(id)) return;
+
+          if (!entry.isIntersecting && entry.boundingClientRect.bottom <= 0) {
+            if (seenRef.current.has(id)) return;
+            if (unreadMapRef.current.get(id) === false) return;
+            seenRef.current.add(id);
+            batcherRef.current?.add(id);
+          }
+        });
+      },
+      {
+        root: root ?? null,
+        rootMargin: `${String(-Math.max(0, Math.round(topOffset)))}px 0px 0px 0px`,
+        threshold: [0],
+      },
+    );
+
+    observerRef.current = observer;
+    elementsRef.current.forEach((node) => {
+      observer.observe(node);
+    });
+
+    return () => {
+      observer.disconnect();
+      observerRef.current = null;
+    };
+  }, [root, topOffset]);
+
+  useEffect(() => {
+    unreadMapRef.current = new Map(activeArticles.map((item) => [item.id, item.unread]));
+    const currentIds = new Set(activeArticles.map((item) => item.id));
+    for (const [id, element] of elementsRef.current.entries()) {
+      if (!currentIds.has(id)) {
+        observerRef.current?.unobserve(element);
+        elementsRef.current.delete(id);
+        seenRef.current.delete(id);
+      }
+    }
+  }, [activeArticles]);
+
+  const registerArticle = useCallback(
+    (id: number) => (node: HTMLElement | null) => {
+      if (!node) return;
+      node.dataset.articleId = String(id);
+      elementsRef.current.set(id, node);
+      observerRef.current?.observe(node);
+    },
+    [],
+  );
 
   return {
     queue: orderedQueue,
@@ -597,5 +717,14 @@ export function useFolderQueue(): UseFolderQueueResult {
     skipFolder,
     restart,
     lastUpdateError,
+    selectedArticleId,
+    setSelectedArticleId,
+    selectedArticleElement,
+    setSelectedArticleElement,
+    selectTopmost,
+    selectNext,
+    selectPrevious,
+    deselect,
+    registerArticle,
   };
 }
