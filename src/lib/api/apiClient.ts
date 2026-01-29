@@ -470,9 +470,7 @@ let _instance: ApiClient | null = null;
  * Gets the singleton API client instance.
  */
 export function getApiClient(): ApiClient {
-  if (!_instance) {
-    _instance = new ApiClientImpl();
-  }
+  _instance ??= new ApiClientImpl();
   return _instance;
 }
 

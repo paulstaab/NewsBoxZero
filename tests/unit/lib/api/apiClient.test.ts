@@ -493,7 +493,8 @@ describe('ApiClient', () => {
       };
 
       // Test that mock works
-      expect(mockClient.feeds.getAll).toBeDefined();
+      expect(mockClient.feeds).toHaveProperty('getAll');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(vi.isMockFunction(mockClient.feeds.getAll)).toBe(true);
     });
   });
