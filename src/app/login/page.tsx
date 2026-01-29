@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { getVersion } from '@/lib/api/version';
@@ -39,7 +39,7 @@ function LoginContent() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Step 1: Validate server URL and check connectivity
-  const handleServerUrlSubmit = async (e: FormEvent) => {
+  const handleServerUrlSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationError(null);
 
@@ -94,7 +94,7 @@ function LoginContent() {
   };
 
   // Step 2: Submit credentials
-  const handleCredentialsSubmit = async (e: FormEvent) => {
+  const handleCredentialsSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationError(null);
 
@@ -122,7 +122,7 @@ function LoginContent() {
     }
   };
 
-  const handlePlainSubmit = async (e: FormEvent) => {
+  const handlePlainSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidationError(null);
 
