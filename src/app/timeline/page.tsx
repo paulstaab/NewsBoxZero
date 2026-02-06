@@ -57,6 +57,7 @@ function TimelineContent() {
     setSelectedArticleId,
     setSelectedArticleElement,
     registerArticle,
+    disableObserverTemporarily,
   } = useTimeline({
     topOffset: isDocked ? dockedHeight : 0,
   });
@@ -194,8 +195,10 @@ function TimelineContent() {
   useEffect(() => {
     if (!scrollToTopOnNextFolderRef.current) return;
     scrollToTopOnNextFolderRef.current = false;
+    // Disable the IntersectionObserver before scrolling to prevent articles from being marked read
+    disableObserverTemporarily();
     window.scrollTo({ top: 0, left: 0 });
-  }, [activeFolder]);
+  }, [activeFolder, disableObserverTemporarily]);
 
   // Show loading state while checking authentication
   if (isInitializing || !isHydrated) {

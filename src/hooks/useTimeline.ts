@@ -65,6 +65,7 @@ export interface UseTimelineResult extends SelectionActions {
   selectedArticleElement: HTMLElement | null;
   setSelectedArticleElement: (element: HTMLElement | null) => void;
   registerArticle: (id: number) => (node: HTMLElement | null) => void;
+  disableObserverTemporarily: () => void;
 }
 
 interface RefreshOptions {
@@ -626,6 +627,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const seenRef = useRef<Set<number>>(new Set());
   const batcherRef = useRef<ReturnType<typeof createReadBatcher> | null>(null);
   const unreadMapRef = useRef<Map<number, boolean>>(new Map());
+  const observerDisabledRef = useRef(false);
 
   useEffect(() => {
     batcherRef.current?.clear();
@@ -647,6 +649,9 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        // Skip processing if observer is temporarily disabled
+        if (observerDisabledRef.current) return;
+
         entries.forEach((entry) => {
           const target = entry.target as HTMLElement;
           const id = Number(target.dataset.articleId);
@@ -700,6 +705,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     [],
   );
 
+  const disableObserverTemporarily = useCallback(() => {
+    observerDisabledRef.current = true;
+    // Re-enable after a short delay to allow scroll to complete
+    setTimeout(() => {
+      observerDisabledRef.current = false;
+    }, 500);
+  }, []);
+
   return {
     queue: orderedQueue,
     activeFolder,
@@ -726,5 +739,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     selectPrevious,
     deselect,
     registerArticle,
+    disableObserverTemporarily,
   };
 }
