@@ -198,7 +198,8 @@ function TimelineContent() {
     // Disable the IntersectionObserver before scrolling to prevent articles from being marked read
     disableObserverTemporarily();
     window.scrollTo({ top: 0, left: 0 });
-  }, [activeFolder, disableObserverTemporarily]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFolder]);
 
   // Show loading state while checking authentication
   if (isInitializing || !isHydrated) {
