@@ -5,7 +5,7 @@
  * Displays when the user is offline to provide feedback.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 /**
  * Props for the OfflineBanner component.
@@ -19,32 +19,21 @@ export interface OfflineBannerProps {
  * Tracks browser online/offline state.
  */
 export function useOnlineStatus(): boolean {
-  // Use lazy initialization to set the initial state based on navigator.onLine
-  const [isOnline, setIsOnline] = useState(() => {
-    if (typeof navigator !== 'undefined') {
-      return navigator.onLine;
+  const subscribe = (callback: () => void) => {
+    if (typeof window === 'undefined') {
+      return () => undefined;
     }
-    return true; // Default to true for SSR
-  });
-
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
+    window.addEventListener('online', callback);
+    window.addEventListener('offline', callback);
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', callback);
+      window.removeEventListener('offline', callback);
     };
-  }, []);
+  };
 
-  return isOnline;
+  const getSnapshot = () => (typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => true);
 }
 
 /**

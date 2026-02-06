@@ -1,10 +1,8 @@
 'use client';
 
 import { useMemo, useRef, type RefObject } from 'react';
-import useSWR from 'swr';
 import { formatDistanceToNow } from 'date-fns';
-import type { Article, ArticlePreview } from '@/types';
-import { getArticle } from '@/lib/api/items';
+import type { ArticlePreview } from '@/types';
 import { useSwipeDismiss } from '@/hooks/useSwipeDismiss';
 
 interface ArticlePopoutProps {
@@ -33,20 +31,6 @@ export function ArticlePopout({
     canStart: () => (scrollRef.current?.scrollTop ?? 0) <= 0,
   });
 
-  const shouldFetch = isOpen && Boolean(article);
-
-  const {
-    data: fullArticle,
-    error,
-    isLoading,
-  } = useSWR<Article | null, Error>(
-    shouldFetch && article ? ['article', article.id, article.feedId] : null,
-    async () => (article ? getArticle(article.id) : null),
-    {
-      keepPreviousData: false,
-    },
-  );
-
   const content = useMemo(() => {
     if (!article) return null;
     return {
@@ -66,8 +50,7 @@ export function ArticlePopout({
     ? formatDistanceToNow(content.publishedDate, { addSuffix: true }).replace(/^about\s+/i, '')
     : null;
 
-  const fullArticleMatches = !fullArticle || fullArticle.id === article.id;
-  const bodyHtml = fullArticleMatches ? (fullArticle?.body ?? '') : '';
+  const bodyHtml = article.body;
   const bodyFallback = !bodyHtml && content.summary ? content.summary : null;
 
   return (
@@ -113,20 +96,8 @@ export function ArticlePopout({
             </p>
           </div>
 
-          <div
-            className="article-popout__body"
-            dir={fullArticleMatches && fullArticle?.rtl ? 'rtl' : 'ltr'}
-          >
-            {isLoading || !fullArticleMatches ? (
-              <div className="article-popout__loading">
-                <div className="article-popout__spinner" />
-                Loading full article...
-              </div>
-            ) : error ? (
-              <div className="article-popout__error">
-                Failed to load article content. Please try again.
-              </div>
-            ) : bodyHtml ? (
+          <div className="article-popout__body" dir="ltr">
+            {bodyHtml ? (
               <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
             ) : bodyFallback ? (
               <p>{bodyFallback}</p>

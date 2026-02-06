@@ -84,6 +84,9 @@ export interface ArticlePreview {
   /** Plain-text summary used in cards */
   summary: string;
 
+  /** HTML body used for the pop-out view */
+  body: string;
+
   /** Original article URL */
   url: string;
 

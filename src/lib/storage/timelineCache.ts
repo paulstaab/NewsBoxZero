@@ -13,11 +13,18 @@ function ensureArrayOfNumbers(value: number[] | undefined): number[] {
 
 function ensureArticlesArray(value: ArticlePreview[] | undefined): ArticlePreview[] {
   if (!Array.isArray(value)) return [];
-  return value.map((article) => ({
-    ...article,
-    feedName: article.feedName || '',
-    author: article.author || '',
-  }));
+  return value.map((article) => {
+    const preview = article as Partial<ArticlePreview>;
+    const hasFullText =
+      typeof preview.hasFullText === 'boolean' ? preview.hasFullText : Boolean(preview.body);
+    return {
+      ...article,
+      feedName: article.feedName || '',
+      author: article.author || '',
+      body: article.body || '',
+      hasFullText,
+    };
+  });
 }
 
 function rebuildFolderMap(entries: FolderQueueEntry[]): Record<number, FolderQueueEntry> {

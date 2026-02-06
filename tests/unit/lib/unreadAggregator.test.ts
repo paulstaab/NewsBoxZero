@@ -13,6 +13,7 @@ function preview(overrides: Partial<ArticlePreview> = {}): ArticlePreview {
     feedName: overrides.feedName ?? 'Feed Title',
     author: overrides.author ?? 'Author Name',
     summary: overrides.summary ?? 'Summary',
+    body: overrides.body ?? '<p>Body</p>',
     url: overrides.url ?? 'https://example.com',
     thumbnailUrl: overrides.thumbnailUrl ?? null,
     pubDate: overrides.pubDate ?? Math.floor(Date.now() / 1000),

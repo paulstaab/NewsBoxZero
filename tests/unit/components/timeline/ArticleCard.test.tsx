@@ -29,6 +29,7 @@ const mockArticle: ArticlePreview = {
   feedName: 'Example Feed',
   author: 'Test Author',
   summary: 'This is a summary of the article.',
+  body: '<p>This is the full body content.</p>',
   url: 'https://example.com/article',
   thumbnailUrl: 'https://example.com/image.jpg',
   pubDate: 1700000000,

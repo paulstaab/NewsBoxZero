@@ -110,8 +110,9 @@ function toArticlePreview(
   const trimmedTitle = article.title.trim();
   const fallbackTitle = trimmedTitle.length > 0 ? article.title : 'Untitled article';
   const summary = summarize(article.body, '');
+  const trimmedBody = article.body.trim();
   const trimmedUrl = article.url.trim();
-  const hasFullText = article.body.trim().length > 0;
+  const hasFullText = trimmedBody.length > 0;
   const trimmedAuthor = article.author.trim();
   const normalizedFeedName = feedName.trim();
 
@@ -123,6 +124,7 @@ function toArticlePreview(
     feedName: normalizedFeedName.length > 0 ? normalizedFeedName : 'Unknown source',
     author: trimmedAuthor,
     summary,
+    body: trimmedBody,
     url: trimmedUrl.length > 0 ? article.url : '#',
     thumbnailUrl: article.mediaThumbnail,
     pubDate: article.pubDate,
