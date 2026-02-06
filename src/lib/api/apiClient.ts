@@ -340,7 +340,7 @@ class ApiClientImpl implements ApiClient {
       },
 
       getById: async (id: number) => {
-        const items = await this.items.get({ id });
+        const items = await this.items.get({ id, getRead: true, batchSize: 1 });
         return items[0] ?? null;
       },
 

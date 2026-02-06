@@ -46,6 +46,11 @@ TypeScript 5.9 on Node.js 20 (Next.js App Router): Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 
+## Tests and Linting
+
+- Always run the `Lint` and `Execute Unit Tests` tasks before finishing and fix any problems.
+- After significant changes, also run the `Execute E2E Tests` task and verify that the E2E tests still work.
+
 ## Comments and Documentation
 
 - Use short comments to indicate the purpose of code blocks

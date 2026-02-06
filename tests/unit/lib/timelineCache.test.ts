@@ -19,6 +19,7 @@ function createPreview(overrides: Partial<ArticlePreview> = {}): ArticlePreview 
     feedName: overrides.feedName ?? 'Sample Feed',
     author: overrides.author ?? 'Sample Author',
     summary: overrides.summary ?? 'Summary',
+    body: overrides.body ?? '<p>Body</p>',
     url: overrides.url ?? 'https://example.com/article',
     thumbnailUrl: overrides.thumbnailUrl ?? null,
     pubDate: overrides.pubDate ?? Math.floor(Date.now() / 1000),
