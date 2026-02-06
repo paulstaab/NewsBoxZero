@@ -147,6 +147,9 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
 
 const SYNC_TIMEOUT_MS = 8000;
 const MIN_SYNC_INDICATOR_MS = 350;
+// Delay before re-enabling the IntersectionObserver after programmatic scroll.
+// This prevents articles from being marked as read during the scroll animation.
+// 500ms is sufficient for most scroll animations to complete.
 const OBSERVER_RE_ENABLE_DELAY_MS = 500;
 
 function delay(ms: number): Promise<void> {
