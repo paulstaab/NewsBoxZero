@@ -628,6 +628,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const batcherRef = useRef<ReturnType<typeof createReadBatcher> | null>(null);
   const unreadMapRef = useRef<Map<number, boolean>>(new Map());
   const observerDisabledRef = useRef(false);
+  const observerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     batcherRef.current?.clear();
@@ -643,6 +644,11 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     return () => {
       batcherRef.current?.clear();
       batcherRef.current = null;
+      // Clean up any pending observer timeout
+      if (observerTimeoutRef.current !== null) {
+        clearTimeout(observerTimeoutRef.current);
+        observerTimeoutRef.current = null;
+      }
     };
   }, [debounceMs, markItemRead]);
 
@@ -707,9 +713,14 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
 
   const disableObserverTemporarily = useCallback(() => {
     observerDisabledRef.current = true;
+    // Clear any existing timeout
+    if (observerTimeoutRef.current !== null) {
+      clearTimeout(observerTimeoutRef.current);
+    }
     // Re-enable after a short delay to allow scroll to complete
-    setTimeout(() => {
+    observerTimeoutRef.current = setTimeout(() => {
       observerDisabledRef.current = false;
+      observerTimeoutRef.current = null;
     }, 500);
   }, []);
 
