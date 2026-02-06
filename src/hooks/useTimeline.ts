@@ -65,6 +65,7 @@ export interface UseTimelineResult extends SelectionActions {
   selectedArticleElement: HTMLElement | null;
   setSelectedArticleElement: (element: HTMLElement | null) => void;
   registerArticle: (id: number) => (node: HTMLElement | null) => void;
+  disableObserverTemporarily: () => void;
 }
 
 interface RefreshOptions {
@@ -146,6 +147,10 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
 
 const SYNC_TIMEOUT_MS = 8000;
 const MIN_SYNC_INDICATOR_MS = 350;
+// Delay before re-enabling the IntersectionObserver after programmatic scroll.
+// This prevents articles from being marked as read during the scroll animation.
+// 500ms is sufficient for most scroll animations to complete.
+const OBSERVER_RE_ENABLE_DELAY_MS = 500;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -626,6 +631,8 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
   const seenRef = useRef<Set<number>>(new Set());
   const batcherRef = useRef<ReturnType<typeof createReadBatcher> | null>(null);
   const unreadMapRef = useRef<Map<number, boolean>>(new Map());
+  const observerDisabledRef = useRef(false);
+  const observerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     batcherRef.current?.clear();
@@ -641,12 +648,20 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     return () => {
       batcherRef.current?.clear();
       batcherRef.current = null;
+      // Clean up any pending observer timeout
+      if (observerTimeoutRef.current !== null) {
+        clearTimeout(observerTimeoutRef.current);
+        observerTimeoutRef.current = null;
+      }
     };
   }, [debounceMs, markItemRead]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        // Skip processing if observer is temporarily disabled
+        if (observerDisabledRef.current) return;
+
         entries.forEach((entry) => {
           const target = entry.target as HTMLElement;
           const id = Number(target.dataset.articleId);
@@ -700,6 +715,19 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     [],
   );
 
+  const disableObserverTemporarily = useCallback(() => {
+    observerDisabledRef.current = true;
+    // Clear any existing timeout
+    if (observerTimeoutRef.current !== null) {
+      clearTimeout(observerTimeoutRef.current);
+    }
+    // Re-enable after a short delay to allow scroll to complete
+    observerTimeoutRef.current = setTimeout(() => {
+      observerDisabledRef.current = false;
+      observerTimeoutRef.current = null;
+    }, OBSERVER_RE_ENABLE_DELAY_MS);
+  }, []);
+
   return {
     queue: orderedQueue,
     activeFolder,
@@ -726,5 +754,6 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     selectPrevious,
     deselect,
     registerArticle,
+    disableObserverTemporarily,
   };
 }
