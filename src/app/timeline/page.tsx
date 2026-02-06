@@ -198,6 +198,7 @@ function TimelineContent() {
     // Disable the IntersectionObserver before scrolling to prevent articles from being marked read
     disableObserverTemporarily();
     window.scrollTo({ top: 0, left: 0 });
+    // disableObserverTemporarily is stable (useCallback with empty deps), so it's safe to omit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFolder]);
 
