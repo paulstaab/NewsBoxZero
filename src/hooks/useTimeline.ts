@@ -147,6 +147,7 @@ function findNextActiveId(queue: FolderQueueEntry[]): number | null {
 
 const SYNC_TIMEOUT_MS = 8000;
 const MIN_SYNC_INDICATOR_MS = 350;
+const OBSERVER_RE_ENABLE_DELAY_MS = 500;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -721,7 +722,7 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     observerTimeoutRef.current = setTimeout(() => {
       observerDisabledRef.current = false;
       observerTimeoutRef.current = null;
-    }, 500);
+    }, OBSERVER_RE_ENABLE_DELAY_MS);
   }, []);
 
   return {
