@@ -118,7 +118,6 @@ export interface ApiArticle {
   author: string | null;
   url: string | null;
   body: string | null;
-  content: string | null;
   feedId: number;
   folderId?: number | null;
   unread: boolean;
@@ -168,7 +167,7 @@ export function normalizeArticle(api: ApiArticle): Article {
     title: api.title ?? '(No title)',
     author: api.author ?? '',
     url: api.url ?? '',
-    body: api.body ?? api.content ?? '',
+    body: api.body ?? '',
     feedId: api.feedId,
     folderId: api.folderId ?? null,
     unread: api.unread,

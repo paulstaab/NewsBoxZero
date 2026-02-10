@@ -1,9 +1,11 @@
 'use client';
 
 import { useMemo, useRef, type RefObject } from 'react';
+import useSWR from 'swr';
 import { formatDistanceToNow } from 'date-fns';
-import type { ArticlePreview } from '@/types';
+import type { Article, ArticlePreview } from '@/types';
 import { useSwipeDismiss } from '@/hooks/useSwipeDismiss';
+import { getArticle, getArticleContent } from '@/lib/api/items';
 
 interface ArticlePopoutProps {
   isOpen: boolean;
@@ -31,11 +33,35 @@ export function ArticlePopout({
     canStart: () => (scrollRef.current?.scrollTop ?? 0) <= 0,
   });
 
+  const shouldFetch = isOpen && Boolean(article);
+
+  const { data: fullArticle, error: articleError } = useSWR<Article | null, Error>(
+    shouldFetch && article ? ['article', article.id, article.feedId] : null,
+    async () => (article ? getArticle(article.id) : null),
+    {
+      keepPreviousData: false,
+    },
+  );
+
+  const {
+    data: fullContent,
+    error: contentError,
+    isLoading: isContentLoading,
+  } = useSWR<string | null, Error>(
+    shouldFetch && article ? ['article-content', article.id] : null,
+    async () => (article ? getArticleContent(article.id) : null),
+    {
+      keepPreviousData: false,
+    },
+  );
+
   const content = useMemo(() => {
     if (!article) return null;
+    const trimmedTitle = article.title.trim();
+    const trimmedFeedName = article.feedName.trim();
     return {
-      title: article.title || 'Untitled article',
-      feedName: article.feedName.trim() || 'Unknown source',
+      title: trimmedTitle.length > 0 ? article.title : 'Untitled article',
+      feedName: trimmedFeedName.length > 0 ? trimmedFeedName : 'Unknown source',
       author: article.author.trim(),
       summary: article.summary.trim(),
       publishedDate: article.pubDate ? new Date(article.pubDate * 1000) : null,
@@ -50,8 +76,13 @@ export function ArticlePopout({
     ? formatDistanceToNow(content.publishedDate, { addSuffix: true }).replace(/^about\s+/i, '')
     : null;
 
-  const bodyHtml = article.body;
+  const normalizedContent = typeof fullContent === 'string' ? fullContent.trim() : '';
+  const fallbackBody = fullArticle?.body ?? '';
+  const bodyHtml = normalizedContent ? fullContent : fallbackBody;
   const bodyFallback = !bodyHtml && content.summary ? content.summary : null;
+  const isBodyLoading = isContentLoading && !bodyHtml && !bodyFallback;
+  const combinedError = contentError ?? articleError;
+  const hasError = combinedError && !bodyHtml && !bodyFallback;
 
   return (
     <div
@@ -96,8 +127,17 @@ export function ArticlePopout({
             </p>
           </div>
 
-          <div className="article-popout__body" dir="ltr">
-            {bodyHtml ? (
+          <div className="article-popout__body" dir={fullArticle?.rtl ? 'rtl' : 'ltr'}>
+            {isBodyLoading ? (
+              <div className="article-popout__loading">
+                <div className="article-popout__spinner" />
+                Loading full article...
+              </div>
+            ) : hasError ? (
+              <div className="article-popout__error">
+                Failed to load article content. Please try again.
+              </div>
+            ) : bodyHtml ? (
               <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
             ) : bodyFallback ? (
               <p>{bodyFallback}</p>

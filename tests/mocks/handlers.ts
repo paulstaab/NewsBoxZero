@@ -97,7 +97,6 @@ export const mockItems = [
   {
     id: 1001,
     title: 'Ship It Saturday: Folder Queue',
-    content: '<p>Engineering just shipped the folder queue feature.</p>',
     author: 'Platform Team',
     body: '<p>Engineering just shipped the folder queue feature.</p>',
     contentHash: 'eng-queue-1001',
@@ -121,7 +120,6 @@ export const mockItems = [
   {
     id: 1002,
     title: 'Accessibility Improvements Rolling Out',
-    content: '<p>New keyboard shortcuts now live.</p>',
     author: 'Accessibility Guild',
     body: '<p>New keyboard shortcuts now live.</p>',
     contentHash: 'eng-a11y-1002',
@@ -145,7 +143,6 @@ export const mockItems = [
   {
     id: 1003,
     title: 'Observability Deep Dive',
-    content: '<p>Tracing the folder queue pipeline end to end.</p>',
     author: 'Infra Team',
     body: '<p>Tracing the folder queue pipeline end to end.</p>',
     contentHash: 'eng-obs-1003',
@@ -169,7 +166,6 @@ export const mockItems = [
   {
     id: 2001,
     title: 'Color Systems for 2025',
-    content: '<p>Exploring new gradient tokens.</p>',
     author: 'Design Systems',
     body: '<p>Exploring new gradient tokens.</p>',
     contentHash: 'design-color-2001',
@@ -193,7 +189,6 @@ export const mockItems = [
   {
     id: 2002,
     title: 'Motion Studies: Folder Stepper',
-    content: '<p>Documenting the folder stepper animation curves.</p>',
     author: 'Motion Lab',
     body: '<p>Documenting the folder stepper animation curves.</p>',
     contentHash: 'design-motion-2002',
@@ -217,7 +212,6 @@ export const mockItems = [
   {
     id: 3001,
     title: 'Pod Stack Episode 42',
-    content: '<p>Discussing offline-first UX wins.</p>',
     author: 'Hosts',
     body: '<p>Discussing offline-first UX wins.</p>',
     contentHash: 'pod-episode-42',
@@ -241,7 +235,6 @@ export const mockItems = [
   {
     id: 3002,
     title: 'Previously Played: Offline Sync',
-    content: '<p>Follow-up from episode 41.</p>',
     author: 'Hosts',
     body: '<p>Follow-up from episode 41.</p>',
     contentHash: 'pod-episode-41',
@@ -439,6 +432,22 @@ export const handlers: HttpHandler[] = [
     }
 
     return HttpResponse.json({ items: filteredItems });
+  }),
+
+  // GET /items/:itemId/content
+  http.get(`${BASE_URL}/items/:itemId/content`, ({ request, params }) => {
+    if (!isAuthorized(request)) {
+      return new HttpResponse(null, { status: 401 });
+    }
+
+    const itemId = Number(params.itemId);
+    const item = mockItems.find((entry) => entry.id === itemId);
+
+    if (!item?.body) {
+      return new HttpResponse(null, { status: 404 });
+    }
+
+    return HttpResponse.json({ content: item.body });
   }),
 
   // GET /items/updated

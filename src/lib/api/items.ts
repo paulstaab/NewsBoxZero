@@ -28,6 +28,13 @@ export async function getArticle(id: number): Promise<Article | null> {
 }
 
 /**
+ * Fetches full article content HTML (if available).
+ */
+export async function getArticleContent(id: number): Promise<string | null> {
+  return api.items.getContent(id);
+}
+
+/**
  * Fetches items modified since a specific timestamp.
  */
 export async function getUpdatedItems(

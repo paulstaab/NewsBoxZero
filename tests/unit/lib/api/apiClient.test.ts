@@ -473,6 +473,7 @@ describe('ApiClient', () => {
         items: {
           get: vi.fn().mockResolvedValue([]),
           getById: vi.fn(),
+          getContent: vi.fn(),
           getUpdated: vi.fn(),
           markRead: vi.fn(),
           markUnread: vi.fn(),
