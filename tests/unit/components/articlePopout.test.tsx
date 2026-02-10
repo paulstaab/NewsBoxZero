@@ -21,16 +21,29 @@ vi.mock('next/image', () => ({
 }));
 /* eslint-enable @next/next/no-img-element */
 
-const { mockSWRResponse } = vi.hoisted(() => ({
-  mockSWRResponse: {
+const { mockArticleResponse, mockContentResponse } = vi.hoisted(() => ({
+  mockArticleResponse: {
     data: undefined as Article | null | undefined,
+    error: null as Error | null,
+    isLoading: false,
+  },
+  mockContentResponse: {
+    data: undefined as string | null | undefined,
     error: null as Error | null,
     isLoading: false,
   },
 }));
 
 vi.mock('swr', () => ({
-  default: () => mockSWRResponse,
+  default: (key: unknown) => {
+    if (Array.isArray(key) && key[0] === 'article-content') {
+      return mockContentResponse;
+    }
+    if (Array.isArray(key) && key[0] === 'article') {
+      return mockArticleResponse;
+    }
+    return { data: undefined, error: null, isLoading: false };
+  },
 }));
 
 const mockArticle: ArticlePreview = {
@@ -41,7 +54,7 @@ const mockArticle: ArticlePreview = {
   feedName: 'Example Feed',
   author: 'Pop Author',
   summary: 'This is a summary of the article.',
-  body: '<p>This is the full body content.</p>',
+  body: '',
   url: 'https://example.com/article',
   thumbnailUrl: 'https://example.com/image.jpg',
   pubDate: 1700000000,
@@ -76,9 +89,12 @@ const mockFullArticle: Article = {
 
 describe('ArticlePopout', () => {
   it('renders heading, subheading, and body content', () => {
-    mockSWRResponse.data = mockFullArticle;
-    mockSWRResponse.error = null;
-    mockSWRResponse.isLoading = false;
+    mockArticleResponse.data = mockFullArticle;
+    mockArticleResponse.error = null;
+    mockArticleResponse.isLoading = false;
+    mockContentResponse.data = '<p>This is the full body content.</p>';
+    mockContentResponse.error = null;
+    mockContentResponse.isLoading = false;
 
     render(
       <ArticlePopout
@@ -116,9 +132,12 @@ describe('ArticlePopout', () => {
   });
 
   it('closes when Escape is pressed', async () => {
-    mockSWRResponse.data = mockFullArticle;
-    mockSWRResponse.error = null;
-    mockSWRResponse.isLoading = false;
+    mockArticleResponse.data = mockFullArticle;
+    mockArticleResponse.error = null;
+    mockArticleResponse.isLoading = false;
+    mockContentResponse.data = '<p>This is the full body content.</p>';
+    mockContentResponse.error = null;
+    mockContentResponse.isLoading = false;
 
     function Harness() {
       const openerRef = useRef<HTMLButtonElement>(null);

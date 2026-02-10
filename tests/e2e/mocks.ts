@@ -60,7 +60,6 @@ export function getMockItems() {
     {
       id: 1001,
       title: 'Ship It Saturday: Folder Queue',
-      content: '<p>Engineering just shipped the folder queue feature.</p>',
       author: 'Platform Team',
       body: '<p>Engineering just shipped the folder queue feature.</p>',
       feedId: 101,
@@ -83,7 +82,6 @@ export function getMockItems() {
     {
       id: 1002,
       title: 'Accessibility Improvements Rolling Out',
-      content: '<p>New keyboard shortcuts now live.</p>',
       author: 'Accessibility Guild',
       body: '<p>New keyboard shortcuts now live.</p>',
       feedId: 102,
@@ -106,7 +104,6 @@ export function getMockItems() {
     {
       id: 1003,
       title: 'Observability Deep Dive',
-      content: '<p>Tracing the folder queue pipeline end to end.</p>',
       author: 'Infra Team',
       body: '<p>Tracing the folder queue pipeline end to end.</p>',
       feedId: 101,
@@ -129,7 +126,6 @@ export function getMockItems() {
     {
       id: 2001,
       title: 'Color Systems for 2025',
-      content: '<p>Exploring new gradient tokens.</p>',
       author: 'Design Systems',
       body: '<p>Exploring new gradient tokens.</p>',
       feedId: 201,
@@ -152,7 +148,6 @@ export function getMockItems() {
     {
       id: 2002,
       title: 'Motion Studies: Folder Stepper',
-      content: '<p>Documenting the folder stepper animation curves.</p>',
       author: 'Motion Lab',
       body: '<p>Documenting the folder stepper animation curves.</p>',
       feedId: 201,
@@ -175,7 +170,6 @@ export function getMockItems() {
     {
       id: 3001,
       title: 'Pod Stack Episode 42',
-      content: '<p>Discussing offline-first UX wins.</p>',
       author: 'Hosts',
       body: '<p>Discussing offline-first UX wins.</p>',
       feedId: 301,
@@ -245,6 +239,36 @@ export async function setupApiMocks(page: Page, baseUrl = 'https://rss.example.c
 
   // Mock items endpoint
   // Per Core Principle VI (Unread-Only Focus), API MUST return only unread articles
+  await page.route(`${apiBase}/items/*/content`, async (route: Route) => {
+    const request = route.request();
+    const auth = request.headers().authorization;
+
+    if (auth !== 'Basic dGVzdHVzZXI6dGVzdHBhc3M=') {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Unauthorized' }),
+      });
+      return;
+    }
+
+    const url = new URL(request.url());
+    const segments = url.pathname.split('/');
+    const itemId = Number(segments[segments.length - 2]);
+    const item = getMockItems().find((entry) => entry.id === itemId);
+
+    if (!item?.body) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ content: item.body }),
+    });
+  });
+
   await page.route(`${apiBase}/items**`, async (route: Route) => {
     const request = route.request();
     const auth = request.headers().authorization;

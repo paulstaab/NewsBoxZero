@@ -48,6 +48,8 @@ export class NetworkError extends Error {
  */
 export interface ApiRequestOptions extends Omit<RequestInit, 'headers'> {
   headers?: Record<string, string>;
+  /** Controls how successful responses are parsed (default: json). */
+  responseType?: 'json' | 'text';
   /** Skip authentication header (for credential validation) */
   skipAuth?: boolean;
   /** Override auth credentials for this request */
@@ -96,6 +98,7 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
     baseUrl: overrideBaseUrl,
     maxRetries = CONFIG.MAX_RETRIES,
     noRetry = false,
+    responseType = 'json',
     headers: customHeaders = {},
     ...fetchOptions
   } = options;
@@ -181,6 +184,10 @@ export async function apiRequest<T>(endpoint: string, options: ApiRequestOptions
       }
 
       // Parse successful response
+      if (responseType === 'text') {
+        return (await response.text()) as T;
+      }
+
       const contentType = response.headers.get('Content-Type');
       if (contentType?.includes('application/json')) {
         return (await response.json()) as T;

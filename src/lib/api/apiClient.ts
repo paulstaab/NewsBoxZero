@@ -124,6 +124,12 @@ export interface ItemsApi {
   getById(id: number): Promise<Article | null>;
 
   /**
+   * Fetches the full content HTML for a single article.
+   * Returns null when the endpoint is missing or the item has no content.
+   */
+  getContent(id: number): Promise<string | null>;
+
+  /**
    * Fetches items modified since a specific timestamp.
    */
   getUpdated(lastModified: number, type?: ItemFilterType, id?: number): Promise<Article[]>;
@@ -342,6 +348,39 @@ class ApiClientImpl implements ApiClient {
       getById: async (id: number) => {
         const items = await this.items.get({ id, getRead: true, batchSize: 1 });
         return items[0] ?? null;
+      },
+
+      getContent: async (id: number) => {
+        try {
+          const response = await baseApiGet<string>(`/items/${String(id)}/content`, {
+            responseType: 'text',
+          });
+          const trimmed = response.trim();
+          if (!trimmed) {
+            return '';
+          }
+
+          if (trimmed.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(trimmed) as {
+                content?: string | null;
+                body?: string | null;
+              };
+              if (typeof parsed === 'object') {
+                return parsed.content ?? parsed.body ?? '';
+              }
+            } catch {
+              // Fall through to treat as raw HTML/text.
+            }
+          }
+
+          return response;
+        } catch (error) {
+          if (error instanceof ApiError && error.statusCode === 404) {
+            return null;
+          }
+          throw error;
+        }
       },
 
       getUpdated: async (
