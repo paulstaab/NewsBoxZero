@@ -111,7 +111,7 @@ describe('ArticlePopout', () => {
     expect(screen.getByText('This is the full body content.')).toBeDefined();
   });
 
-  it('calls onClose when overlay or close button is clicked', () => {
+  it('calls onClose only when close button is clicked', () => {
     const onClose = vi.fn();
 
     render(
@@ -125,13 +125,13 @@ describe('ArticlePopout', () => {
     );
 
     fireEvent.click(screen.getByTestId('article-popout-overlay'));
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /close/i }));
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('closes when Escape is pressed', async () => {
+  it('closes when Space is pressed', async () => {
     mockArticleResponse.data = mockFullArticle;
     mockArticleResponse.error = null;
     mockArticleResponse.isLoading = false;
@@ -169,7 +169,7 @@ describe('ArticlePopout', () => {
       expect(screen.getByText('Popout Article Title')).toBeDefined();
     });
 
-    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: ' ' });
 
     await waitFor(() => {
       expect(screen.queryByText('Popout Article Title')).toBeNull();
