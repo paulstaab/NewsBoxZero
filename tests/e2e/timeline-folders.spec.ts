@@ -359,7 +359,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     const targetCard = page.getByRole('option').filter({ hasText: titleText }).first();
     await targetCard.click();
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /close article/i }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(targetCard).toHaveAttribute('aria-label', /read/i);
 
@@ -505,7 +505,7 @@ test.describe('Timeline update and persistence (US5)', () => {
     expect(markReadCalled).toBe(true);
 
     // Close pop-out and verify the read item remains visible until the next sync reconciliation
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /close article/i }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(targetCard).toHaveAttribute('aria-label', /read/i);
     await expect(page.getByRole('option').filter({ hasText: titleText })).toHaveCount(1);

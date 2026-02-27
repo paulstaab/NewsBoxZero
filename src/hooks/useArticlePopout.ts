@@ -77,13 +77,7 @@ export function useArticlePopout(): UseArticlePopoutResult {
       const activeElement = document.activeElement as HTMLElement | null;
       if (isExcludedTarget(activeElement)) return;
 
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closePopout();
-        return;
-      }
-
-      if (event.key === ' ' || event.key === 'Spacebar') {
+      if (event.key === ' ' || event.key === 'Spacebar' || event.key === 'Space') {
         event.preventDefault();
         closePopout();
         return;
@@ -113,10 +107,10 @@ export function useArticlePopout(): UseArticlePopoutResult {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, { capture: true });
       document.body.style.overflow = previousOverflow;
       document.body.style.paddingRight = previousPaddingRight;
     };

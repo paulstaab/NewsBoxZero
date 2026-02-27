@@ -4,7 +4,6 @@ import { useMemo, useRef, type RefObject } from 'react';
 import useSWR from 'swr';
 import { formatDistanceToNow } from 'date-fns';
 import type { Article, ArticlePreview } from '@/types';
-import { useSwipeDismiss } from '@/hooks/useSwipeDismiss';
 import { getArticle, getArticleContent } from '@/lib/api/items';
 
 interface ArticlePopoutProps {
@@ -26,12 +25,6 @@ export function ArticlePopout({
   closeButtonRef,
 }: ArticlePopoutProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipeDismiss({
-    enabled: isOpen,
-    onDismiss: onClose,
-    canStart: () => (scrollRef.current?.scrollTop ?? 0) <= 0,
-  });
 
   const shouldFetch = isOpen && Boolean(article);
 
@@ -89,7 +82,6 @@ export function ArticlePopout({
       className="article-popout__overlay"
       role="presentation"
       data-testid="article-popout-overlay"
-      onClick={onClose}
     >
       <div
         className="article-popout"
@@ -102,9 +94,6 @@ export function ArticlePopout({
         onClick={(event) => {
           event.stopPropagation();
         }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
       >
         <button
           type="button"
