@@ -20,7 +20,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install --include=dev && npx playwright install --with-deps",
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends ripgrep && npm install --include=dev && npx playwright install --with-deps",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
