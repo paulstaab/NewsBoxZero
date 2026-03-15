@@ -11,7 +11,7 @@ Reconcile locally cached unread articles against the server’s unread list duri
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.9 on Node.js 20  
+**Language/Version**: TypeScript 5.9 on Node.js 24  
 **Primary Dependencies**: Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1  
 **Storage**: Browser localStorage + sessionStorage (timeline cache + session/preferences)  
 **Testing**: Vitest + Testing Library, Playwright E2E, ESLint, `tsc --noEmit`  

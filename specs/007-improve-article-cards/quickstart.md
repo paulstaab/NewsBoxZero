@@ -1,7 +1,7 @@
 # Quickstart: Improve Timeline Article Cards
 
 ## Prereqs
-- Node.js 20+
+- Node.js 24+
 - Dependencies installed (`npm install`)
 
 ## Run

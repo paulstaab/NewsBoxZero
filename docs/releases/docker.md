@@ -8,7 +8,7 @@
 
 ## CI Workflow Summary
 
-1. Checkout + Node 18 setup
+1. Checkout + Node 24 setup
 2. `npm ci && npm run lint && npm run test && npm run build && npm run export`
 3. `docker buildx build --platform linux/amd64 --push ghcr.io/paulstaab/newsboxzero:latest`
 4. `docker buildx imagetools inspect` to append digest + size to summary
