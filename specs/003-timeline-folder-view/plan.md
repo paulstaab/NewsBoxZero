@@ -9,7 +9,7 @@ Deliver a folder-first reading flow inside the existing Next.js timeline page. T
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x on Node 20 (Next.js App Router)  
+**Language/Version**: TypeScript 5.x on Node 24 (Next.js App Router)  
 **Primary Dependencies**: Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests  
 **Storage**: Browser localStorage + sessionStorage for auth plus a new timeline cache namespace (NEEDS CLARIFICATION: key schema & retention policy)  
 **Testing**: Vitest for hooks/utils, Playwright (including axe-core + visual) for end-to-end folder navigation, MSW-backed mocks  

@@ -10,7 +10,7 @@
 
 **Purpose**: Stand up the Next.js 14 static workspace, tooling, and CI scaffolding required by all later phases.
 
-- [x] T001 Configure Node 20 + Next.js 14 static export defaults (output: 'export', trailingSlash, images.unoptimized) in `package.json`, `tsconfig.json`, and `next.config.js`.
+- [x] T001 Configure Node 24 + Next.js 14 static export defaults (output: 'export', trailingSlash, images.unoptimized) in `package.json`, `tsconfig.json`, and `next.config.js`.
 - [x] T002 Create the directory skeleton (`src/app`, `src/components`, `src/hooks`, `src/lib`, `src/styles`, `src/types`, `tests/`, `public/`) with placeholder exports in `src/app/page.tsx` and `src/app/layout.tsx` so imports resolve per plan.md.
 - [x] T003 Install Tailwind+PostCSS and seed responsive tokens/breakpoints in `tailwind.config.js`, `postcss.config.js`, `src/styles/tokens.css`, and `src/styles/globals.css`.
 - [x] T004 [P] Configure ESLint (strict TS rules), Prettier, and npm scripts in `.eslintrc.cjs`, `.prettierrc`, and `package.json` to satisfy Constitution Principle I.

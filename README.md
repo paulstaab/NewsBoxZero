@@ -25,7 +25,7 @@ speak the Nextcloud News v1.3 protocol (untested).
 
 ### Prerequisites
 
-- Node.js 20 or higher
+- Node.js 24 or higher
 - npm
 
 ### Installation

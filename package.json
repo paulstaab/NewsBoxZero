@@ -4,7 +4,7 @@
   "description": "A static webapp frontend for headless-rss",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev",
