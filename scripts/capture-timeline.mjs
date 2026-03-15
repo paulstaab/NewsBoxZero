@@ -41,15 +41,42 @@ if (!serverUrl || !username || !password) {
 const appBaseUrl = process.env.APP_BASE_URL ?? envFile.APP_BASE_URL ?? 'http://127.0.0.1:3000';
 const outputDir = path.join(ROOT_DIR, 'screenshots');
 const outputs = {
-  full: path.join(outputDir, 'timeline-full.png'),
-  top: path.join(outputDir, 'timeline-top.png'),
-  bottom: path.join(outputDir, 'timeline-bottom.png'),
-  screen: path.join(outputDir, 'timeline-screen.png'),
-  feeds: path.join(outputDir, 'feeds-screen.png'),
-  feedsViewport: path.join(outputDir, 'feeds-viewport.png'),
+  timeline: {
+    full: path.join(outputDir, 'timeline-full.png'),
+    top: path.join(outputDir, 'timeline-top.png'),
+    bottom: path.join(outputDir, 'timeline-bottom.png'),
+    screen: path.join(outputDir, 'timeline-screen.png'),
+  },
+  feeds: {
+    full: path.join(outputDir, 'feeds-full.png'),
+    top: path.join(outputDir, 'feeds-top.png'),
+    bottom: path.join(outputDir, 'feeds-bottom.png'),
+    screen: path.join(outputDir, 'feeds-screen.png'),
+    viewport: path.join(outputDir, 'feeds-viewport.png'),
+  },
 };
 
 await fs.mkdir(outputDir, { recursive: true });
+
+const capturePageShots = async (page, pageOutputs) => {
+  const viewport = page.viewportSize() ?? { width: 1280, height: 720 };
+  const topHeight = Math.min(600, viewport.height);
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: pageOutputs.screen });
+
+  await page.screenshot({
+    path: pageOutputs.top,
+    clip: { x: 0, y: 0, width: viewport.width, height: topHeight },
+  });
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: pageOutputs.bottom });
+
+  await page.screenshot({ path: pageOutputs.full, fullPage: true });
+};
 
 const browser = await chromium.launch();
 const context = await browser.newContext({
@@ -147,24 +174,7 @@ if (!timelineReady) {
   throw new Error('Timeline did not render expected content.');
 }
 await page.waitForLoadState('networkidle');
-
-const viewport = page.viewportSize() ?? { width: 1280, height: 720 };
-const topHeight = Math.min(600, viewport.height);
-
-await page.evaluate(() => window.scrollTo(0, 0));
-await page.waitForTimeout(200);
-await page.screenshot({ path: outputs.screen });
-
-await page.screenshot({
-  path: outputs.top,
-  clip: { x: 0, y: 0, width: viewport.width, height: topHeight },
-});
-
-await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-await page.waitForTimeout(200);
-await page.screenshot({ path: outputs.bottom });
-
-await page.screenshot({ path: outputs.full, fullPage: true });
+await capturePageShots(page, outputs.timeline);
 
 await page.goto(`${appBaseUrl}/feeds/`, { waitUntil: 'domcontentloaded' });
 
@@ -178,17 +188,20 @@ try {
 }
 
 await page.waitForLoadState('networkidle');
-await page.evaluate(() => window.scrollTo(0, 0));
-await page.waitForTimeout(200);
-await page.screenshot({ path: outputs.feedsViewport });
-await page.screenshot({ path: outputs.feeds, fullPage: true });
+await capturePageShots(page, outputs.feeds);
+await fs.copyFile(outputs.feeds.screen, outputs.feeds.viewport);
 
 await browser.close();
 
 console.log('Saved timeline screenshots:');
-console.log(outputs.full);
-console.log(outputs.top);
-console.log(outputs.bottom);
-console.log(outputs.screen);
-console.log(outputs.feeds);
-console.log(outputs.feedsViewport);
+console.log(outputs.timeline.full);
+console.log(outputs.timeline.top);
+console.log(outputs.timeline.bottom);
+console.log(outputs.timeline.screen);
+
+console.log('Saved feed management screenshots:');
+console.log(outputs.feeds.full);
+console.log(outputs.feeds.top);
+console.log(outputs.feeds.bottom);
+console.log(outputs.feeds.screen);
+console.log(outputs.feeds.viewport);

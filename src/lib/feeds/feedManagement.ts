@@ -1,3 +1,4 @@
+import { formatDistanceToNowStrict } from 'date-fns';
 import type { Feed, Folder } from '@/types';
 
 export const UNCATEGORIZED_GROUP_NAME = 'Uncategorized';
@@ -66,15 +67,14 @@ export function buildFeedManagementGroups(
 }
 
 /**
- * Formats a Unix timestamp in seconds using the browser's local date and time settings.
+ * Formats a Unix timestamp in seconds relative to the current time.
  */
-export function formatLocalDateTime(timestampSeconds: number | null): string {
+export function formatRelativeDateTime(timestampSeconds: number | null): string {
   if (timestampSeconds === null || timestampSeconds <= 0) {
     return 'Not available';
   }
 
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(timestampSeconds * 1000));
+  return formatDistanceToNowStrict(new Date(timestampSeconds * 1000), {
+    addSuffix: true,
+  });
 }

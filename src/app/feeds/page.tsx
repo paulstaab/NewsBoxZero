@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ButtonHTMLAttributes,
   type SubmitEvent,
 } from 'react';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ import { ItemFilterType, type Feed, type Folder } from '@/types';
 import {
   buildFeedManagementGroups,
   compareLabels,
-  formatLocalDateTime,
+  formatRelativeDateTime,
   type FeedManagementGroup,
 } from '@/lib/feeds/feedManagement';
 
@@ -42,49 +43,171 @@ function omitLatestArticleDate(
   ) as Record<number, number | null>;
 }
 
-/**
- * Compact metric card used in the page header.
- */
-function FeedMetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-      <div className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-white/60">
-        {label}
-      </div>
-      <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
-    </div>
-  );
+interface IconProps {
+  className?: string;
+}
+
+interface FeedActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string;
+  variant?: 'default' | 'accent' | 'danger';
+  size?: 'sm' | 'lg';
 }
 
 /**
- * Reusable metadata tile for feed rows.
+ * Shared icon-only action button used throughout the page.
  */
-function FeedDetailTile({
+function FeedActionButton({
+  children,
+  className = '',
   label,
-  value,
-  tone = 'default',
-}: {
-  label: string;
-  value: string;
-  tone?: 'default' | 'warning';
-}) {
+  size = 'sm',
+  variant = 'default',
+  ...buttonProps
+}: FeedActionButtonProps) {
+  const palette =
+    variant === 'accent'
+      ? 'border-transparent bg-[hsl(var(--color-accent-strong))] text-slate-950 hover:brightness-110 focus:ring-[hsl(var(--color-accent-strong))]'
+      : variant === 'danger'
+        ? 'border-red-400/30 bg-red-950/20 text-red-200 hover:bg-red-950/35 focus:ring-red-300/60'
+        : 'border-white/10 bg-white/6 text-[hsl(var(--color-text))] hover:bg-white/10 focus:ring-[hsl(var(--color-accent-strong))]';
+  const sizing = size === 'lg' ? 'h-11 w-11' : 'h-10 w-10';
+
   return (
-    <div
-      className={`rounded-2xl border px-4 py-3 ${
-        tone === 'warning'
-          ? 'border-amber-300/35 bg-amber-100/80 text-amber-950'
-          : 'border-[hsl(var(--color-border))] bg-[hsl(var(--color-surface))]/80 text-[hsl(var(--color-text))]'
-      }`}
+    <button
+      {...buttonProps}
+      aria-label={label}
+      title={label}
+      className={`inline-flex ${sizing} items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))] disabled:cursor-not-allowed disabled:opacity-60 ${palette} ${className}`.trim()}
+      type={buttonProps.type ?? 'button'}
     >
-      <dt
-        className={`text-[0.68rem] font-semibold uppercase tracking-[0.2em] ${
-          tone === 'warning' ? 'text-amber-900/70' : 'text-[hsl(var(--color-text-muted))]'
-        }`}
-      >
-        {label}
-      </dt>
-      <dd className="mt-2 text-sm font-medium leading-6">{value}</dd>
-    </div>
+      {children}
+    </button>
+  );
+}
+
+function PlusIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path d="M12 5v14" strokeLinecap="round" />
+      <path d="M5 12h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RefreshIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path d="M20 11a8 8 0 0 0-14.9-4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 4v5h5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 13a8 8 0 0 0 14.9 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FolderPlusIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path
+        d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"
+        strokeLinejoin="round"
+      />
+      <path d="M12 10.5v5" strokeLinecap="round" />
+      <path d="M9.5 13h5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PencilIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path d="M4 20l4.5-1 9-9a2.1 2.1 0 1 0-3-3l-9 9z" strokeLinejoin="round" />
+      <path d="M13.5 6.5l3 3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path d="M4 7h16" strokeLinecap="round" />
+      <path d="M9 7V5h6v2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 7l1 12h6l1-12" strokeLinejoin="round" />
+      <path d="M10 11v5" strokeLinecap="round" />
+      <path d="M14 11v5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MoveIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path
+        d="M4 8.5A2.5 2.5 0 0 1 6.5 6H11l2 2h4.5A2.5 2.5 0 0 1 20 10.5V11"
+        strokeLinejoin="round"
+      />
+      <path d="M13 15h7" strokeLinecap="round" />
+      <path d="m17 11 4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 10.5V17a2 2 0 0 0 2 2h7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BackIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      className={className}
+    >
+      <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WarningIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 3.75c.43 0 .83.23 1.04.61l8 14A1.2 1.2 0 0 1 20 20.25H4a1.2 1.2 0 0 1-1.04-1.89l8-14c.21-.38.61-.61 1.04-.61Zm0 4.5a.75.75 0 0 0-.75.75v4.5a.75.75 0 0 0 1.5 0V9a.75.75 0 0 0-.75-.75Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+    </svg>
   );
 }
 
@@ -113,6 +236,7 @@ function FeedManagementContent() {
   const { isAuthenticated, isInitializing, logout } = useAuth();
   const createFeedDialogRef = useRef<HTMLDialogElement>(null);
   const createFolderDialogRef = useRef<HTMLDialogElement>(null);
+  const moveFeedDialogRef = useRef<HTMLDialogElement>(null);
 
   const [data, setData] = useState<FeedManagementData>({ folders: [], feeds: [] });
   const [latestArticleDates, setLatestArticleDates] = useState<Record<number, number | null>>({});
@@ -129,6 +253,9 @@ function FeedManagementContent() {
   const [editingFolderName, setEditingFolderName] = useState('');
   const [editingFeedId, setEditingFeedId] = useState<number | null>(null);
   const [editingFeedTitle, setEditingFeedTitle] = useState('');
+  const [moveFeedId, setMoveFeedId] = useState<number | null>(null);
+  const [moveFeedTitle, setMoveFeedTitle] = useState('');
+  const [moveFeedFolderId, setMoveFeedFolderId] = useState('');
 
   const sortedFolders = useMemo(
     () => [...data.folders].sort((left, right) => compareLabels(left.name, right.name)),
@@ -139,10 +266,6 @@ function FeedManagementContent() {
     () => buildFeedManagementGroups(data.folders, data.feeds, latestArticleDates),
     [data.feeds, data.folders, latestArticleDates],
   );
-  const totalFeeds = data.feeds.length;
-  const foldersWithFeeds = groups.filter((group) => !group.isUncategorized).length;
-  const feedsWithErrors = data.feeds.filter((feed) => feed.lastUpdateError).length;
-
   const handleRequestError = useCallback(
     (error: unknown, fallbackMessage: string) => {
       if (error instanceof AuthenticationError) {
@@ -163,6 +286,19 @@ function FeedManagementContent() {
 
   const closeCreateFeedDialog = useCallback(() => {
     createFeedDialogRef.current?.close();
+  }, []);
+
+  const openMoveFeedDialog = useCallback((feed: Feed) => {
+    setMoveFeedId(feed.id);
+    setMoveFeedTitle(feed.title);
+    setMoveFeedFolderId(feed.folderId === null ? '' : String(feed.folderId));
+    moveFeedDialogRef.current?.showModal();
+  }, []);
+
+  const resetMoveFeedDialog = useCallback(() => {
+    setMoveFeedId(null);
+    setMoveFeedTitle('');
+    setMoveFeedFolderId('');
   }, []);
 
   /**
@@ -264,9 +400,11 @@ function FeedManagementContent() {
       try {
         await action();
         await refreshPageData(false);
+        return true;
       } catch (error) {
         const message = handleRequestError(error, `${label} failed.`);
         setMutationError(message);
+        return false;
       } finally {
         setBusyLabel(null);
       }
@@ -398,7 +536,7 @@ function FeedManagementContent() {
   const handleMoveFeed = async (feedId: number, folderIdValue: string) => {
     const folderId = folderIdValue ? Number(folderIdValue) : null;
 
-    await runMutation('Move feed', async () => {
+    return runMutation('Move feed', async () => {
       await moveFeed(feedId, folderId);
       setData((current) => ({
         ...current,
@@ -406,6 +544,20 @@ function FeedManagementContent() {
       }));
       setStatusMessage('Moved feed successfully.');
     });
+  };
+
+  const handleMoveFeedSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (moveFeedId === null) {
+      return;
+    }
+
+    const moved = await handleMoveFeed(moveFeedId, moveFeedFolderId);
+    if (moved) {
+      moveFeedDialogRef.current?.close();
+      resetMoveFeedDialog();
+    }
   };
 
   const handleDeleteFeed = async (feed: Feed) => {
@@ -441,57 +593,52 @@ function FeedManagementContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--color-accent)_/_0.24),_transparent_28%),linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_18%,hsl(var(--color-surface))_100%)] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_60%,hsl(var(--color-surface))_100%)] p-6 shadow-[0_22px_50px_rgba(5,10,25,0.28)] sm:p-8">
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top,_hsl(var(--color-accent-strong)_/_0.28),_transparent_58%)] lg:block" />
-          <div className="relative flex flex-col gap-6">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-              <div className="max-w-3xl space-y-3">
-                <p className="text-sm uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
-                  Feed Management
-                </p>
-                <h1 className="text-3xl font-semibold tracking-tight text-[hsl(var(--color-text))] sm:text-4xl">
-                  Manage subscriptions and folders
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-[hsl(var(--color-text-muted))] sm:text-base">
-                  Add feeds, route them into folders, and clean up stale subscriptions from one
-                  focused control surface.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3 xl:max-w-sm xl:justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    createFolderDialogRef.current?.showModal();
-                  }}
-                  className="rounded-full bg-[hsl(var(--color-accent-strong))] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))]"
-                >
-                  New Folder
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void refreshPageData(false);
-                  }}
-                  disabled={isRefreshing || busyLabel !== null}
-                  className="rounded-full border border-white/12 bg-white/6 px-5 py-3 text-sm font-medium text-[hsl(var(--color-text))] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                </button>
-                <Link
-                  href="/timeline"
-                  className="rounded-full border border-white/12 bg-transparent px-5 py-3 text-sm font-medium text-[hsl(var(--color-text))] transition hover:bg-white/8 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))]"
-                >
-                  Back To Timeline
-                </Link>
-              </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--color-accent)_/_0.18),_transparent_26%),linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_18%,hsl(var(--color-surface))_100%)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <header className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] p-6 shadow-[0_18px_40px_rgba(5,10,25,0.2)] sm:p-7">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="max-w-3xl space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--color-text-muted))]">
+                Feed Management
+              </p>
+              <h1 className="text-3xl font-semibold tracking-tight text-[hsl(var(--color-text))] sm:text-4xl">
+                Manage subscriptions and folders
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-[hsl(var(--color-text-muted))] sm:text-base">
+                Review each subscription at a glance, then rename, move, or remove it from a compact
+                control surface.
+              </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              <FeedMetricCard label="Total feeds" value={String(totalFeeds)} />
-              <FeedMetricCard label="Active folders" value={String(foldersWithFeeds)} />
-              <FeedMetricCard label="Feeds with errors" value={String(feedsWithErrors)} />
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <FeedActionButton
+                label="New folder"
+                onClick={() => {
+                  createFolderDialogRef.current?.showModal();
+                }}
+                variant="accent"
+                size="lg"
+              >
+                <FolderPlusIcon />
+              </FeedActionButton>
+              <FeedActionButton
+                disabled={isRefreshing || busyLabel !== null}
+                label={isRefreshing ? 'Refreshing feeds' : 'Refresh feeds'}
+                onClick={() => {
+                  void refreshPageData(false);
+                }}
+                size="lg"
+              >
+                <RefreshIcon />
+              </FeedActionButton>
+              <Link
+                href="/timeline"
+                aria-label="Back to timeline"
+                title="Back to timeline"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/6 text-[hsl(var(--color-text))] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))]"
+              >
+                <BackIcon />
+              </Link>
             </div>
           </div>
         </header>
@@ -529,10 +676,10 @@ function FeedManagementContent() {
               return (
                 <section
                   key={group.isUncategorized ? 'uncategorized' : String(group.id)}
-                  className="overflow-hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] shadow-[0_16px_40px_rgba(7,10,24,0.18)]"
+                  className="overflow-hidden rounded-[1.5rem] border border-white/8 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] shadow-[0_14px_32px_rgba(7,10,24,0.16)]"
                 >
-                  <div className="flex flex-col gap-5 border-b border-white/8 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-2">
+                  <div className="flex flex-col gap-4 border-b border-white/8 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
                       {isEditingFolder ? (
                         <form
                           onSubmit={(event) => {
@@ -572,7 +719,7 @@ function FeedManagementContent() {
                       ) : (
                         <>
                           <div className="flex flex-wrap items-center gap-3">
-                            <h2 className="text-2xl font-semibold text-[hsl(var(--color-text))]">
+                            <h2 className="text-xl font-semibold text-[hsl(var(--color-text))] sm:text-2xl">
                               {group.name}
                             </h2>
                             <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[hsl(var(--color-text-muted))]">
@@ -580,39 +727,33 @@ function FeedManagementContent() {
                               {group.feeds.length === 1 ? '' : 's'}
                             </span>
                           </div>
-                          <p className="max-w-2xl text-sm leading-6 text-[hsl(var(--color-text-muted))]">
-                            {group.isUncategorized
-                              ? 'Feeds without a folder assignment live here until you move them.'
-                              : 'Curate this folder by renaming it, moving feeds, or removing stale subscriptions.'}
-                          </p>
                         </>
                       )}
                     </div>
 
                     {group.id !== null ? (
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))] transition hover:bg-white/10"
+                      <div className="flex flex-wrap gap-2">
+                        <FeedActionButton
+                          label={`Rename folder ${group.name}`}
                           onClick={() => {
                             setEditingFolderId(group.id);
                             setEditingFolderName(group.name);
                           }}
                         >
-                          Rename Folder
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-full border border-red-400/30 bg-red-950/20 px-4 py-2 text-sm font-medium text-red-200 transition hover:bg-red-950/35"
+                          <PencilIcon />
+                        </FeedActionButton>
+                        <FeedActionButton
+                          label={`Delete folder ${group.name}`}
                           onClick={() => {
                             const folder = data.folders.find((entry) => entry.id === group.id);
                             if (folder) {
                               void handleDeleteFolder(folder);
                             }
                           }}
+                          variant="danger"
                         >
-                          Delete Folder
-                        </button>
+                          <TrashIcon />
+                        </FeedActionButton>
                       </div>
                     ) : null}
                   </div>
@@ -624,18 +765,11 @@ function FeedManagementContent() {
                       return (
                         <article
                           key={feed.id}
-                          className="grid gap-5 px-6 py-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,1fr)_280px]"
+                          className="grid gap-4 px-5 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
                         >
-                          <div className="space-y-4">
-                            <div className="flex flex-wrap items-start gap-3">
-                              <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                                Feed #{feed.id}
-                              </div>
-                              {feed.lastUpdateError ? (
-                                <div className="rounded-full border border-amber-300/35 bg-amber-100/80 px-3 py-1 text-xs font-medium text-amber-900">
-                                  Update error present
-                                </div>
-                              ) : null}
+                          <div className="min-w-0 space-y-3">
+                            <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))] w-fit">
+                              Feed #{feed.id}
                             </div>
 
                             {isEditingFeed ? (
@@ -673,77 +807,75 @@ function FeedManagementContent() {
                                 </button>
                               </form>
                             ) : (
-                              <>
-                                <h3 className="text-xl font-semibold leading-tight text-[hsl(var(--color-text))] sm:text-2xl">
+                              <div className="flex items-start gap-2">
+                                <h3
+                                  className="truncate text-lg font-semibold leading-tight text-[hsl(var(--color-text))] sm:text-xl"
+                                  title={feed.url}
+                                >
                                   {feed.title}
                                 </h3>
-                                <p className="break-all text-sm leading-6 text-[hsl(var(--color-text-muted))]">
-                                  {feed.url}
-                                </p>
-                              </>
+                                {feed.lastUpdateError ? (
+                                  <span
+                                    aria-label={`Update error: ${feed.lastUpdateError}`}
+                                    className="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center text-amber-400"
+                                    title={feed.lastUpdateError}
+                                  >
+                                    <WarningIcon className="h-4.5 w-4.5" />
+                                  </span>
+                                ) : null}
+                              </div>
                             )}
+
+                            <dl className="grid gap-2 sm:grid-cols-2">
+                              <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
+                                <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
+                                  Last article
+                                </dt>
+                                <dd className="mt-1 text-sm font-medium text-[hsl(var(--color-text))]">
+                                  {formatRelativeDateTime(lastArticleDate)}
+                                </dd>
+                              </div>
+                              <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
+                                <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
+                                  Next update
+                                </dt>
+                                <dd className="mt-1 text-sm font-medium text-[hsl(var(--color-text))]">
+                                  {formatRelativeDateTime(feed.nextUpdateTime)}
+                                </dd>
+                              </div>
+                            </dl>
                           </div>
 
-                          <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                            <FeedDetailTile
-                              label="Last Article Date"
-                              value={formatLocalDateTime(lastArticleDate)}
-                            />
-                            <FeedDetailTile
-                              label="Next Scheduled Update"
-                              value={formatLocalDateTime(feed.nextUpdateTime)}
-                            />
-                            <FeedDetailTile
-                              label="Latest Update Error"
-                              value={feed.lastUpdateError ?? 'None'}
-                              tone={feed.lastUpdateError ? 'warning' : 'default'}
-                            />
-                          </dl>
-
-                          <div className="flex flex-col justify-between gap-4 rounded-[1.5rem] border border-white/10 bg-black/10 p-4">
-                            <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
-                              <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                                Move to folder
-                              </span>
-                              <select
-                                value={feed.folderId === null ? '' : String(feed.folderId)}
-                                onChange={(event) => {
-                                  void handleMoveFeed(feed.id, event.target.value);
-                                }}
-                                className="rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
-                                aria-label={`Move ${feed.title} to folder`}
-                              >
-                                <option value="">Uncategorized</option>
-                                {sortedFolders.map((folder) => (
-                                  <option key={folder.id} value={String(folder.id)}>
-                                    {folder.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-
-                            <div className="flex flex-wrap gap-3">
-                              <button
-                                type="button"
-                                className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))] transition hover:bg-white/10"
+                          {isEditingFeed ? null : (
+                            <div className="flex items-center gap-2 md:justify-self-end">
+                              <FeedActionButton
+                                label={`Rename feed ${feed.title}`}
                                 onClick={() => {
                                   setEditingFeedId(feed.id);
                                   setEditingFeedTitle(feed.title);
                                 }}
                               >
-                                Rename Feed
-                              </button>
-                              <button
-                                type="button"
-                                className="rounded-full border border-red-400/30 bg-red-950/20 px-4 py-2 text-sm font-medium text-red-200 transition hover:bg-red-950/35"
+                                <PencilIcon />
+                              </FeedActionButton>
+                              <FeedActionButton
+                                label={`Move ${feed.title} to another folder`}
+                                onClick={() => {
+                                  openMoveFeedDialog(feed);
+                                }}
+                              >
+                                <MoveIcon />
+                              </FeedActionButton>
+                              <FeedActionButton
+                                label={`Delete feed ${feed.title}`}
                                 onClick={() => {
                                   void handleDeleteFeed(feed);
                                 }}
+                                variant="danger"
                               >
-                                Delete Feed
-                              </button>
+                                <TrashIcon />
+                              </FeedActionButton>
                             </div>
-                          </div>
+                          )}
                         </article>
                       );
                     })}
@@ -759,7 +891,7 @@ function FeedManagementContent() {
           aria-label="Add feed"
           title="Add feed (+)"
           onClick={openCreateFeedDialog}
-          className="fixed bottom-6 right-6 z-50 inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(180deg,hsl(var(--color-accent-strong))_0%,hsl(var(--color-accent))_100%)] text-4xl font-light leading-none text-slate-950 shadow-[0_20px_45px_rgba(4,10,24,0.45)] transition hover:scale-[1.04] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))]"
+          className="fixed bottom-6 right-6 z-50 inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(180deg,hsl(var(--color-accent-strong))_0%,hsl(var(--color-accent))_100%)] text-slate-950 shadow-[0_20px_45px_rgba(4,10,24,0.45)] transition hover:scale-[1.04] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))]"
           style={{
             position: 'fixed',
             right: '1.75rem',
@@ -768,7 +900,7 @@ function FeedManagementContent() {
             height: '4.5rem',
           }}
         >
-          <span aria-hidden="true">+</span>
+          <PlusIcon className="h-7 w-7" />
         </button>
 
         <dialog
@@ -848,6 +980,66 @@ function FeedManagementContent() {
                 className="rounded-full bg-[hsl(var(--color-accent-strong))] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busyLabel === 'Subscribe feed' ? 'Subscribing...' : 'Subscribe'}
+              </button>
+            </div>
+          </form>
+        </dialog>
+
+        <dialog
+          ref={moveFeedDialogRef}
+          className="w-full max-w-md rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] p-0 text-[hsl(var(--color-text))] shadow-2xl backdrop:bg-black/55"
+          onClose={resetMoveFeedDialog}
+        >
+          <form
+            onSubmit={(event) => {
+              void handleMoveFeedSubmit(event);
+            }}
+            className="space-y-5 p-6"
+          >
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold">Move Feed</h2>
+              <p className="text-sm text-[hsl(var(--color-text-secondary))]">
+                Choose a new folder for {moveFeedTitle || 'this feed'}.
+              </p>
+            </div>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
+              <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
+                Destination folder
+              </span>
+              <select
+                value={moveFeedFolderId}
+                onChange={(event) => {
+                  setMoveFeedFolderId(event.target.value);
+                }}
+                className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
+                aria-label="Target folder"
+              >
+                <option value="">Uncategorized</option>
+                {sortedFolders.map((folder) => (
+                  <option key={folder.id} value={String(folder.id)}>
+                    {folder.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))]"
+                onClick={() => {
+                  moveFeedDialogRef.current?.close();
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busyLabel !== null}
+                className="rounded-full bg-[hsl(var(--color-accent-strong))] px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Move Feed
               </button>
             </div>
           </form>

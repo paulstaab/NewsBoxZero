@@ -6,6 +6,8 @@
 import { type Page, type Route } from '@playwright/test';
 import type { ApiFeed } from '@/types';
 
+const nowInSeconds = Math.floor(Date.now() / 1000);
+
 // Mock data matching MSW handlers
 export const mockFolders = [
   { id: 10, name: 'Engineering Updates', feeds: [101, 102] },
@@ -20,7 +22,7 @@ export const mockFeeds: ApiFeed[] = [
     title: 'Frontend Focus',
     faviconLink: 'https://frontend.example.com/favicon.ico',
     added: 1702200000,
-    nextUpdateTime: 1702203600,
+    nextUpdateTime: nowInSeconds + 1800,
     folderId: 10,
     ordering: 0,
     link: 'https://frontend.example.com',
@@ -34,7 +36,7 @@ export const mockFeeds: ApiFeed[] = [
     title: 'Backend Briefing',
     faviconLink: 'https://backend.example.com/favicon.ico',
     added: 1702105000,
-    nextUpdateTime: 1702208600,
+    nextUpdateTime: nowInSeconds + 5400,
     folderId: 10,
     ordering: 1,
     link: 'https://backend.example.com',
@@ -48,7 +50,7 @@ export const mockFeeds: ApiFeed[] = [
     title: 'Design Notes',
     faviconLink: null,
     added: 1702000000,
-    nextUpdateTime: 1702203600,
+    nextUpdateTime: nowInSeconds + 7200,
     folderId: 20,
     ordering: 0,
     link: 'https://design.example.com',
@@ -62,7 +64,7 @@ export const mockFeeds: ApiFeed[] = [
     title: 'The Pod Stack',
     faviconLink: 'https://podcasts.example.com/icon.png',
     added: 1701900000,
-    nextUpdateTime: 1702303600,
+    nextUpdateTime: nowInSeconds + 14400,
     folderId: 30,
     ordering: 0,
     link: 'https://podcasts.example.com',

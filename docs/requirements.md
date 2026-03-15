@@ -105,14 +105,15 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `FEEDS-006`: Failed subscription attempts shall preserve the user input and show actionable error feedback without removing the current page data.
 - `FEEDS-007`: The page shall group subscribed feeds by folder and shall show feeds without a folder assignment in an `Uncategorized` group.
 - `FEEDS-008`: Feed groups and feed rows shall be ordered alphabetically by displayed name.
-- `FEEDS-009`: Each feed row shall display the feed ID, feed name, last article date, next scheduled update time, and the most recent update error message when one exists.
-- `FEEDS-010`: The page shall provide a control to reassign a feed to a different folder, including moving it back to the uncategorized group.
-- `FEEDS-011`: The page shall allow deleting an individual feed only after explicit user confirmation.
-- `FEEDS-012`: The page shall provide a dialog for creating a new folder.
-- `FEEDS-013`: The page shall allow renaming an existing folder.
-- `FEEDS-014`: The page shall allow deleting an existing folder only after explicit user confirmation.
-- `FEEDS-015`: When confirming folder deletion, the page shall warn that deleting the folder will unsubscribe all feeds currently assigned to that folder.
-- `FEEDS-016`: Confirmed folder deletion shall unsubscribe all feeds currently assigned to that folder and then remove the folder.
-- `FEEDS-017`: The page shall format displayed feed timestamps using the user’s local date and time settings.
-- `FEEDS-018`: A floating add-feed action shall open the subscription modal.
-- `FEEDS-019`: Pressing the `+` key outside editable fields shall open the subscription modal.
+- `FEEDS-009`: Each feed row shall display the feed ID, feed name, last article date relative to the current time, and next scheduled update time relative to the current time.
+- `FEEDS-010`: The page shall show feed update failures as a warning icon beside the feed name and expose the concrete error text on hover.
+- `FEEDS-011`: The page shall provide a control to reassign a feed to a different folder, including moving it back to the uncategorized group, from a modal opened by a row action.
+- `FEEDS-012`: The page shall allow deleting an individual feed only after explicit user confirmation.
+- `FEEDS-013`: The page shall provide a dialog for creating a new folder.
+- `FEEDS-014`: The page shall allow renaming an existing folder.
+- `FEEDS-015`: The page shall allow deleting an existing folder only after explicit user confirmation.
+- `FEEDS-016`: When confirming folder deletion, the page shall warn that deleting the folder will unsubscribe all feeds currently assigned to that folder.
+- `FEEDS-017`: Confirmed folder deletion shall unsubscribe all feeds currently assigned to that folder and then remove the folder.
+- `FEEDS-018`: The page shall expose the feed URL as hover text on the displayed feed name.
+- `FEEDS-019`: A floating add-feed action shall open the subscription modal.
+- `FEEDS-020`: Pressing the `+` key outside editable fields shall open the subscription modal.
