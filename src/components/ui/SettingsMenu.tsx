@@ -6,6 +6,8 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { triggerInstallPrompt, canPromptInstall } from '@/lib/pwa/installPrompt';
 
 export interface SettingsMenuProps {
@@ -25,6 +27,7 @@ export interface SettingsMenuProps {
  * Renders the settings menu trigger and panel.
  */
 export function SettingsMenu({ position = 'top-right', className = '' }: SettingsMenuProps) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [showInstallOption, setShowInstallOption] = useState(false);
@@ -163,6 +166,58 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
                 {isInstalling ? 'Installing...' : showInstallOption ? 'Install App' : 'Install App'}
               </span>
             </button>
+
+            <Link
+              href="/timeline"
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[hsl(var(--color-text))] hover:bg-[hsl(var(--color-surface-hover))] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[hsl(var(--color-primary))]"
+              role="menuitem"
+              aria-current={pathname === '/timeline' ? 'page' : undefined}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <svg
+                className="h-5 w-5 text-[hsl(var(--color-text-secondary))]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12h18M3 6h18M3 18h18"
+                />
+              </svg>
+              <span>Timeline</span>
+            </Link>
+
+            <Link
+              href="/feeds"
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[hsl(var(--color-text))] hover:bg-[hsl(var(--color-surface-hover))] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[hsl(var(--color-primary))]"
+              role="menuitem"
+              aria-current={pathname === '/feeds' ? 'page' : undefined}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <svg
+                className="h-5 w-5 text-[hsl(var(--color-text-secondary))]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7h16M4 12h10M4 17h16"
+                />
+              </svg>
+              <span>Feed Management</span>
+            </Link>
 
             {/* About Option (placeholder for future) */}
             <button

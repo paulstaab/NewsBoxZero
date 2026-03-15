@@ -15,6 +15,7 @@ It is organized by shared shell behavior and page so coverage can scale as more 
 
 - `TC-APP-*`: shared shell and cross-page behavior
 - `TC-LOGIN-*`: login page
+- `TC-FEEDS-*`: feed management page
 - `TC-TIMELINE-*`: timeline page
 
 ## Shared App Shell
@@ -84,7 +85,18 @@ It is organized by shared shell behavior and page so coverage can scale as more 
 | `TC-TIMELINE-029` | Visual | `tests/visual/us1-login-timeline.spec.ts`             | Login, timeline, pop-out, and offline states remain visually stable. | Stored screenshots for key login and timeline states continue to match.                                   |
 | `TC-TIMELINE-030` | Visual | `tests/visual/timeline-folders.spec.ts`               | Folder queue and timeline folder states remain visually stable.      | Stored screenshots for folder-focused timeline states continue to match.                                  |
 
+## Feed Management Page
+
+| ID             | Type | Source                                  | Case                                                         | Expected Result                                                                                  |
+| -------------- | ---- | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `TC-FEEDS-001` | E2E  | `tests/e2e/feeds-management.spec.ts`    | Unauthenticated access is blocked.                           | Visiting `/feeds` while signed out redirects to `/login`.                                        |
+| `TC-FEEDS-002` | E2E  | `tests/e2e/feeds-management.spec.ts`    | Shared settings navigation reaches the feed page.            | Opening the settings menu and selecting feed management routes to `/feeds`.                      |
+| `TC-FEEDS-003` | E2E  | `tests/e2e/feeds-management.spec.ts`    | Feed and folder CRUD flows update the page state.            | Create, rename, move, unsubscribe, and folder deletion actions refresh the rendered feed groups. |
+| `TC-FEEDS-004` | Unit | `tests/unit/lib/feedManagement.test.ts` | Feed groups are sorted and uncategorized feeds are included. | Folder groups and feed rows are returned in alphabetical order with uncategorized items grouped. |
+| `TC-FEEDS-005` | Unit | `tests/unit/lib/feedManagement.test.ts` | Timestamp formatting handles missing values.                 | Absent timestamps render as `Not available` and populated timestamps format locally.             |
+
 ## Current Gaps
 
 - Several older unit tests in `tests/unit/hooks/useAuth.test.ts` are still placeholders and should not be treated as meaningful coverage beyond URL validation.
 - The current automated suite does not provide strong coverage for queue docking, focus trap edge cases, or the hidden `?plain=1` login mode.
+- The feed management suite currently focuses on the main CRUD path and does not yet cover subscription failure states or accessibility-specific assertions on `/feeds`.

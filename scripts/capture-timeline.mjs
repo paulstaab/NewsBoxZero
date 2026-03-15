@@ -45,6 +45,7 @@ const outputs = {
   top: path.join(outputDir, 'timeline-top.png'),
   bottom: path.join(outputDir, 'timeline-bottom.png'),
   screen: path.join(outputDir, 'timeline-screen.png'),
+  feeds: path.join(outputDir, 'feeds-screen.png'),
 };
 
 await fs.mkdir(outputDir, { recursive: true });
@@ -130,7 +131,14 @@ try {
     await page.locator('[role="article"]').first().waitFor({ state: 'visible', timeout: 15000 });
     timelineReady = true;
   } catch {
-    timelineReady = false;
+    try {
+      await page
+        .getByRole('heading', { name: /all caught up|all folders viewed/i })
+        .waitFor({ state: 'visible', timeout: 15000 });
+      timelineReady = true;
+    } catch {
+      timelineReady = false;
+    }
   }
 }
 
@@ -157,6 +165,22 @@ await page.screenshot({ path: outputs.bottom });
 
 await page.screenshot({ path: outputs.full, fullPage: true });
 
+await page.goto(`${appBaseUrl}/feeds/`, { waitUntil: 'domcontentloaded' });
+
+try {
+  await page.getByRole('heading', { name: /manage subscriptions and folders/i }).waitFor({
+    state: 'visible',
+    timeout: 15000,
+  });
+} catch {
+  throw new Error(`Feed management page did not render. Current URL: ${page.url()}.`);
+}
+
+await page.waitForLoadState('networkidle');
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.waitForTimeout(200);
+await page.screenshot({ path: outputs.feeds, fullPage: true });
+
 await browser.close();
 
 console.log('Saved timeline screenshots:');
@@ -164,3 +188,4 @@ console.log(outputs.full);
 console.log(outputs.top);
 console.log(outputs.bottom);
 console.log(outputs.screen);
+console.log(outputs.feeds);
