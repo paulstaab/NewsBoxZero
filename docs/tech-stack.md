@@ -1,3 +1,38 @@
+# Tech stack
+
+This document provides a high-level overview of the technologies used in this
+repository and how they fit together.
+
+## Application runtime
+
+- Primary language / framework: _[fill in here if needed]_
+- Package management: _[fill in here if needed]_
+
+## CI/CD
+
+- Continuous integration: GitHub Actions
+- Test & build: standard workflow jobs run on pull requests and main-branch pushes
+
+## Containerization & deployment
+
+The application is containerized and published as a Docker image:
+
+- **Dockerfile**: A root-level `Dockerfile` defines the production image.
+- **Buildx**: GitHub Actions uses Docker Buildx (via `docker/build-push-action`)
+  to build the image, including support for multi-architecture builds where
+  configured.
+- **Registry**: Built images are pushed to GitHub Container Registry (GHCR) under
+  the `ghcr.io/<OWNER>/<IMAGE-NAME>` namespace for this repository.
+
+The CI workflow is responsible for:
+
+- Building the Docker image from the root `Dockerfile`.
+- Tagging the image (for example, with the commit SHA and/or release version).
+- Publishing the image to GHCR using repository-scoped credentials.
+
+For step-by-step instructions on how to deploy a new version using the published
+Docker image, including any environment-specific details, see the **Deployment**
+section in `README.md`, which serves as the current deployment runbook.
 # Tech Stack
 
 ## Purpose
