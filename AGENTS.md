@@ -1,64 +1,123 @@
-# NewsBoxZero Development Guidelines
+# NewsBoxZero Agent Instructions
 
-Auto-generated from all feature plans. Last updated: 2025-12-28
+## Purpose
 
-## Active Technologies
+This file is the single source of truth for repository-specific coding instructions.
+Use it for any automated or agent-driven work in this repository.
 
-- TypeScript 5.9 (Node.js 24) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (007-improve-article-cards)
-- Browser localStorage + sessionStorage (timeline cache, session/preferences) (007-improve-article-cards)
+## Project Overview
 
-- TypeScript 5.9, Node.js 24 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (006-pinned-action-buttons)
+NewsBoxZero is a static-export-oriented Next.js frontend for a headless RSS backend that exposes the Nextcloud News v1.3 API.
+The current product surface is centered on:
 
-- TypeScript 5.9 on Node.js 24 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (005-article-sync-readstatus)
-- Browser localStorage + sessionStorage (timeline cache + session/preferences) (005-article-sync-readstatus)
+- shared app shell behavior
+- login page behavior
+- timeline page behavior
+- PWA install and offline affordances
 
-- TypeScript 5.9 on Node.js 24 (Next.js App Router) + Next.js 16 (static export), React 19, SWR, Tailwind CSS, date-fns (004-folder-queue-pills)
+## Source Of Truth
 
-## Project Structure
+When understanding or changing behavior, use these sources in this order:
+
+1. implemented code in `src/`
+2. automated tests in `tests/`
+3. lightweight product docs in `docs/`
+
+## Documentation That Must Stay In Sync
+
+The following docs are part of the maintained product baseline and must stay aligned with the code:
+
+- `docs/requirements.md`
+- `docs/test-cases.md`
+- `docs/test-scenarios.md`
+- `docs/tech-stack.md`
+
+Rules:
+
+- When behavior changes, update the relevant docs in the same task.
+- When tests change in a meaningful way, update `docs/test-cases.md` and `docs/test-scenarios.md` as needed.
+- When the stack, tooling, or core architecture changes, update `docs/tech-stack.md`.
+- When the user asks for documentation updates, do not stop at code changes; keep the docs in sync as part of the request.
+- If you notice the docs are materially out of sync with the code while working on a related area, fix them.
+
+## Repository Structure
 
 ```text
-backend/
-frontend/
+src/
+  app/              # Next.js App Router pages
+  components/       # UI components
+  hooks/            # React hooks
+  lib/              # API clients, storage, config, utilities
+  styles/           # Global styles and design tokens
+  types/            # Shared TypeScript types
 tests/
+  e2e/              # Playwright end-to-end suites
+  unit/             # Vitest unit tests
+  visual/           # Visual regression suites
+public/             # Static assets, manifest, service worker assets
+docs/               # Maintained lightweight requirements and test docs
+scripts/            # Helper scripts, including screenshot capture
 ```
+
+## Current Stack
+
+- TypeScript 5.9
+- Node.js 24+
+- Next.js 16 App Router
+- React 19
+- SWR 2.x
+- Tailwind CSS 4.1
+- date-fns 4.1
+- Playwright
+- Vitest
+- Testing Library
+- MSW
+
+For the maintained stack description, see `docs/tech-stack.md`.
 
 ## Commands
 
-```bash
-npm run lint:fix      # Run ESLint
-npm run typecheck     # Run TypeScript type checking
-npm run format        # Auto-format all files
-npm run test          # Run unit tests
-npm run test:e2e      # Run end-to-end tests
-```
+- `npm run dev` - start the dev server
+- `npm run build` - build the app
+- `npm run start` - start the production server
+- `npm run lint` - run ESLint
+- `npm run lint:fix` - run ESLint with fixes
+- `npm run typecheck` - run TypeScript checks
+- `npm run format` - run Prettier write
+- `npm run format:check` - run Prettier check
+- `npm run test` - run unit tests
+- `npm run test:coverage` - run unit tests with coverage
+- `npm run test:e2e` - run Playwright e2e tests
+- `npm run test:e2e:ui` - run Playwright e2e tests in UI mode
 
-## Code Style
+## Working Expectations
 
-TypeScript 5.9 on Node.js 24 (Next.js App Router): Follow standard conventions
+- Prefer `rg` for searching files and text.
+- Keep changes consistent with existing patterns unless the user asks for a broader redesign.
+- Use short comments only where they help explain non-obvious code.
+- Add JSDoc or TSDoc to functions, classes, and React components when you create or substantially change them.
+- Prefer small, targeted changes over speculative refactors.
+- Preserve accessibility behavior when changing UI.
+- Preserve static-export compatibility and client-side authenticated fetching patterns.
 
-## Recent Changes
+## Testing Expectations
 
-- 007-improve-article-cards: Added TypeScript 5.9 (Node.js 24) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
-
-- 006-pinned-action-buttons: Added TypeScript 5.9, Node.js 24 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
-
-- 005-article-sync-readstatus: Added TypeScript 5.9 on Node.js 24 + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
-
-<!-- MANUAL ADDITIONS START -->
-
-## Tests and Linting
-
-- Always run the `Lint` and `Execute Unit Tests` tasks before finishing and fix any problems.
-- After significant changes, also run the `Execute E2E Tests` task and verify that the E2E tests still work.
-
-## Comments and Documentation
-
-- Use short comments to indicate the purpose of code blocks
-- Use JSDoc/TSDoc comments above functions, classes, and React components to document parameters, returns, and behavior.
+- Always run `npm run lint` and `npm run test` before finishing, and fix issues you introduced.
+- After significant behavior changes, also run `npm run test:e2e`.
+- If you do not run a relevant test suite, say so clearly.
 
 ## Screenshots
 
-Use the capture scripts `./scripts/capture-timeline.sh` and `./scripts/capture-login-page.sh` to create screenshot.
-This requires network access and must run outside ouf any sandbox.
+Use these scripts when screenshots are needed:
 
-<!-- MANUAL ADDITIONS END -->
+- `./scripts/capture-timeline.sh`
+- `./scripts/capture-login-page.sh`
+
+These require network access and must run outside restricted sandboxes when applicable.
+
+## Related Docs
+
+- `docs/requirements.md`
+- `docs/test-cases.md`
+- `docs/test-scenarios.md`
+- `docs/tech-stack.md`
