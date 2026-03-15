@@ -33,6 +33,7 @@ The CI workflow is responsible for:
 For step-by-step instructions on how to deploy a new version using the published
 Docker image, including any environment-specific details, see the **Deployment**
 section in `README.md`, which serves as the current deployment runbook.
+
 # Tech Stack
 
 ## Purpose
