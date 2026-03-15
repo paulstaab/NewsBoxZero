@@ -9,7 +9,7 @@ Replace the Unread/All pills on the timeline page with a horizontal folder queue
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.9 on Node.js 20 (Next.js App Router)  
+**Language/Version**: TypeScript 5.9 on Node.js 24 (Next.js App Router)  
 **Primary Dependencies**: Next.js 16 (static export), React 19, SWR, Tailwind CSS, date-fns  
 **Storage**: Browser `localStorage` for `newsboxzero.timeline.v1` cache; session storage for auth tokens  
 **Testing**: Vitest + Testing Library for hooks/utils; Playwright (with axe-core) for UI and a11y  

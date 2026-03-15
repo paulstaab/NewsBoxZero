@@ -5,7 +5,7 @@
 
 ## Phase 0: Research & Decisions
 
-- [ ] T001 [P] Capture the final runtime base image (`node:18-alpine`) and static server selection in specs/002-docker-deploy/research.md
+- [ ] T001 [P] Capture the final runtime base image (`node:24-alpine`) and static server selection in specs/002-docker-deploy/research.md
 - [ ] T002 Document GHCR credential scope, secret names, and rotation playbook in specs/002-docker-deploy/research.md
 - [ ] T003 [P] Record the manual verification checklist (non-root UID, read-only root, `/tmp` tmpfs, ≤30 s startup) in specs/002-docker-deploy/research.md
 
@@ -25,8 +25,8 @@
 
 ## Phase 3: User Story 1 - CI publishes production container (Priority: P1)
 
-- [ ] T012 [US1] Implement the builder stage in Dockerfile (Node 18) running `npm ci && npm run build && npm run export` to produce `/out`
-- [ ] T013 [US1] Implement the runtime stage using `node:18-alpine`, copy `/out`, install `npx serve`, set `USER 65532`, expose port 8000, and restrict writes to `/tmp`
+- [ ] T012 [US1] Implement the builder stage in Dockerfile (Node 24) running `npm ci && npm run build && npm run export` to produce `/out`
+- [ ] T013 [US1] Implement the runtime stage using `node:24-alpine`, copy `/out`, install `npx serve`, set `USER 65532`, expose port 8000, and restrict writes to `/tmp`
 - [ ] T014 [US1] Ensure `.github/workflows/deploy.yml` runs `npm run lint` and `npm run test` before any Docker build step to honor the “no new tests” directive
 - [ ] T015 [US1] Add a `docker buildx build --platform linux/amd64 --push ghcr.io/<org>/<repo>:latest` job gated on `main` with GHCR auth sourced from encrypted secrets
 - [ ] T016 [US1] Emit digest, compressed size (≤150 MB), and success/failure context to `$GITHUB_STEP_SUMMARY` and CI logs for every publish

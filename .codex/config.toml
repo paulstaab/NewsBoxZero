@@ -1,5 +1,9 @@
-model = "gpt-5.2-codex"
+model = "gpt-5.4"
 model_reasoning_effort = "medium"
+personality = "pragmatic"
 
 [projects."/workspaces/newsboxzero"]
 trust_level = "trusted"
+
+[notice.model_migrations]
+"gpt-5.2-codex" = "gpt-5.4"

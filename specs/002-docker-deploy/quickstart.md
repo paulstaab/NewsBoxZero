@@ -10,7 +10,7 @@
 ```bash
 docker build -t newsboxzero:latest .
 ```
-- Uses the multi-stage Dockerfile (Node 18 builder + runtime).
+- Uses the multi-stage Dockerfile (Node 24 builder + runtime).
 - Image should remain ≤150 MB compressed after buildx inspection.
 
 ## Run as Non-Root with Read-Only Root FS

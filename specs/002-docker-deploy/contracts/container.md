@@ -5,7 +5,7 @@
 |------|------|--------|-------------|
 | `ref` | string | GitHub Actions `push` event | Must be `refs/heads/main`; workflow exits early otherwise. |
 | `GHCR_PUSH_TOKEN` | secret | Repo secret | PAT with `packages:write`. Used by `docker/login-action`. |
-| `NODE_VERSION` | env | workflow | Pinned to `18.x` for deterministic builds. |
+| `NODE_VERSION` | env | workflow | Pinned to `24.x` for deterministic builds. |
 
 ## Workflow Steps (Happy Path)
 1. **Checkout** — uses `actions/checkout@v4`.

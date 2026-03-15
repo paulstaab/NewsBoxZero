@@ -20,6 +20,12 @@
       "problemMatcher": []
     },
     {
+      "label": "Update Lock File",
+      "type": "shell",
+      "command": "npm install --package-lock-only",
+      "problemMatcher": []
+    },
+    {
       "label": "Serve",
       "type": "shell",
       "command": "npm run dev",

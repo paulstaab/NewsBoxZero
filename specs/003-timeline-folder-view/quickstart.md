@@ -2,7 +2,7 @@
 
 ## 1. Prerequisites
 
-- Node 20.x (matches `.nvmrc`)
+- Node 24.x
 - pnpm 9.x or npm 10.x (repo uses npm scripts by default)
 - A headless-rss instance reachable over HTTPS (or MSW mocks via `npm run dev`)
 - Modern Chrome/Firefox for testing offline/service-worker features

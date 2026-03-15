@@ -3,16 +3,16 @@
 Auto-generated from all feature plans. Last updated: 2025-12-10
 
 ## Active Technologies
-- TypeScript 5.9 / Next.js 14.2 (App Router) on Node.js 20 LTS + Next.js, React 18, SWR, Tailwind CSS, Docker Buildx/BuildKit, Caddy 2 (runtime server), GitHub Actions, GitHub Container Registry (002-docker-deploy)
-- TypeScript / Next.js 14 built with Node.js 18 LTS (runtime base: `node:18-alpine` multi-stage) + Next.js App Router, SWR, TailwindCSS, Docker multi-stage build, GitHub Actions workflow (002-docker-deploy)
-- TypeScript 5.x on Node 20 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests (003-timeline-folder-view)
-- TypeScript 5.9 (Node.js 20), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy (008-timeline-scroll-hotkeys)
+- TypeScript 5.9 / Next.js 14.2 (App Router) on Node.js 24 LTS + Next.js, React 18, SWR, Tailwind CSS, Docker Buildx/BuildKit, Caddy 2 (runtime server), GitHub Actions, GitHub Container Registry (002-docker-deploy)
+- TypeScript / Next.js 14 built with Node.js 24 LTS (runtime base: `node:24-alpine` multi-stage) + Next.js App Router, SWR, TailwindCSS, Docker multi-stage build, GitHub Actions workflow (002-docker-deploy)
+- TypeScript 5.x on Node 24 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests (003-timeline-folder-view)
+- TypeScript 5.9 (Node.js 24), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy (008-timeline-scroll-hotkeys)
 - sessionStorage (default) + opt-in localStorage for credentials/preferences; IndexedDB for offline mutation queue (queued read/star actions) (008-timeline-scroll-hotkeys)
-- TypeScript 5.9 (Node.js 20) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (009-article-popout-view)
+- TypeScript 5.9 (Node.js 24) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1 (009-article-popout-view)
 - Browser localStorage + sessionStorage (timeline cache, session/preferences) (009-article-popout-view)
 
 
-- TypeScript 5.x, Node 20 LTS + Next.js 14 (static export), React 18, TailwindCSS (or CSS Modules), SWR (client fetch caching) (001-static-rss-app)
+- TypeScript 5.x, Node 24 LTS + Next.js 14 (static export), React 18, TailwindCSS (or CSS Modules), SWR (client fetch caching) (001-static-rss-app)
 
 ## Project Structure
 
@@ -52,12 +52,12 @@ docs/               # Release notes, metrics, other docs
 
 ## Code Style
 
-TypeScript 5.x, Node 20 LTS: Follow standard conventions
+TypeScript 5.x, Node 24 LTS: Follow standard conventions
 
 ## Recent Changes
-- 009-article-popout-view: Added TypeScript 5.9 (Node.js 20) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
-- 008-timeline-scroll-hotkeys: Added TypeScript 5.9 (Node.js 20), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy
-- 003-timeline-folder-view: Added TypeScript 5.x on Node 20 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests
+- 009-article-popout-view: Added TypeScript 5.9 (Node.js 24) + Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1
+- 008-timeline-scroll-hotkeys: Added TypeScript 5.9 (Node.js 24), Next.js 16 App Router, React 19 + SWR 2.3 (data fetching), Tailwind CSS 4.1 (styling), date-fns 4.1 (dates), headless-rss Nextcloud v1.3 REST endpoints, service worker for cache/runtime strategy
+- 003-timeline-folder-view: Added TypeScript 5.x on Node 24 (Next.js App Router) + Next.js 14 (static export), React 18, SWR for client fetching, date-fns for timestamps, MSW/Playwright for tests
 
 
 <!-- MANUAL ADDITIONS START -->
