@@ -9,7 +9,7 @@ Build a minimum-footprint Docker image that serves the statically exported Next.
 
 ## Technical Context
 
-**Language/Version**: TypeScript / Next.js 14 built with Node.js 18 LTS (runtime base: `node:18-alpine` multi-stage)  
+**Language/Version**: TypeScript / Next.js 14 built with Node.js 24 LTS (runtime base: `node:24-alpine` multi-stage)  
 **Primary Dependencies**: Next.js App Router, SWR, TailwindCSS, Docker multi-stage build, GitHub Actions workflow  
 **Storage**: N/A (static assets served from image)  
 **Testing**: Existing Vitest + Playwright suites (no new container-specific tests per spec)  
@@ -23,7 +23,7 @@ Build a minimum-footprint Docker image that serves the statically exported Next.
 
 1. **Simplicity First** — Prefer a two-stage Dockerfile (builder + runtime) without extra services. Reuse existing build commands and avoid introducing release playbooks or additional pipelines. Document run instructions inside the plan and quickstart.
 2. **Code Quality Discipline** — Lint/type-check already enforced before building. Dockerfile kept under 50 lines with comments for non-obvious steps. Remove any unused scripts created during this effort.
-3. **Static Delivery Mandate** — Use `next build && next export` to generate immutable `/out`, then copy to a minimal runtime image (e.g., `node:18-alpine` with `npx serve` or `nginx:alpine`). No server-side rendering or custom APIs introduced.
+3. **Static Delivery Mandate** — Use `next build && next export` to generate immutable `/out`, then copy to a minimal runtime image (e.g., `node:24-alpine` with `npx serve` or `nginx:alpine`). No server-side rendering or custom APIs introduced.
 4. **Right-Sized Tests** — Reuse existing Vitest/Playwright suites in CI prior to container build. Document manual verification steps (running container locally with non-root UID and read-only root) to satisfy coverage without adding new automated tests.
 5. **Experience Consistency** — Static export already honors tokens and responsiveness; containerization does not change UI, but we will confirm that exported assets originate from the same code paths (no alternate styling).
 
@@ -59,7 +59,7 @@ Dockerfile (new, repo root)
 ## Phases
 
 ### Phase 0 – Research & Decisions
-- Resolve runtime image choice and final container entrypoint (e.g., `node:18-alpine` + `npx serve` vs `caddy` vs `nginx`).
+- Resolve runtime image choice and final container entrypoint (e.g., `node:24-alpine` + `npx serve` vs `caddy` vs `nginx`).
 - Confirm minimal package installations required to serve static assets (likely just `serve` npm package installed via `pnpm dlx` or vendored).
 - Document manual verification checklist (non-root UID, read-only FS, `/tmp` mount instructions).
 
@@ -73,7 +73,7 @@ Dockerfile (new, repo root)
 
 ### Phase 2 – Implementation Prep
 1. **Dockerfile**
-   - Multi-stage: builder (Node 18) runs `npm ci && npm run build && npm run export` (or `next build && next export`).
+   - Multi-stage: builder (Node 24) runs `npm ci && npm run build && npm run export` (or `next build && next export`).
    - Runtime: lightweight base (Alpine) copies `/out`, installs `serve`, sets `USER 65532`, exposes `8000`, CMD `npx serve -s /app -l 8000`.
    - Mark `/tmp` as writable; set `ENV PORT=8000`.
 2. **Entrypoint script (optional)**
@@ -91,7 +91,7 @@ Dockerfile (new, repo root)
 - Provide quickstart snippet for operators.
 
 ### Risks & Mitigations
-- **Image size >150 MB** → use `node:18-alpine` or `caddy` static base; remove dev dependencies during build.
+- **Image size >150 MB** → use `node:24-alpine` or `caddy` static base; remove dev dependencies during build.
 - **Non-root UID mismatch** → avoid using `chown` at runtime; rely on `/tmp` only and document tmpfs mount.
 - **CI credentials** → store PAT in GitHub Actions secret `GHCR_PUSH_TOKEN`; limit usage to deploy workflow.
 - **Read-only root FS** → ensure server writes nothing outside `/tmp`; test with `docker run --read-only` locally.
@@ -120,7 +120,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
       - run: npm ci && npm run lint && npm run test && npm run build && npm run export
       - run: docker buildx build --platform linux/amd64 -t ghcr.io/<org>/<repo>:latest --push .
       - run: docker buildx imagetools inspect ghcr.io/<org>/<repo>:latest >> $GITHUB_STEP_SUMMARY

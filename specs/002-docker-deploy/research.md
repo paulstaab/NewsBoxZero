@@ -1,7 +1,7 @@
 # Research — Docker Container Deployment
 
 ## Runtime Base & Static Server
-- **Decision**: Use `node:18-alpine` for both builder (with pnpm/npm tools) and runtime stages, installing the `serve` package at runtime to host `/app`.
+- **Decision**: Use `node:24-alpine` for both builder (with pnpm/npm tools) and runtime stages, installing the `serve` package at runtime to host `/app`.
 - **Rationale**: Keeps parity with the existing Next.js toolchain, keeps OpenSSL/glibc compatibility, and produces images <150 MB when paired with `apk --no-cache` cleanup.
 - **Alternatives Considered**:
   - `caddy:2-alpine` — great for static assets but would require multi-stage copying and adds another binary to maintain; rejected to avoid extra tooling.

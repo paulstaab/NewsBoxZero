@@ -3,18 +3,16 @@
 {
 	"name": "Node.js & TypeScript",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers-extra/features/uv:1": {}
+		"ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/jsburckhardt/devcontainer-features/codex:1": {}
 	},
 	"customizations": {
 		"vscode": {
-			"extensions": [
-				"GitHub.copilot",
-				"GitHub.copilot-chat"
-			]
+			"extensions": []
 		}
 	},
 
@@ -22,7 +20,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && npm install -g @openai/codex && npm install -g @google/gemini-cli && npm install --include=dev && npx playwright install --with-deps",
+	"postCreateCommand": "npm install --include=dev && npx playwright install --with-deps",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

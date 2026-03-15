@@ -10,7 +10,7 @@ This guide helps developers get started with the NewsBoxZero static RSS reader p
 
 ## Prerequisites
 
-- **Node.js**: 20.x LTS or later
+- **Node.js: 24.x LTS or later
 - **npm**: 10.x or later
 - **Git**: For version control
 - **Nextcloud News API**: Running instance for production use (optional for development - MSW mocks provided)

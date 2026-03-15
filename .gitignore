@@ -41,12 +41,18 @@ next-env.d.ts
 tests/e2e/.auth
 
 # Codex files
+.codex/.*
+.codex/*cache.json
 .codex/auth.json
 .codex/history.jsonl
-.codex/version.json
-.codex/skills
+.codex/logs_*
 .codex/sessions
+.codex/shell_snapshots/019cf1d5-52c4-7450-9179-5367e1509b38.sh
+.codex/skills
+.codex/state_*
 .codex/tmp
-.codex/*cache.json
+.codex/version.json
+
+# Test artifacts and screenshots
 tests/e2e/.*
 screenshots/

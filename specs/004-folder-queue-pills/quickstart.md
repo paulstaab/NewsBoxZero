@@ -2,7 +2,7 @@
 
 ## 1. Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - npm (repo default)
 - Headless-rss/Nextcloud News endpoint (or MSW mocks in dev)
 - Modern browser for responsive testing (320-1440px)

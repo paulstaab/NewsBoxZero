@@ -9,7 +9,7 @@ Build a static Next.js (SSG/export) progressive web app that serves as a fronten
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, Node 20 LTS  
+**Language/Version**: TypeScript 5.x, Node 24 LTS  
 **Primary Dependencies**: Next.js 14 (static export), React 18, TailwindCSS (or CSS Modules), SWR (client fetch caching)  
 **Storage**: Browser session/local storage only (no backend DB)  
 **Testing**: Vitest (unit), Playwright (integration + visual regression), axe-core (accessibility)  

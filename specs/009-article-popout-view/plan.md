@@ -17,7 +17,7 @@ Replace the in-timeline article expansion with a modal-style pop-out that displa
   the iteration process.
 -->
 
-**Language/Version**: TypeScript 5.9 (Node.js 20)  
+**Language/Version**: TypeScript 5.9 (Node.js 24)  
 **Primary Dependencies**: Next.js 16 (App Router, static export), React 19, SWR 2.3, Tailwind CSS 4.1, date-fns 4.1  
 **Storage**: Browser localStorage + sessionStorage (timeline cache, session/preferences)  
 **Testing**: Vitest (unit), Playwright (e2e), ESLint + TypeScript typecheck  
