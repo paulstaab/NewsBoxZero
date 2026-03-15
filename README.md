@@ -9,9 +9,6 @@ articles, act quickly, and keep your queue clean without losing track of what yo
 It works with [headless-rss](https://github.com/paulstaab/headless-rss) and other aggregators that
 speak the Nextcloud News v1.3 protocol (untested).
 
-> **✨ Vibe-coded with [spec-kit](https://github.com/github/spec-kit)** — This entire application was built using AI-driven specification-first development, from requirements through implementation.
-> Code-quality will not be stellar.
-
 ## Features
 
 - Inbox-zero workflow focused on rapid skimming and decision-making
