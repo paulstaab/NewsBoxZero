@@ -35,6 +35,21 @@ test.describe('Feed Management Page', () => {
       ).toBeVisible();
     });
 
+    test('floating add button and plus hotkey open the add-feed modal', async ({ page }) => {
+      await page.goto('/feeds');
+
+      await page.getByRole('button', { name: /add feed/i }).click();
+      await expect(
+        page.getByRole('heading', { name: /add a feed to your reading queue/i }),
+      ).toBeVisible();
+      await page.getByRole('button', { name: /^cancel$/i }).click();
+
+      await page.keyboard.press('+');
+      await expect(
+        page.getByRole('heading', { name: /add a feed to your reading queue/i }),
+      ).toBeVisible();
+    });
+
     test('supports feed and folder management flows', async ({ page }) => {
       await page.goto('/feeds');
       await expect(
@@ -50,6 +65,7 @@ test.describe('Feed Management Page', () => {
       await page.getByRole('button', { name: /^create folder$/i }).click();
       await expect(page.getByText(/created folder announcements/i)).toBeVisible();
 
+      await page.getByRole('button', { name: /add feed/i }).click();
       await page.getByLabel(/^feed url$/i).fill('https://alerts.example.com/rss.xml');
       await page.getByLabel(/destination folder/i).selectOption({ label: 'Announcements' });
       await page.getByRole('button', { name: /^subscribe$/i }).click();
@@ -93,6 +109,7 @@ test.describe('Feed Management Page', () => {
       await uncategorizedSection.getByRole('button', { name: /delete feed/i }).click();
       await expect(uncategorizedSection.getByText('Alpha Radar')).not.toBeVisible();
 
+      await page.keyboard.press('+');
       await page.getByLabel(/^feed url$/i).fill('https://briefings.example.com/feed.xml');
       await page.getByLabel(/destination folder/i).selectOption({ label: 'Briefings' });
       await page.getByRole('button', { name: /^subscribe$/i }).click();

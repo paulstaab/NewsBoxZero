@@ -46,6 +46,7 @@ const outputs = {
   bottom: path.join(outputDir, 'timeline-bottom.png'),
   screen: path.join(outputDir, 'timeline-screen.png'),
   feeds: path.join(outputDir, 'feeds-screen.png'),
+  feedsViewport: path.join(outputDir, 'feeds-viewport.png'),
 };
 
 await fs.mkdir(outputDir, { recursive: true });
@@ -179,6 +180,7 @@ try {
 await page.waitForLoadState('networkidle');
 await page.evaluate(() => window.scrollTo(0, 0));
 await page.waitForTimeout(200);
+await page.screenshot({ path: outputs.feedsViewport });
 await page.screenshot({ path: outputs.feeds, fullPage: true });
 
 await browser.close();
@@ -189,3 +191,4 @@ console.log(outputs.top);
 console.log(outputs.bottom);
 console.log(outputs.screen);
 console.log(outputs.feeds);
+console.log(outputs.feedsViewport);

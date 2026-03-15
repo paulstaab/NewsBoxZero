@@ -89,11 +89,29 @@ function FeedDetailTile({
 }
 
 /**
+ * Returns true when keyboard shortcuts should be ignored because focus is inside an editable field.
+ */
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const tagName = target.tagName;
+  return (
+    target.isContentEditable ||
+    tagName === 'INPUT' ||
+    tagName === 'TEXTAREA' ||
+    tagName === 'SELECT'
+  );
+}
+
+/**
  * Feed management route for subscriptions and folders.
  */
 function FeedManagementContent() {
   const router = useRouter();
   const { isAuthenticated, isInitializing, logout } = useAuth();
+  const createFeedDialogRef = useRef<HTMLDialogElement>(null);
   const createFolderDialogRef = useRef<HTMLDialogElement>(null);
 
   const [data, setData] = useState<FeedManagementData>({ folders: [], feeds: [] });
@@ -138,6 +156,14 @@ function FeedManagementContent() {
     },
     [logout, router],
   );
+
+  const openCreateFeedDialog = useCallback(() => {
+    createFeedDialogRef.current?.showModal();
+  }, []);
+
+  const closeCreateFeedDialog = useCallback(() => {
+    createFeedDialogRef.current?.close();
+  }, []);
 
   /**
    * Refreshes lightweight "latest article date" metadata without blocking the main page render.
@@ -209,6 +235,26 @@ function FeedManagementContent() {
     }
   }, [isAuthenticated, isInitializing, refreshPageData, router]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== '+' && event.code !== 'NumpadAdd') {
+        return;
+      }
+
+      if (isEditableTarget(event.target)) {
+        return;
+      }
+
+      event.preventDefault();
+      openCreateFeedDialog();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openCreateFeedDialog]);
+
   const runMutation = useCallback(
     async (label: string, action: () => Promise<void>) => {
       setBusyLabel(label);
@@ -251,6 +297,7 @@ function FeedManagementContent() {
       }));
       setNewFeedUrl('');
       setNewFeedFolderId('');
+      closeCreateFeedDialog();
       setStatusMessage(`Subscribed to ${result.feed.title}.`);
     });
   };
@@ -447,58 +494,6 @@ function FeedManagementContent() {
               <FeedMetricCard label="Feeds with errors" value={String(feedsWithErrors)} />
             </div>
           </div>
-
-          <form
-            onSubmit={(event) => {
-              void handleSubscribe(event);
-            }}
-            className="relative mt-2 grid gap-4 rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,hsl(var(--color-surface))_0%,hsl(var(--color-surface-muted))_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)_auto]"
-          >
-            <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
-              <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                Feed URL
-              </span>
-              <input
-                type="url"
-                value={newFeedUrl}
-                onChange={(event) => {
-                  setNewFeedUrl(event.target.value);
-                }}
-                placeholder="https://example.com/feed.xml"
-                className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm outline-none transition placeholder:text-[hsl(var(--color-text-muted))] focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
-                aria-label="Feed URL"
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
-              <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                Destination folder
-              </span>
-              <select
-                value={newFeedFolderId}
-                onChange={(event) => {
-                  setNewFeedFolderId(event.target.value);
-                }}
-                className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
-                aria-label="Destination folder"
-              >
-                <option value="">Uncategorized</option>
-                {sortedFolders.map((folder) => (
-                  <option key={folder.id} value={String(folder.id)}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="submit"
-              disabled={busyLabel !== null}
-              className="self-end rounded-2xl bg-[hsl(var(--color-accent-strong))] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {busyLabel === 'Subscribe feed' ? 'Subscribing...' : 'Subscribe'}
-            </button>
-          </form>
         </header>
 
         {pageError ? (
@@ -758,6 +753,105 @@ function FeedManagementContent() {
             })}
           </div>
         )}
+
+        <button
+          type="button"
+          aria-label="Add feed"
+          title="Add feed (+)"
+          onClick={openCreateFeedDialog}
+          className="fixed bottom-6 right-6 z-50 inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(180deg,hsl(var(--color-accent-strong))_0%,hsl(var(--color-accent))_100%)] text-4xl font-light leading-none text-slate-950 shadow-[0_20px_45px_rgba(4,10,24,0.45)] transition hover:scale-[1.04] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))]"
+          style={{
+            position: 'fixed',
+            right: '1.75rem',
+            bottom: '1.75rem',
+            width: '4.5rem',
+            height: '4.5rem',
+          }}
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+
+        <dialog
+          ref={createFeedDialogRef}
+          className="w-full max-w-2xl rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] p-0 text-[hsl(var(--color-text))] shadow-2xl backdrop:bg-black/60"
+        >
+          <form
+            method="dialog"
+            onSubmit={(event) => {
+              void handleSubscribe(event);
+            }}
+            className="space-y-6 p-6 sm:p-7"
+          >
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--color-text-muted))]">
+                New Subscription
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Add a feed to your reading queue
+              </h2>
+              <p className="max-w-xl text-sm leading-7 text-[hsl(var(--color-text-muted))]">
+                Paste an RSS or Atom URL, then choose whether it should land in a folder or stay
+                uncategorized.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1.7fr)_minmax(220px,1fr)]">
+              <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
+                <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
+                  Feed URL
+                </span>
+                <input
+                  type="url"
+                  value={newFeedUrl}
+                  onChange={(event) => {
+                    setNewFeedUrl(event.target.value);
+                  }}
+                  placeholder="https://example.com/feed.xml"
+                  className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm outline-none transition placeholder:text-[hsl(var(--color-text-muted))] focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
+                  aria-label="Feed URL"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2 text-sm font-medium text-[hsl(var(--color-text))]">
+                <span className="text-[0.7rem] uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
+                  Destination folder
+                </span>
+                <select
+                  value={newFeedFolderId}
+                  onChange={(event) => {
+                    setNewFeedFolderId(event.target.value);
+                  }}
+                  className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
+                  aria-label="Destination folder"
+                >
+                  <option value="">Uncategorized</option>
+                  {sortedFolders.map((folder) => (
+                    <option key={folder.id} value={String(folder.id)}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-medium text-[hsl(var(--color-text))]"
+                onClick={closeCreateFeedDialog}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busyLabel !== null}
+                className="rounded-full bg-[hsl(var(--color-accent-strong))] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {busyLabel === 'Subscribe feed' ? 'Subscribing...' : 'Subscribe'}
+              </button>
+            </div>
+          </form>
+        </dialog>
 
         <dialog
           ref={createFolderDialogRef}

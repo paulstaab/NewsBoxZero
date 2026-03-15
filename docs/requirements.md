@@ -100,7 +100,7 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `FEEDS-001`: Unauthenticated access to `/feeds` shall redirect to `/login`.
 - `FEEDS-002`: The feed management page shall fetch the current folder list and subscribed feed list when the page loads for an authenticated user.
 - `FEEDS-003`: The page shall refresh its displayed folder and feed data after successful create, update, move, rename, or delete mutations performed on the page.
-- `FEEDS-004`: The page shall provide a subscription form that accepts a feed URL and allows selecting an optional destination folder before submission.
+- `FEEDS-004`: The page shall provide a subscription form in a modal that accepts a feed URL and allows selecting an optional destination folder before submission.
 - `FEEDS-005`: Successful subscription shall add the feed to the selected folder, or to an uncategorized group when no folder is selected.
 - `FEEDS-006`: Failed subscription attempts shall preserve the user input and show actionable error feedback without removing the current page data.
 - `FEEDS-007`: The page shall group subscribed feeds by folder and shall show feeds without a folder assignment in an `Uncategorized` group.
@@ -114,3 +114,5 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `FEEDS-015`: When confirming folder deletion, the page shall warn that deleting the folder will unsubscribe all feeds currently assigned to that folder.
 - `FEEDS-016`: Confirmed folder deletion shall unsubscribe all feeds currently assigned to that folder and then remove the folder.
 - `FEEDS-017`: The page shall format displayed feed timestamps using the user’s local date and time settings.
+- `FEEDS-018`: A floating add-feed action shall open the subscription modal.
+- `FEEDS-019`: Pressing the `+` key outside editable fields shall open the subscription modal.
