@@ -19,12 +19,13 @@ test.describe('Feed Management Page', () => {
       await setupApiMocks(page, TEST_SERVER_URL);
     });
 
-    test('settings menu links to feed management', async ({ page }) => {
+    test('burger menu links to feed management as the first entry', async ({ page }) => {
       await page.goto('/timeline');
-      const settingsButton = page.getByRole('button', { name: /settings menu/i });
-      await settingsButton.evaluate((element) => {
+      const menuButton = page.getByRole('button', { name: /burger menu/i });
+      await menuButton.evaluate((element) => {
         (element as HTMLButtonElement).click();
       });
+      await expect(page.getByRole('menuitem').first()).toHaveText(/feed management/i);
       await page.getByRole('menuitem', { name: /feed management/i }).evaluate((element) => {
         (element as HTMLAnchorElement).click();
       });

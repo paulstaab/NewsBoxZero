@@ -30,12 +30,12 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `APP-003`: The application shall wrap page content in a shared auth context and SWR data layer.
 - `APP-004`: The application shall register a service worker from the client shell.
 - `APP-005`: The application shall show an offline banner when the browser reports offline status and allow the banner to be dismissed until connectivity changes again.
-- `APP-006`: The application shall render a settings menu from the shared app shell.
-- `APP-007`: The settings menu shall expose a manual PWA install action and disable it when installation is unavailable.
+- `APP-006`: The application shall render an always visible burger menu from the shared app shell.
+- `APP-007`: The burger menu shall expose a manual PWA install action and disable it when installation is unavailable.
 - `APP-008`: The application shall show an install prompt only when the browser provides an install event, the app is not already installed, and the user is not inside the 7-day dismissal cooldown.
 - `APP-009`: Dismissing the install prompt shall persist a 7-day cooldown in `localStorage`.
 - `APP-010`: An `appinstalled` event shall suppress future install prompts and clear dismissal state.
-- `APP-011`: The shared settings menu shall provide navigation to the feed management page.
+- `APP-011`: The shared burger menu shall list feed management as entry and use it to navigate to the feed management page.
 
 ### Login Page
 
