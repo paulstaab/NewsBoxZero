@@ -134,17 +134,17 @@ test.describe('Accessibility Compliance', () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test('settings menu should be accessible', async ({ page, makeAxeBuilder }) => {
+    test('burger menu should be accessible', async ({ page, makeAxeBuilder }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      // Open settings menu
-      const settingsButton = page.getByRole('button', { name: /settings/i });
-      const hasSettings = await settingsButton.isVisible().catch(() => false);
+      // Open burger menu
+      const menuButton = page.getByRole('button', { name: /burger menu/i });
+      const hasMenu = await menuButton.isVisible().catch(() => false);
 
-      if (hasSettings) {
+      if (hasMenu) {
         // Get the bounding box and click at the center
-        const box = await settingsButton.boundingBox();
+        const box = await menuButton.boundingBox();
         if (box) {
           await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
         }

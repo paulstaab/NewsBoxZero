@@ -18,6 +18,7 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - Prefixes:
   - `APP-*`: shared app shell and cross-page behavior
   - `LOGIN-*`: login page
+  - `FEEDS-*`: feed management page
   - `TIMELINE-*`: timeline page
 
 ## Requirements
@@ -29,11 +30,12 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `APP-003`: The application shall wrap page content in a shared auth context and SWR data layer.
 - `APP-004`: The application shall register a service worker from the client shell.
 - `APP-005`: The application shall show an offline banner when the browser reports offline status and allow the banner to be dismissed until connectivity changes again.
-- `APP-006`: The application shall render a settings menu from the shared app shell.
-- `APP-007`: The settings menu shall expose a manual PWA install action and disable it when installation is unavailable.
+- `APP-006`: The application shall render an always visible burger menu from the shared app shell.
+- `APP-007`: The burger menu shall expose a manual PWA install action and disable it when installation is unavailable.
 - `APP-008`: The application shall show an install prompt only when the browser provides an install event, the app is not already installed, and the user is not inside the 7-day dismissal cooldown.
 - `APP-009`: Dismissing the install prompt shall persist a 7-day cooldown in `localStorage`.
 - `APP-010`: An `appinstalled` event shall suppress future install prompts and clear dismissal state.
+- `APP-011`: The shared burger menu shall list timeline before feed management and use the feed management entry to navigate to the feed management page.
 
 ### Login Page
 
@@ -92,3 +94,27 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `TIMELINE-035`: Items marked read in the current session shall remain visible until a later sync reconciliation removes them.
 - `TIMELINE-036`: Folder names and feed names already cached in article previews shall be updated when fresher folder/feed metadata arrives.
 - `TIMELINE-037`: Timeline cache shall be stored in `localStorage` under a versioned key.
+
+### Feed Management Page
+
+- `FEEDS-001`: Unauthenticated access to `/feeds` shall redirect to `/login`.
+- `FEEDS-002`: The feed management page shall fetch the current folder list and subscribed feed list when the page loads for an authenticated user.
+- `FEEDS-003`: The page shall refresh its displayed folder and feed data after successful create, update, move, rename, or delete mutations performed on the page.
+- `FEEDS-004`: The page shall provide a subscription form in a modal that accepts a feed URL and allows selecting an optional destination folder before submission.
+- `FEEDS-005`: Successful subscription shall add the feed to the selected folder, or to an uncategorized group when no folder is selected.
+- `FEEDS-006`: Failed subscription attempts shall preserve the user input and show actionable error feedback without removing the current page data.
+- `FEEDS-007`: The page shall group subscribed feeds by folder in a table and shall show feeds without a folder assignment in an `Uncategorized` group.
+- `FEEDS-008`: Feed groups and feed rows shall be ordered alphabetically by displayed name.
+- `FEEDS-009`: Each feed row shall display the feed ID, feed name, last article date relative to the current time, next scheduled update time relative to the current time, a dedicated status indicator, and row actions in separate table columns.
+- `FEEDS-009a`: Hovering the `Last Article` or `Next Update` value shall expose the exact timestamp in the viewer's local timezone formatted as `YYYY-MM-DD HH:mm:ss`.
+- `FEEDS-010`: The page shall show feed update status as a centered icon in the `Status` column, using hover text to expose the concrete error message when the last update failed.
+- `FEEDS-011`: The page shall provide a control to reassign a feed to a different folder, including moving it back to the uncategorized group, from a modal opened by a row action.
+- `FEEDS-012`: The page shall allow deleting an individual feed only after explicit user confirmation.
+- `FEEDS-013`: The page shall provide a dialog for creating a new folder.
+- `FEEDS-014`: The page shall allow renaming an existing folder.
+- `FEEDS-015`: The page shall allow deleting an existing folder only after explicit user confirmation.
+- `FEEDS-016`: When confirming folder deletion, the page shall warn that deleting the folder will unsubscribe all feeds currently assigned to that folder.
+- `FEEDS-017`: Confirmed folder deletion shall unsubscribe all feeds currently assigned to that folder and then remove the folder.
+- `FEEDS-018`: The page shall expose the feed URL as hover text on the displayed feed name.
+- `FEEDS-019`: A floating add-feed action shall open the subscription modal.
+- `FEEDS-020`: Pressing the `+` key outside editable fields shall open the subscription modal.

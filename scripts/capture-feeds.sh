@@ -46,7 +46,7 @@ if [[ "${server_running}" == "false" ]]; then
   fi
 fi
 
-APP_BASE_URL="${APP_BASE_URL}" node scripts/capture-timeline.mjs
+APP_BASE_URL="${APP_BASE_URL}" node scripts/capture-feeds.mjs
 status=$?
 
 if [[ "${started_server}" == "true" ]]; then

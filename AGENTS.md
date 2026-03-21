@@ -111,6 +111,7 @@ For the maintained stack description, see `docs/tech-stack.md`.
 Use these scripts when screenshots are needed:
 
 - `./scripts/capture-timeline.sh`
+- `./scripts/capture-feeds.sh`
 - `./scripts/capture-login-page.sh`
 
 These require network access and must run outside restricted sandboxes when applicable.
