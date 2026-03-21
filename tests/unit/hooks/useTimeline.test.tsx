@@ -12,8 +12,7 @@ const mocks = vi.hoisted(() => ({
   unreadItems: [] as Article[],
 }));
 
-vi.mock('@/lib/sync', async () => {
-  const actual = await import('@/lib/sync');
+vi.mock('@/lib/api/itemsSync', () => {
   return {
     fetchUnreadItemsForSync: vi.fn(() =>
       Promise.resolve({
@@ -21,6 +20,13 @@ vi.mock('@/lib/sync', async () => {
         serverUnreadIds: new Set(mocks.unreadItems.map((item) => item.id)),
       }),
     ),
+  };
+});
+
+vi.mock('@/lib/storage/timelineCache', async () => {
+  const actual = await import('@/lib/storage/timelineCache');
+  return {
+    ...actual,
     reconcileTimelineCache: actual.reconcileTimelineCache,
   };
 });

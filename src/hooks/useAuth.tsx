@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { validateServerUrl, normalizeBaseUrl } from '@/lib/config/env';
 import { loadSession, storeSession, clearSession } from '@/lib/storage';
 import { validateCredentials } from '@/lib/api/client';
-import type { UserSessionConfig, StoredSession } from '@/types';
+import type { UserSessionConfig } from '@/types';
+import { encodeBasicCredentials, toStoredSession, toUserSessionConfig } from '@/lib/auth/session';
 
 interface AuthContextValue {
   /** Current session configuration (null if not authenticated) */
@@ -50,13 +51,6 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
- * Encode username and password to Base64 for Basic auth
- */
-function encodeCredentials(username: string, password: string): string {
-  return btoa(`${username}:${password}`);
-}
-
-/**
  * Provides authentication state and actions to the app.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -70,18 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadStoredSession = () => {
       const stored = loadSession();
       if (stored) {
-        // Convert StoredSession to UserSessionConfig
-        const session: UserSessionConfig = {
-          baseUrl: stored.baseUrl,
-          username: stored.username,
-          credentials: stored.credentials,
-          rememberDevice: stored.rememberDevice,
-          viewMode: 'card',
-          sortOrder: 'newest',
-          showRead: false,
-          lastSyncAt: new Date().toISOString(),
-        };
-        setSession(session);
+        setSession(toUserSessionConfig(stored));
       }
       setIsInitializing(false);
     };
@@ -117,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Encode credentials
-        const credentials = encodeCredentials(username, password);
+        const credentials = encodeBasicCredentials(username, password);
 
         // Validate credentials by calling the API with explicit credentials
         // This avoids relying on storage which hasn't been set yet
@@ -140,13 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         // Store session
-        const storedSession: StoredSession = {
-          baseUrl: newSession.baseUrl,
-          username: newSession.username,
-          credentials: newSession.credentials,
-          rememberDevice: newSession.rememberDevice,
-        };
-        storeSession(storedSession);
+        storeSession(toStoredSession(newSession));
 
         // Update state
         setSession(newSession);
@@ -181,13 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Store updated session
-      const storedSession: StoredSession = {
-        baseUrl: updatedSession.baseUrl,
-        username: updatedSession.username,
-        credentials: updatedSession.credentials,
-        rememberDevice: updatedSession.rememberDevice,
-      };
-      storeSession(storedSession);
+      storeSession(toStoredSession(updatedSession));
 
       // Update state
       setSession(updatedSession);

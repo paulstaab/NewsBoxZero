@@ -1,11 +1,10 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import type { SubmitEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { getVersion } from '@/lib/api/version';
-import { NetworkError, ApiError } from '@/lib/api/client';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { LoginStep, useLoginFlow } from '@/hooks/useLoginFlow';
+import { FullscreenStatus } from '@/components/ui/FullscreenStatus';
 
 /**
  * Multi-step login wizard
@@ -18,161 +17,31 @@ import { NetworkError, ApiError } from '@/lib/api/client';
  * Phase 3b: Enhanced with /version endpoint connectivity check
  */
 
-enum LoginStep {
-  SERVER_URL = 1,
-  VALIDATING_URL = 2,
-  CREDENTIALS = 3,
-  AUTHENTICATING = 4,
-}
-
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, error } = useAuth();
+  const { isInitializing } = useAuthGuard({ requireAuth: false });
   const isPlain = searchParams.get('plain') === '1';
+  const {
+    step,
+    serverUrl,
+    setServerUrl,
+    username,
+    setUsername,
+    password,
+    setPassword,
+    rememberDevice,
+    setRememberDevice,
+    validationError,
+    authError,
+    handleServerUrlSubmit,
+    handleCredentialsSubmit,
+    handlePlainSubmit,
+    handleBack,
+  } = useLoginFlow();
 
-  const [step, setStep] = useState<LoginStep>(LoginStep.SERVER_URL);
-  const [serverUrl, setServerUrl] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberDevice, setRememberDevice] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  // Step 1: Validate server URL and check connectivity
-  const handleServerUrlSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    const trimmedUrl = serverUrl.trim();
-
-    if (!trimmedUrl) {
-      setValidationError('Server URL is required');
-      return;
-    }
-
-    // Check HTTPS requirement
-    if (!trimmedUrl.startsWith('https://')) {
-      setValidationError('Server URL must use HTTPS');
-      return;
-    }
-
-    // Basic URL validation
-    try {
-      new URL(trimmedUrl);
-    } catch {
-      setValidationError('Please enter a valid URL');
-      return;
-    }
-
-    // Check server connectivity using /version endpoint
-    setStep(LoginStep.VALIDATING_URL);
-
-    try {
-      await getVersion(trimmedUrl);
-
-      // Server is reachable, advance to credentials step
-      setStep(LoginStep.CREDENTIALS);
-    } catch (err) {
-      // Handle connectivity errors
-      setStep(LoginStep.SERVER_URL);
-
-      if (err instanceof NetworkError) {
-        // Display the detailed NetworkError message (includes CORS-specific info)
-        setValidationError(err.message);
-      } else if (err instanceof ApiError) {
-        if (err.status === 404) {
-          setValidationError('Server not found or invalid API endpoint. Please verify the URL.');
-        } else if (err.status >= 500) {
-          setValidationError('Server error. Please try again later.');
-        } else {
-          setValidationError(`Server returned error: ${err.statusText}`);
-        }
-      } else {
-        setValidationError('Unable to validate server. Please check your connection.');
-      }
-    }
-  };
-
-  // Step 2: Submit credentials
-  const handleCredentialsSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    if (!username.trim()) {
-      setValidationError('Username is required');
-      return;
-    }
-
-    if (!password) {
-      setValidationError('Password is required');
-      return;
-    }
-
-    setStep(LoginStep.AUTHENTICATING);
-
-    try {
-      await login(serverUrl, username, password, rememberDevice);
-
-      // Redirect to timeline on success
-      router.push('/timeline');
-    } catch (err) {
-      // Stay on credentials step to allow retry
-      setStep(LoginStep.CREDENTIALS);
-      setValidationError(err instanceof Error ? err.message : 'Authentication failed');
-    }
-  };
-
-  const handlePlainSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    const trimmedUrl = serverUrl.trim();
-
-    if (!trimmedUrl) {
-      setValidationError('Server URL is required');
-      return;
-    }
-
-    if (!trimmedUrl.startsWith('https://')) {
-      setValidationError('Server URL must use HTTPS');
-      return;
-    }
-
-    try {
-      new URL(trimmedUrl);
-    } catch {
-      setValidationError('Please enter a valid URL');
-      return;
-    }
-
-    if (!username.trim()) {
-      setValidationError('Username is required');
-      return;
-    }
-
-    if (!password) {
-      setValidationError('Password is required');
-      return;
-    }
-
-    setStep(LoginStep.AUTHENTICATING);
-
-    try {
-      await getVersion(trimmedUrl);
-      await login(trimmedUrl, username, password, rememberDevice);
-      router.push('/timeline');
-    } catch (err) {
-      setStep(LoginStep.SERVER_URL);
-      setValidationError(err instanceof Error ? err.message : 'Authentication failed');
-    }
-  };
-
-  const handleBack = () => {
-    setValidationError(null);
-    if (step === LoginStep.CREDENTIALS) {
-      setStep(LoginStep.SERVER_URL);
-    }
-  };
+  if (isInitializing) {
+    return <FullscreenStatus message="Loading login..." />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
@@ -206,16 +75,17 @@ function LoginContent() {
           </div>
 
           {/* Error display */}
-          {(validationError ?? error) && (
+          {(validationError ?? authError) && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-800">{validationError ?? error}</p>
+              <p className="text-sm text-red-800">{validationError ?? authError}</p>
             </div>
           )}
 
           {isPlain && (
             <form
               onSubmit={(e) => {
-                void handlePlainSubmit(e);
+                e.preventDefault();
+                void handlePlainSubmit();
               }}
               className="space-y-6"
             >
@@ -302,7 +172,8 @@ function LoginContent() {
           {!isPlain && step === LoginStep.SERVER_URL && (
             <form
               onSubmit={(e) => {
-                void handleServerUrlSubmit(e);
+                e.preventDefault();
+                void handleServerUrlSubmit();
               }}
               className="space-y-6"
             >
@@ -348,7 +219,8 @@ function LoginContent() {
           {step === LoginStep.CREDENTIALS && (
             <form
               onSubmit={(e) => {
-                void handleCredentialsSubmit(e);
+                e.preventDefault();
+                void handleCredentialsSubmit();
               }}
               className="space-y-6"
             >
@@ -451,16 +323,7 @@ function LoginContent() {
  */
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-          <div className="inline-flex items-center gap-3 text-gray-600">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span>Loading login...</span>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<FullscreenStatus message="Loading login..." />}>
       <LoginContent />
     </Suspense>
   );

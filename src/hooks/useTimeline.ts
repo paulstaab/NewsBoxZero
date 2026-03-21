@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import { getFolders } from '@/lib/api/folders';
 import { getFeeds } from '@/lib/api/feeds';
 import { markItemsRead, markItemRead as apiMarkItemRead } from '@/lib/api/items';
-import { fetchUnreadItemsForSync, reconcileTimelineCache } from '@/lib/sync';
+import { fetchUnreadItemsForSync } from '@/lib/api/itemsSync';
+import { reconcileTimelineCache } from '@/lib/storage/timelineCache';
 import {
   deriveFolderProgress,
   moveFolderToEnd,
@@ -13,7 +14,6 @@ import {
   sortFolderQueueEntries,
 } from '@/lib/utils/unreadAggregator';
 import {
-  type Article,
   type ArticlePreview,
   type Folder,
   type FolderProgressState,
@@ -29,11 +29,14 @@ import {
   storeTimelineCache,
 } from '@/lib/storage';
 import {
-  getNextSelectionId,
-  getPreviousSelectionId,
-  getTopmostVisibleId,
-} from '@/lib/timeline/selection';
-import { createReadBatcher } from '@/lib/timeline/read-batching';
+  applyFeedNames,
+  applyFolderNames,
+  resolveFolderId,
+  toArticlePreview,
+} from '@/lib/timeline/articlePreview';
+import { buildFolderMap, findNextActiveId } from '@/lib/timeline/envelope';
+import { useTimelineSelection } from '@/hooks/useTimelineSelection';
+import { useAutoMarkRead } from '@/hooks/useAutoMarkRead';
 
 type FeedsSummary = Awaited<ReturnType<typeof getFeeds>>;
 
@@ -72,87 +75,8 @@ interface RefreshOptions {
   forceSync?: boolean;
 }
 
-function stripHtml(input: string): string {
-  if (!input) return '';
-  return input
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function summarize(body: string, fallback: string): string {
-  const text = stripHtml(body);
-  if (!text) return fallback;
-  return text.length > 320 ? `${text.slice(0, 317).trim()}…` : text;
-}
-
-function resolveFolderId(article: Article, feedFolderMap: Map<number, number>): number | null {
-  if (typeof article.folderId === 'number' && Number.isFinite(article.folderId)) {
-    return article.folderId;
-  }
-
-  if (feedFolderMap.has(article.feedId)) {
-    return feedFolderMap.get(article.feedId) ?? UNCATEGORIZED_FOLDER_ID;
-  }
-
-  return null;
-}
-
-function toArticlePreview(
-  article: Article,
-  folderId: number | null,
-  cachedAt: number,
-  feedName: string,
-): ArticlePreview | null {
-  if (folderId === null) {
-    return null;
-  }
-  const trimmedTitle = article.title.trim();
-  const fallbackTitle = trimmedTitle.length > 0 ? article.title : 'Untitled article';
-  const summary = summarize(article.body, '');
-  const trimmedBody = article.body.trim();
-  const trimmedUrl = article.url.trim();
-  const hasFullText = trimmedBody.length > 0;
-  const trimmedAuthor = article.author.trim();
-  const normalizedFeedName = feedName.trim();
-
-  return {
-    id: article.id,
-    folderId,
-    feedId: article.feedId,
-    title: fallbackTitle,
-    feedName: normalizedFeedName.length > 0 ? normalizedFeedName : 'Unknown source',
-    author: trimmedAuthor,
-    summary,
-    body: trimmedBody,
-    url: trimmedUrl.length > 0 ? article.url : '#',
-    thumbnailUrl: article.mediaThumbnail,
-    pubDate: article.pubDate,
-    unread: article.unread,
-    starred: article.starred,
-    hasFullText,
-    storedAt: cachedAt,
-  };
-}
-
-function buildFolderMap(entries: FolderQueueEntry[]): Record<number, FolderQueueEntry> {
-  return entries.reduce<Record<number, FolderQueueEntry>>((acc, entry) => {
-    acc[entry.id] = entry;
-    return acc;
-  }, {});
-}
-
-function findNextActiveId(queue: FolderQueueEntry[]): number | null {
-  const nextActive = queue.find((entry) => entry.status !== 'skipped');
-  return nextActive ? nextActive.id : null;
-}
-
 const SYNC_TIMEOUT_MS = 8000;
 const MIN_SYNC_INDICATOR_MS = 350;
-// Delay before re-enabling the IntersectionObserver after programmatic scroll.
-// This prevents articles from being marked as read during the scroll animation.
-// 500ms is sufficient for most scroll animations to complete.
-const OBSERVER_RE_ENABLE_DELAY_MS = 500;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -173,63 +97,6 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
       clearTimeout(timeoutId);
     }
   }
-}
-
-function applyFolderNames(
-  envelope: TimelineCacheEnvelope,
-  foldersData: Folder[] | undefined,
-): TimelineCacheEnvelope {
-  if (!foldersData || foldersData.length === 0) {
-    return envelope;
-  }
-
-  const folderNameMap = new Map<number, string>(
-    foldersData.map((folder) => [folder.id, folder.name]),
-  );
-  const updatedFolders: Record<number, FolderQueueEntry> = {};
-
-  for (const [folderIdStr, folder] of Object.entries(envelope.folders)) {
-    const id = Number(folderIdStr);
-    const resolvedName =
-      folderNameMap.get(id) ?? (id === UNCATEGORIZED_FOLDER_ID ? 'Uncategorized' : folder.name);
-    updatedFolders[id] = {
-      ...folder,
-      name: resolvedName,
-    };
-  }
-
-  return {
-    ...envelope,
-    folders: updatedFolders,
-  };
-}
-
-function applyFeedNames(
-  envelope: TimelineCacheEnvelope,
-  feedNameMap: Map<number, string>,
-): TimelineCacheEnvelope {
-  if (feedNameMap.size === 0) {
-    return envelope;
-  }
-
-  const updatedFolders: Record<number, FolderQueueEntry> = {};
-
-  for (const [folderIdStr, folder] of Object.entries(envelope.folders)) {
-    const updatedArticles = folder.articles.map((article) => {
-      const resolvedName = feedNameMap.get(article.feedId) ?? article.feedName;
-      return resolvedName !== article.feedName ? { ...article, feedName: resolvedName } : article;
-    });
-
-    updatedFolders[Number(folderIdStr)] = {
-      ...folder,
-      articles: updatedArticles,
-    };
-  }
-
-  return {
-    ...envelope,
-    folders: updatedFolders,
-  };
 }
 
 /**
@@ -597,138 +464,23 @@ export function useTimeline(options: UseTimelineOptions = {}): UseTimelineResult
     }
   }, []);
 
-  const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null);
-  const [selectedArticleElement, setSelectedArticleElement] = useState<HTMLElement | null>(null);
-
-  const orderedIds = useMemo(() => activeArticles.map((article) => article.id), [activeArticles]);
-
-  const selectTopmost = useCallback(
-    (topmostId?: number | null) => {
-      const resolvedId = topmostId ?? getTopmostVisibleId(orderedIds);
-      if (resolvedId === null || typeof resolvedId === 'undefined') return;
-      setSelectedArticleId(resolvedId);
-    },
-    [orderedIds],
-  );
-
-  const selectNext = useCallback(() => {
-    const nextId = getNextSelectionId(selectedArticleId, orderedIds);
-    if (nextId === null) return;
-    setSelectedArticleId(nextId);
-  }, [orderedIds, selectedArticleId]);
-
-  const selectPrevious = useCallback(() => {
-    const prevId = getPreviousSelectionId(selectedArticleId, orderedIds);
-    if (prevId === null) return;
-    setSelectedArticleId(prevId);
-  }, [orderedIds, selectedArticleId]);
-
-  const deselect = useCallback(() => {
-    setSelectedArticleId(null);
-    setSelectedArticleElement(null);
-  }, []);
-
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const elementsRef = useRef<Map<number, HTMLElement>>(new Map());
-  const seenRef = useRef<Set<number>>(new Set());
-  const batcherRef = useRef<ReturnType<typeof createReadBatcher> | null>(null);
-  const unreadMapRef = useRef<Map<number, boolean>>(new Map());
-  const observerDisabledRef = useRef(false);
-  const observerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    batcherRef.current?.clear();
-    batcherRef.current = createReadBatcher({
-      debounceMs: debounceMs,
-      onFlush: (ids) => {
-        ids.forEach((id) => {
-          void markItemRead(id);
-        });
-      },
-    });
-
-    return () => {
-      batcherRef.current?.clear();
-      batcherRef.current = null;
-      // Clean up any pending observer timeout
-      if (observerTimeoutRef.current !== null) {
-        clearTimeout(observerTimeoutRef.current);
-        observerTimeoutRef.current = null;
-      }
-    };
-  }, [debounceMs, markItemRead]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Skip processing if observer is temporarily disabled
-        if (observerDisabledRef.current) return;
-
-        entries.forEach((entry) => {
-          const target = entry.target as HTMLElement;
-          const id = Number(target.dataset.articleId);
-          if (!Number.isFinite(id)) return;
-
-          if (!entry.isIntersecting && entry.boundingClientRect.bottom <= 0) {
-            if (seenRef.current.has(id)) return;
-            if (unreadMapRef.current.get(id) === false) return;
-            seenRef.current.add(id);
-            batcherRef.current?.add(id);
-          }
-        });
-      },
-      {
-        root: root ?? null,
-        rootMargin: `${String(-Math.max(0, Math.round(topOffset)))}px 0px 0px 0px`,
-        threshold: [0],
-      },
-    );
-
-    observerRef.current = observer;
-    elementsRef.current.forEach((node) => {
-      observer.observe(node);
-    });
-
-    return () => {
-      observer.disconnect();
-      observerRef.current = null;
-    };
-  }, [root, topOffset]);
-
-  useEffect(() => {
-    unreadMapRef.current = new Map(activeArticles.map((item) => [item.id, item.unread]));
-    const currentIds = new Set(activeArticles.map((item) => item.id));
-    for (const [id, element] of elementsRef.current.entries()) {
-      if (!currentIds.has(id)) {
-        observerRef.current?.unobserve(element);
-        elementsRef.current.delete(id);
-        seenRef.current.delete(id);
-      }
-    }
-  }, [activeArticles]);
-
-  const registerArticle = useCallback(
-    (id: number) => (node: HTMLElement | null) => {
-      if (!node) return;
-      node.dataset.articleId = String(id);
-      elementsRef.current.set(id, node);
-      observerRef.current?.observe(node);
-    },
-    [],
-  );
-
-  const disableObserverTemporarily = useCallback(() => {
-    observerDisabledRef.current = true;
-    // Clear any existing timeout
-    if (observerTimeoutRef.current !== null) {
-      clearTimeout(observerTimeoutRef.current);
-    }
-    // Re-enable after a short delay to allow scroll to complete
-    observerTimeoutRef.current = setTimeout(() => {
-      observerDisabledRef.current = false;
-      observerTimeoutRef.current = null;
-    }, OBSERVER_RE_ENABLE_DELAY_MS);
-  }, []);
+  const {
+    selectedArticleId,
+    setSelectedArticleId,
+    selectedArticleElement,
+    setSelectedArticleElement,
+    selectTopmost,
+    selectNext,
+    selectPrevious,
+    deselect,
+  } = useTimelineSelection(activeArticles);
+  const { registerArticle, disableObserverTemporarily } = useAutoMarkRead({
+    activeArticles,
+    markItemRead,
+    root,
+    topOffset,
+    debounceMs,
+  });
 
   return {
     queue: orderedQueue,

@@ -3,29 +3,26 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { FullscreenStatus } from '@/components/ui/FullscreenStatus';
 
 /**
  * Home page that redirects to timeline or login based on auth state.
  */
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
 
   useEffect(() => {
+    if (isInitializing) {
+      return;
+    }
+
     if (isAuthenticated) {
       router.push('/timeline');
     } else {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isInitializing, router]);
 
-  // Show loading state while redirecting
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-600">Loading NewsBoxZero...</p>
-      </div>
-    </div>
-  );
+  return <FullscreenStatus message="Loading NewsBoxZero..." className="bg-transparent" />;
 }

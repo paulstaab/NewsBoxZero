@@ -5,6 +5,7 @@
 
 import { CONFIG } from './config/env';
 import { type StoredSession, type UserPreferences, DEFAULT_PREFERENCES } from '@/types';
+import { encodeBasicCredentials } from '@/lib/auth/session';
 
 /**
  * Stores session data in the appropriate storage based on rememberDevice flag.
@@ -121,7 +122,7 @@ export function clearAllData(): void {
  * Encodes credentials for HTTP Basic auth.
  */
 export function encodeCredentials(username: string, password: string): string {
-  return btoa(`${username}:${password}`);
+  return encodeBasicCredentials(username, password);
 }
 
 /**
