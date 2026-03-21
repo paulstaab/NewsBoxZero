@@ -189,7 +189,7 @@ textarea:focus-visible {
 
   .article-card__excerpt--clamped {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    line-clamp: 6;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

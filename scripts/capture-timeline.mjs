@@ -127,7 +127,7 @@ try {
   timelineReady = true;
 } catch {
   try {
-    await page.locator('[role="article"]').first().waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('[role="option"]').first().waitFor({ state: 'visible', timeout: 15000 });
     timelineReady = true;
   } catch {
     timelineReady = false;
