@@ -123,32 +123,6 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
         >
           <div className="app-menu__content">
             <Link
-              href="/feeds"
-              className="app-menu__item"
-              role="menuitem"
-              aria-current={pathname === '/feeds' ? 'page' : undefined}
-              onClick={() => {
-                setIsOpen(false);
-              }}
-            >
-              <svg
-                className="app-menu__icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 7h16M4 12h10M4 17h16"
-                />
-              </svg>
-              <span>Feed Management</span>
-            </Link>
-
-            <Link
               href="/timeline"
               className="app-menu__item"
               role="menuitem"
@@ -172,6 +146,32 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
                 />
               </svg>
               <span>Timeline</span>
+            </Link>
+
+            <Link
+              href="/feeds"
+              className="app-menu__item"
+              role="menuitem"
+              aria-current={pathname === '/feeds' ? 'page' : undefined}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <svg
+                className="app-menu__icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7h16M4 12h10M4 17h16"
+                />
+              </svg>
+              <span>Feed Management</span>
             </Link>
 
             {/* Install App Option */}
