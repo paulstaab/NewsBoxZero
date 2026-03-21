@@ -92,6 +92,7 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
       {/* Burger menu button */}
       <button
         type="button"
+        id="settings-menu-button"
         onClick={() => {
           setIsOpen(!isOpen);
         }}
@@ -119,7 +120,7 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
           className="app-menu__panel"
           role="menu"
           aria-orientation="vertical"
-          aria-labelledby="settings-menu"
+          aria-labelledby="settings-menu-button"
         >
           <div className="app-menu__content">
             <Link
