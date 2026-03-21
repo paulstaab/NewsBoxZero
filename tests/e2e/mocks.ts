@@ -4,6 +4,9 @@
  */
 
 import { type Page, type Route } from '@playwright/test';
+import type { ApiFeed } from '@/types';
+
+const nowInSeconds = Math.floor(Date.now() / 1000);
 
 // Mock data matching MSW handlers
 export const mockFolders = [
@@ -12,16 +15,20 @@ export const mockFolders = [
   { id: 30, name: 'Podcasts', feeds: [301] },
 ];
 
-export const mockFeeds = [
+export const mockFeeds: ApiFeed[] = [
   {
     id: 101,
     url: 'https://frontend.example.com/rss',
     title: 'Frontend Focus',
     faviconLink: 'https://frontend.example.com/favicon.ico',
     added: 1702200000,
+    nextUpdateTime: nowInSeconds + 1800,
     folderId: 10,
+    ordering: 0,
     link: 'https://frontend.example.com',
     pinned: false,
+    updateErrorCount: 0,
+    lastUpdateError: null,
   },
   {
     id: 102,
@@ -29,9 +36,13 @@ export const mockFeeds = [
     title: 'Backend Briefing',
     faviconLink: 'https://backend.example.com/favicon.ico',
     added: 1702105000,
+    nextUpdateTime: nowInSeconds + 5400,
     folderId: 10,
+    ordering: 1,
     link: 'https://backend.example.com',
     pinned: false,
+    updateErrorCount: 0,
+    lastUpdateError: null,
   },
   {
     id: 201,
@@ -39,9 +50,13 @@ export const mockFeeds = [
     title: 'Design Notes',
     faviconLink: null,
     added: 1702000000,
+    nextUpdateTime: nowInSeconds + 7200,
     folderId: 20,
+    ordering: 0,
     link: 'https://design.example.com',
     pinned: true,
+    updateErrorCount: 0,
+    lastUpdateError: null,
   },
   {
     id: 301,
@@ -49,9 +64,13 @@ export const mockFeeds = [
     title: 'The Pod Stack',
     faviconLink: 'https://podcasts.example.com/icon.png',
     added: 1701900000,
+    nextUpdateTime: nowInSeconds + 14400,
     folderId: 30,
+    ordering: 0,
     link: 'https://podcasts.example.com',
     pinned: false,
+    updateErrorCount: 1,
+    lastUpdateError: 'Connection timeout',
   },
 ];
 
@@ -201,6 +220,28 @@ export const mockItems = getMockItems();
 export async function setupApiMocks(page: Page, baseUrl = 'https://rss.example.com') {
   const apiPath = '/index.php/apps/news/api/v1-3';
   const apiBase = `${baseUrl}${apiPath}`;
+  const feeds = mockFeeds.map((feed) => ({ ...feed }));
+  const folders = mockFolders.map((folder) => ({ ...folder, feeds: [...folder.feeds] }));
+  const items = getMockItems().map((item) => ({ ...item }));
+  let nextFeedId = 1000;
+  let nextFolderId = 100;
+
+  const isAuthorized = (route: Route) =>
+    route.request().headers().authorization === 'Basic dGVzdHVzZXI6dGVzdHBhc3M=';
+
+  const syncFolderFeedAssignments = () => {
+    for (const folder of folders) {
+      folder.feeds = feeds.filter((feed) => feed.folderId === folder.id).map((feed) => feed.id);
+    }
+  };
+
+  const fulfillUnauthorized = async (route: Route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Unauthorized' }),
+    });
+  };
 
   // Mock version endpoint (no auth required)
   await page.route(`${apiBase}/version`, async (route: Route) => {
@@ -211,51 +252,117 @@ export async function setupApiMocks(page: Page, baseUrl = 'https://rss.example.c
     });
   });
 
-  // Mock feeds endpoint
-  await page.route(`${apiBase}/feeds`, async (route: Route) => {
-    const request = route.request();
-    const auth = request.headers().authorization;
+  // Mock feeds endpoint and feed mutations
+  await page.route(`${apiBase}/feeds**`, async (route: Route) => {
+    if (!isAuthorized(route)) {
+      await fulfillUnauthorized(route);
+      return;
+    }
 
-    // Check for valid auth
-    if (auth !== 'Basic dGVzdHVzZXI6dGVzdHBhc3M=') {
+    const request = route.request();
+    const url = new URL(request.url());
+    const pathname = url.pathname;
+    const method = request.method();
+
+    if (pathname.endsWith('/feeds') && method === 'GET') {
       await route.fulfill({
-        status: 401,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ message: 'Unauthorized' }),
+        body: JSON.stringify({
+          feeds,
+          starredCount: 1,
+          newestItemId: 103,
+        }),
       });
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        feeds: mockFeeds,
-        starredCount: 1,
-        newestItemId: 103,
-      }),
-    });
+    if (pathname.endsWith('/feeds') && method === 'POST') {
+      const body = (await request.postDataJSON()) as { url: string; folderId: number | null };
+      const hostname = new URL(body.url).hostname.replace(/^www\./, '');
+      const newFeed = {
+        id: nextFeedId++,
+        url: body.url,
+        title: hostname,
+        faviconLink: null,
+        added: Math.floor(Date.now() / 1000),
+        nextUpdateTime: null,
+        folderId: body.folderId,
+        ordering: 0,
+        link: body.url,
+        pinned: false,
+        updateErrorCount: 0,
+        lastUpdateError: null,
+      };
+
+      feeds.push(newFeed);
+      syncFolderFeedAssignments();
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ feeds: [newFeed], newestItemId: null }),
+      });
+      return;
+    }
+
+    const feedMatch = /\/feeds\/(\d+)(?:\/(move|rename|read))?$/.exec(pathname);
+    if (!feedMatch) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+
+    const feedId = Number(feedMatch[1]);
+    const action = feedMatch[2];
+    const feedIndex = feeds.findIndex((feed) => feed.id === feedId);
+
+    if (feedIndex === -1) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+
+    if (method === 'DELETE' && pathname.endsWith(`/feeds/${String(feedId)}`)) {
+      feeds.splice(feedIndex, 1);
+      syncFolderFeedAssignments();
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    if (method === 'POST' && action === 'move') {
+      const body = (await request.postDataJSON()) as { folderId: number | null };
+      feeds[feedIndex].folderId = body.folderId;
+      syncFolderFeedAssignments();
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    if (method === 'POST' && action === 'rename') {
+      const body = (await request.postDataJSON()) as { feedTitle: string };
+      feeds[feedIndex].title = body.feedTitle;
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    if (method === 'POST' && action === 'read') {
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    await route.fulfill({ status: 405 });
   });
 
   // Mock items endpoint
   // Per Core Principle VI (Unread-Only Focus), API MUST return only unread articles
   await page.route(`${apiBase}/items/*/content`, async (route: Route) => {
-    const request = route.request();
-    const auth = request.headers().authorization;
-
-    if (auth !== 'Basic dGVzdHVzZXI6dGVzdHBhc3M=') {
-      await route.fulfill({
-        status: 401,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Unauthorized' }),
-      });
+    if (!isAuthorized(route)) {
+      await fulfillUnauthorized(route);
       return;
     }
 
-    const url = new URL(request.url());
+    const url = new URL(route.request().url());
     const segments = url.pathname.split('/');
     const itemId = Number(segments[segments.length - 2]);
-    const item = getMockItems().find((entry) => entry.id === itemId);
+    const item = items.find((entry) => entry.id === itemId);
 
     if (!item?.body) {
       await route.fulfill({ status: 404 });
@@ -270,48 +377,115 @@ export async function setupApiMocks(page: Page, baseUrl = 'https://rss.example.c
   });
 
   await page.route(`${apiBase}/items**`, async (route: Route) => {
-    const request = route.request();
-    const auth = request.headers().authorization;
-
-    if (auth !== 'Basic dGVzdHVzZXI6dGVzdHBhc3M=') {
-      await route.fulfill({
-        status: 401,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Unauthorized' }),
-      });
+    if (!isAuthorized(route)) {
+      await fulfillUnauthorized(route);
       return;
     }
 
-    // Always return fresh unread items - constitution mandates unread-only focus
-    // Use getMockItems() to prevent state leakage between tests
-    const unreadItems = getMockItems().filter((item) => item.unread);
+    const request = route.request();
+    const url = new URL(request.url());
+    const getRead = url.searchParams.get('getRead') !== 'false';
+    const type = Number(url.searchParams.get('type') ?? '3');
+    const id = Number(url.searchParams.get('id') ?? '0');
+    const batchSize = Number(url.searchParams.get('batchSize') ?? String(items.length));
+    const offset = Number(url.searchParams.get('offset') ?? '0');
+    const oldestFirst = url.searchParams.get('oldestFirst') === 'true';
+
+    let filteredItems = [...items];
+
+    if (!getRead) {
+      filteredItems = filteredItems.filter((item) => item.unread);
+    }
+
+    if (type === 0 && id > 0) {
+      filteredItems = filteredItems.filter((item) => item.feedId === id);
+    }
+
+    if (type === 1 && id > 0) {
+      filteredItems = filteredItems.filter((item) => item.folderId === id);
+    }
+
+    filteredItems.sort((left, right) =>
+      oldestFirst ? left.pubDate - right.pubDate : right.pubDate - left.pubDate,
+    );
+
+    filteredItems = filteredItems.slice(offset, offset + batchSize);
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: unreadItems }),
+      body: JSON.stringify({ items: filteredItems }),
     });
   });
 
-  // Mock folders endpoint
-  await page.route(`${apiBase}/folders`, async (route: Route) => {
-    const request = route.request();
-    const auth = request.headers().authorization;
+  // Mock folders endpoint and folder mutations
+  await page.route(`${apiBase}/folders**`, async (route: Route) => {
+    if (!isAuthorized(route)) {
+      await fulfillUnauthorized(route);
+      return;
+    }
 
-    if (auth !== 'Basic dGVzdHVzZXI6dGVzdHBhc3M=') {
+    const request = route.request();
+    const url = new URL(request.url());
+    const pathname = url.pathname;
+    const method = request.method();
+
+    if (pathname.endsWith('/folders') && method === 'GET') {
+      syncFolderFeedAssignments();
       await route.fulfill({
-        status: 401,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ message: 'Unauthorized' }),
+        body: JSON.stringify({ folders }),
       });
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ folders: mockFolders }),
-    });
+    if (pathname.endsWith('/folders') && method === 'POST') {
+      const body = (await request.postDataJSON()) as { name: string };
+      const newFolder = { id: nextFolderId++, name: body.name, feeds: [] as number[] };
+      folders.push(newFolder);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ folders: [newFolder] }),
+      });
+      return;
+    }
+
+    const folderMatch = /\/folders\/(\d+)(?:\/(read))?$/.exec(pathname);
+    if (!folderMatch) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+
+    const folderId = Number(folderMatch[1]);
+    const action = folderMatch[2];
+    const folderIndex = folders.findIndex((folder) => folder.id === folderId);
+
+    if (folderIndex === -1) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+
+    if (method === 'PUT' && pathname.endsWith(`/folders/${String(folderId)}`)) {
+      const body = (await request.postDataJSON()) as { name: string };
+      folders[folderIndex].name = body.name;
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    if (method === 'DELETE' && pathname.endsWith(`/folders/${String(folderId)}`)) {
+      folders.splice(folderIndex, 1);
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    if (method === 'POST' && action === 'read') {
+      await route.fulfill({ status: 200, body: '' });
+      return;
+    }
+
+    await route.fulfill({ status: 405 });
   });
 }
 

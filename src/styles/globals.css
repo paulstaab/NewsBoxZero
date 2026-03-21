@@ -48,6 +48,104 @@ textarea:focus-visible {
 }
 
 @layer components {
+  .app-menu {
+    position: fixed;
+    z-index: 40;
+  }
+
+  .app-menu__button {
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--color-border));
+    background: hsl(var(--color-surface-muted));
+    color: hsl(var(--color-text));
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      transform 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  .app-menu__button:hover {
+    background: hsl(var(--color-surface));
+    transform: translateY(-1px);
+  }
+
+  .app-menu__button-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .app-menu__panel {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    width: 15rem;
+    overflow: hidden;
+    border: 1px solid hsl(var(--color-border));
+    border-radius: var(--radius-lg);
+    background: hsl(var(--color-surface-muted));
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-menu__content {
+    padding: var(--space-2) 0;
+  }
+
+  .app-menu__item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 0;
+    background: transparent;
+    color: hsl(var(--color-text));
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+  }
+
+  .app-menu__item:hover {
+    background: hsl(var(--color-surface));
+  }
+
+  .app-menu__item[aria-current='page'] {
+    background: hsl(var(--color-selection-bg));
+    color: hsl(var(--color-accent-strong));
+  }
+
+  .app-menu__item:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .app-menu__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 auto;
+    color: hsl(var(--color-text-muted));
+  }
+
+  .app-menu__divider {
+    margin: var(--space-2) 0;
+    border-top: 1px solid hsl(var(--color-border));
+  }
+
+  .app-menu__version {
+    padding: var(--space-2) var(--space-4);
+    color: hsl(var(--color-text-muted));
+    font-size: var(--font-size-xs);
+  }
+
   .timeline-list {
     display: flex;
     flex-direction: column;

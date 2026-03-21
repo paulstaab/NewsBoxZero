@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Settings Menu Component.
- * Provides access to app settings including manual PWA install.
+ * Shared burger menu for navigation and install actions.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type CSSProperties } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { triggerInstallPrompt, canPromptInstall } from '@/lib/pwa/installPrompt';
 
 export interface SettingsMenuProps {
@@ -22,9 +23,10 @@ export interface SettingsMenuProps {
 }
 
 /**
- * Renders the settings menu trigger and panel.
+ * Renders the shared burger menu trigger and panel.
  */
 export function SettingsMenu({ position = 'top-right', className = '' }: SettingsMenuProps) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
   const [showInstallOption, setShowInstallOption] = useState(false);
@@ -78,57 +80,101 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
     setShowInstallOption(canPromptInstall());
   };
 
-  const positionClasses = {
-    'top-left': 'top-4 left-4',
-    'top-right': 'top-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'bottom-right': 'bottom-4 right-4',
+  const positionStyles: Record<NonNullable<SettingsMenuProps['position']>, CSSProperties> = {
+    'top-left': { top: 'var(--space-4)', left: 'var(--space-4)' },
+    'top-right': { top: 'var(--space-4)', right: 'var(--space-4)' },
+    'bottom-left': { bottom: 'var(--space-4)', left: 'var(--space-4)' },
+    'bottom-right': { bottom: 'var(--space-4)', right: 'var(--space-4)' },
   };
 
   return (
-    <div ref={menuRef} className={`fixed ${positionClasses[position]} z-40 ${className}`}>
-      {/* Settings Button */}
+    <div ref={menuRef} className={`app-menu ${className}`.trim()} style={positionStyles[position]}>
+      {/* Burger menu button */}
       <button
         type="button"
+        id="settings-menu-button"
         onClick={() => {
           setIsOpen(!isOpen);
         }}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--color-surface-elevated))] text-[hsl(var(--color-text))] shadow-lg ring-1 ring-[hsl(var(--color-border))] hover:bg-[hsl(var(--color-surface-hover))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-primary))] focus:ring-offset-2"
-        aria-label="Settings menu"
+        className="app-menu__button"
+        aria-label="Burger menu"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <svg
-          className="h-5 w-5"
+          className="app-menu__button-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 17h16" />
         </svg>
       </button>
 
-      {/* Settings Menu Dropdown */}
+      {/* Burger menu dropdown */}
       {isOpen && (
         <div
-          className="absolute top-12 right-0 w-56 overflow-hidden rounded-lg bg-[hsl(var(--color-surface-elevated))] shadow-xl ring-1 ring-[hsl(var(--color-border))]"
+          className="app-menu__panel"
           role="menu"
           aria-orientation="vertical"
-          aria-labelledby="settings-menu"
+          aria-labelledby="settings-menu-button"
         >
-          <div className="py-1">
+          <div className="app-menu__content">
+            <Link
+              href="/timeline"
+              className="app-menu__item"
+              role="menuitem"
+              aria-current={pathname === '/timeline' ? 'page' : undefined}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <svg
+                className="app-menu__icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12h18M3 6h18M3 18h18"
+                />
+              </svg>
+              <span>Timeline</span>
+            </Link>
+
+            <Link
+              href="/feeds"
+              className="app-menu__item"
+              role="menuitem"
+              aria-current={pathname === '/feeds' ? 'page' : undefined}
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <svg
+                className="app-menu__icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7h16M4 12h10M4 17h16"
+                />
+              </svg>
+              <span>Feed Management</span>
+            </Link>
+
             {/* Install App Option */}
             <button
               type="button"
@@ -136,7 +182,7 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
                 void handleInstall();
               }}
               disabled={!showInstallOption || isInstalling}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[hsl(var(--color-text))] hover:bg-[hsl(var(--color-surface-hover))] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[hsl(var(--color-primary))] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="app-menu__item"
               role="menuitem"
               aria-label={showInstallOption ? 'Install App' : 'Install not available'}
               title={
@@ -146,7 +192,7 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
               }
             >
               <svg
-                className="h-5 w-5 text-[hsl(var(--color-text-secondary))]"
+                className="app-menu__icon"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -159,22 +205,20 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
                   d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              <span>
-                {isInstalling ? 'Installing...' : showInstallOption ? 'Install App' : 'Install App'}
-              </span>
+              <span>{isInstalling ? 'Installing...' : 'Install App'}</span>
             </button>
 
             {/* About Option (placeholder for future) */}
             <button
               type="button"
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[hsl(var(--color-text))] hover:bg-[hsl(var(--color-surface-hover))] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[hsl(var(--color-primary))]"
+              className="app-menu__item"
               role="menuitem"
               onClick={() => {
                 setIsOpen(false);
               }}
             >
               <svg
-                className="h-5 w-5 text-[hsl(var(--color-text-secondary))]"
+                className="app-menu__icon"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -191,12 +235,10 @@ export function SettingsMenu({ position = 'top-right', className = '' }: Setting
             </button>
 
             {/* Divider */}
-            <div className="my-1 border-t border-[hsl(var(--color-border))]" />
+            <div className="app-menu__divider" />
 
             {/* Version Info */}
-            <div className="px-4 py-2 text-xs text-[hsl(var(--color-text-tertiary))]">
-              Version 1.0.0
-            </div>
+            <div className="app-menu__version">Version 1.0.0</div>
           </div>
         </div>
       )}

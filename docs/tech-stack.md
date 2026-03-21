@@ -69,9 +69,9 @@ This document lists the technology and tooling currently used by NewsBoxZero.
 - Tailwind CSS 4.1
 - Global CSS in `src/styles/globals.css`
 - Shared design tokens in `src/styles/tokens.css`
+- Font Awesome for shared action and status iconography across the app
 - `date-fns` 4.1 for relative time labels
 - `next/image` for article thumbnails where available
-- Font Awesome icons for some action affordances
 
 ## API Integration
 
