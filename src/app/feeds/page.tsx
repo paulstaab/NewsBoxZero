@@ -187,6 +187,8 @@ function FeedManagementContent() {
 
   /**
    * Refreshes lightweight "latest article date" metadata without blocking the main page render.
+   * Fetches a single batch of recent items across all feeds and derives the latest date per feed
+   * client-side to avoid an N+1 network pattern.
    */
   const refreshFeedActivity = useCallback(async (feeds: Feed[]) => {
     if (feeds.length === 0) {
@@ -195,20 +197,25 @@ function FeedManagementContent() {
     }
 
     try {
-      const results = await Promise.all(
-        feeds.map(async (feed) => {
-          const items = await getItems({
-            type: ItemFilterType.FEED,
-            id: feed.id,
-            getRead: true,
-            batchSize: 1,
-          });
+      const items = await getItems({
+        type: ItemFilterType.ALL,
+        getRead: true,
+        batchSize: 200,
+      });
 
-          return [feed.id, items[0]?.pubDate ?? null] as const;
-        }),
-      );
+      const datesByFeed: Record<number, number | null> = {};
+      for (const feed of feeds) {
+        datesByFeed[feed.id] = null;
+      }
+      for (const item of items) {
+        if (!(item.feedId in datesByFeed)) continue;
+        const current = datesByFeed[item.feedId];
+        if (current === null || item.pubDate > current) {
+          datesByFeed[item.feedId] = item.pubDate;
+        }
+      }
 
-      setLatestArticleDates(Object.fromEntries(results));
+      setLatestArticleDates(datesByFeed);
     } catch {
       setLatestArticleDates((current) => current);
     }
@@ -380,7 +387,31 @@ function FeedManagementContent() {
     }
 
     await runMutation('Delete folder', async () => {
-      await Promise.all(assignedFeeds.map((feed) => deleteFeed(feed.id)));
+      if (assignedFeeds.length > 0) {
+        const results = await Promise.allSettled(assignedFeeds.map((feed) => deleteFeed(feed.id)));
+
+        const deletedFeedIds = assignedFeeds
+          .filter((_, index) => results[index].status === 'fulfilled')
+          .map((feed) => feed.id);
+        const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+        if (failedCount > 0) {
+          setData((current) => ({
+            ...current,
+            feeds: current.feeds.filter((feed) => !deletedFeedIds.includes(feed.id)),
+          }));
+          setLatestArticleDates((current) =>
+            deletedFeedIds.reduce(
+              (nextEntries, feedId) => omitLatestArticleDate(nextEntries, feedId),
+              current,
+            ),
+          );
+          throw new Error(
+            `Unable to unsubscribe ${String(failedCount)} feed${failedCount === 1 ? '' : 's'} from "${folder.name}". The folder was not deleted.`,
+          );
+        }
+      }
+
       await deleteFolder(folder.id);
       setData((current) => ({
         folders: current.folders.filter((entry) => entry.id !== folder.id),
