@@ -103,7 +103,14 @@ export function useAutoMarkRead({
 
   const registerArticle = useCallback(
     (id: number) => (node: HTMLElement | null) => {
-      if (!node) return;
+      if (!node) {
+        const prev = elementsRef.current.get(id);
+        if (prev) {
+          observerRef.current?.unobserve(prev);
+          elementsRef.current.delete(id);
+        }
+        return;
+      }
       node.dataset.articleId = String(id);
       elementsRef.current.set(id, node);
       observerRef.current?.observe(node);

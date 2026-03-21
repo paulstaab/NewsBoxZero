@@ -18,7 +18,7 @@ function stripHtml(input: string): string {
 function summarize(body: string, fallback: string): string {
   const text = stripHtml(body);
   if (!text) return fallback;
-  return text.length > 320 ? `${text.slice(0, 317).trim()}...` : text;
+  return text.length > 320 ? `${text.slice(0, 319).trim()}…` : text;
 }
 
 /**
@@ -62,12 +62,12 @@ export function toArticlePreview(
     id: article.id,
     folderId,
     feedId: article.feedId,
-    title: trimmedTitle.length > 0 ? article.title : 'Untitled article',
+    title: trimmedTitle.length > 0 ? trimmedTitle : 'Untitled article',
     feedName: normalizedFeedName.length > 0 ? normalizedFeedName : 'Unknown source',
     author: trimmedAuthor,
     summary: summarize(article.body, ''),
     body: trimmedBody,
-    url: trimmedUrl.length > 0 ? article.url : '#',
+    url: trimmedUrl.length > 0 ? trimmedUrl : '#',
     thumbnailUrl: article.mediaThumbnail,
     pubDate: article.pubDate,
     unread: article.unread,
