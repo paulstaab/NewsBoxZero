@@ -1,8 +1,7 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, type CSSProperties } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useTimeline } from '@/hooks/useTimeline';
 import { useFolderQueueDocking } from '@/hooks/useFolderQueueDocking';
 import { useArticlePopout } from '@/hooks/useArticlePopout';
@@ -20,14 +19,14 @@ import {
   markTimelineUpdateStart,
   markTimelineUpdateComplete,
 } from '@/lib/metrics/metricsClient';
+import { FullscreenStatus } from '@/components/ui/FullscreenStatus';
 
 /**
  * Timeline page content component
  * Extracted to wrap useSearchParams in Suspense
  */
 function TimelineContent() {
-  const router = useRouter();
-  const { isAuthenticated, isInitializing } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuthGuard();
 
   // Mark cache load start before hook initialization
   useEffect(() => {
@@ -148,12 +147,6 @@ function TimelineContent() {
     unreadIdSet,
   ]);
 
-  useEffect(() => {
-    if (!isInitializing && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, isInitializing, router]);
-
   // Mark cache ready after hydration
   useEffect(() => {
     if (isHydrated) {
@@ -204,14 +197,7 @@ function TimelineContent() {
 
   // Show loading state while checking authentication
   if (isInitializing || !isHydrated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="inline-flex items-center gap-3 text-gray-600">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
+    return <FullscreenStatus message="Loading..." />;
   }
 
   if (!isAuthenticated) {
@@ -371,16 +357,7 @@ function TimelineContent() {
  */
 export default function TimelinePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600">Loading timeline...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<FullscreenStatus message="Loading timeline..." />}>
       <TimelineContent />
     </Suspense>
   );
