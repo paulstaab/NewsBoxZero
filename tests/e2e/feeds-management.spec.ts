@@ -58,19 +58,28 @@ test.describe('Feed Management Page', () => {
       ).toBeVisible();
 
       await expect(page.getByText(/feed #101/i)).toBeVisible();
-      const podStackRow = page.locator('article', {
-        has: page.getByText('The Pod Stack', { exact: true }),
-      });
-      await expect(podStackRow.getByText(/last article/i)).toBeVisible();
-      await expect(podStackRow.getByText(/hours ago/i)).toBeVisible();
-      await expect(
-        podStackRow.getByText(/in (?:\d+ )?(?:minute|minutes|hour|hours)/i),
-      ).toBeVisible();
-      await expect(podStackRow.getByTitle('https://podcasts.example.com/rss')).toBeVisible();
+      const feedTable = page.getByRole('table', { name: /feed management table/i });
+      const podStackRow = feedTable.getByRole('row', { name: /the pod stack/i });
+      await expect(feedTable.getByRole('columnheader', { name: /feed name/i })).toBeVisible();
+      await expect(feedTable.getByRole('columnheader', { name: /last article/i })).toBeVisible();
+      await expect(feedTable.getByRole('columnheader', { name: /next update/i })).toBeVisible();
+      await expect(feedTable.getByRole('columnheader', { name: /status/i })).toBeVisible();
+      await expect(feedTable.getByRole('columnheader', { name: /actions/i })).toBeVisible();
+      const lastArticleValue = podStackRow.getByText(/hours ago/i);
+      const nextUpdateValue = podStackRow.getByText(/in (?:\d+ )?(?:minute|minutes|hour|hours)/i);
+      await expect(lastArticleValue).toBeVisible();
+      await expect(nextUpdateValue).toBeVisible();
+      await expect(lastArticleValue).toHaveAttribute(
+        'title',
+        /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/,
+      );
+      await expect(nextUpdateValue).toHaveAttribute('title', /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+      await expect(podStackRow.getByText('https://podcasts.example.com/rss')).toBeVisible();
       await expect(podStackRow.getByLabel(/update error: connection timeout/i)).toHaveAttribute(
         'title',
         'Connection timeout',
       );
+      await expect(feedTable.getByLabel('Feed healthy').first()).toBeVisible();
 
       await page.getByRole('button', { name: /new folder/i }).click();
       await page.getByLabel(/new folder name/i).fill('Announcements');
@@ -82,14 +91,11 @@ test.describe('Feed Management Page', () => {
       await page.getByLabel(/^destination folder$/i).selectOption({ label: 'Announcements' });
       await page.getByRole('button', { name: /^subscribe$/i }).click();
 
-      const announcementsSection = page.locator('section', {
-        has: page.getByRole('heading', { name: 'Announcements' }),
-      });
-      await expect(
-        announcementsSection.getByRole('heading', { name: 'alerts.example.com' }),
-      ).toBeVisible();
+      const announcementsRow = feedTable.getByRole('row', { name: /^announcements/i });
+      await expect(announcementsRow).toBeVisible();
+      await expect(feedTable.getByRole('row', { name: /alerts\.example\.com/i })).toBeVisible();
 
-      await announcementsSection.getByRole('button', { name: /rename folder/i }).click();
+      await announcementsRow.getByRole('button', { name: /rename folder/i }).click();
       await page.getByLabel(/^folder name$/i).fill('Briefings');
       await page
         .getByRole('button', { name: /^save$/i })
@@ -97,11 +103,11 @@ test.describe('Feed Management Page', () => {
         .click();
       await expect(page.getByRole('heading', { name: 'Briefings' })).toBeVisible();
 
-      const renamedSection = page.locator('section', {
-        has: page.getByRole('heading', { name: 'Briefings' }),
-      });
+      const briefingsRow = feedTable.getByRole('row', { name: /^briefings/i });
+      await expect(briefingsRow).toBeVisible();
+      const alphaRadarRow = feedTable.getByRole('row', { name: /alerts\.example\.com/i });
 
-      await renamedSection.getByRole('button', { name: /rename feed/i }).evaluate((element) => {
+      await alphaRadarRow.getByRole('button', { name: /rename feed/i }).evaluate((element) => {
         (element as HTMLButtonElement).click();
       });
       await page.getByLabel(/feed name for alerts\.example\.com/i).fill('Alpha Radar');
@@ -109,39 +115,39 @@ test.describe('Feed Management Page', () => {
         .getByRole('button', { name: /^save$/i })
         .last()
         .click();
-      await expect(renamedSection.getByText('Alpha Radar')).toBeVisible();
-      await expect(renamedSection.getByTitle('https://alerts.example.com/rss.xml')).toBeVisible();
+      const renamedFeedRow = feedTable.getByRole('row', { name: /alpha radar/i });
+      await expect(renamedFeedRow.getByText('Alpha Radar')).toBeVisible();
+      await expect(renamedFeedRow.getByText('https://alerts.example.com/rss.xml')).toBeVisible();
 
-      await renamedSection
+      await renamedFeedRow
         .getByRole('button', { name: /move alpha radar to another folder/i })
         .click();
       await page.getByLabel(/^target folder$/i).selectOption({ label: 'Uncategorized' });
       await page.getByRole('button', { name: /^move feed$/i }).click();
-      const uncategorizedSection = page.locator('section', {
-        has: page.getByRole('heading', { name: 'Uncategorized' }),
-      });
-      await expect(uncategorizedSection.getByText('Alpha Radar')).toBeVisible();
+      const uncategorizedRow = feedTable.getByRole('row', { name: /uncategorized/i });
+      await expect(uncategorizedRow).toBeVisible();
+      const uncategorizedFeedRow = feedTable.getByRole('row', { name: /alpha radar/i });
+      await expect(uncategorizedFeedRow).toBeVisible();
 
       page.once('dialog', (dialog) => dialog.accept());
-      await uncategorizedSection.getByRole('button', { name: /delete feed/i }).click();
-      await expect(uncategorizedSection.getByText('Alpha Radar')).not.toBeVisible();
+      await uncategorizedFeedRow.getByRole('button', { name: /delete feed/i }).click();
+      await expect(feedTable.getByText('Alpha Radar')).not.toBeVisible();
 
       await page.keyboard.press('+');
       await page.getByLabel(/^feed url$/i).fill('https://briefings.example.com/feed.xml');
       await page.getByLabel(/^destination folder$/i).selectOption({ label: 'Briefings' });
       await page.getByRole('button', { name: /^subscribe$/i }).click();
-      await expect(
-        renamedSection.getByRole('heading', { name: 'briefings.example.com' }),
-      ).toBeVisible();
+      const briefingsFeedRow = feedTable.getByRole('row', { name: /briefings\.example\.com/i });
+      await expect(briefingsFeedRow).toBeVisible();
 
       page.once('dialog', async (dialog) => {
         expect(dialog.message()).toContain('unsubscribe 1 feed');
         await dialog.accept();
       });
-      await renamedSection.getByRole('button', { name: /delete folder/i }).click();
+      await briefingsRow.getByRole('button', { name: /delete folder/i }).click();
 
       await expect(page.getByRole('heading', { name: 'Briefings', exact: true })).not.toBeVisible();
-      await expect(page.getByRole('heading', { name: 'briefings.example.com' })).not.toBeVisible();
+      await expect(feedTable.getByText('briefings.example.com')).not.toBeVisible();
     });
   });
 });

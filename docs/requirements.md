@@ -103,10 +103,11 @@ The requirements should be phrased to stay implementation-agnostic wherever poss
 - `FEEDS-004`: The page shall provide a subscription form in a modal that accepts a feed URL and allows selecting an optional destination folder before submission.
 - `FEEDS-005`: Successful subscription shall add the feed to the selected folder, or to an uncategorized group when no folder is selected.
 - `FEEDS-006`: Failed subscription attempts shall preserve the user input and show actionable error feedback without removing the current page data.
-- `FEEDS-007`: The page shall group subscribed feeds by folder and shall show feeds without a folder assignment in an `Uncategorized` group.
+- `FEEDS-007`: The page shall group subscribed feeds by folder in a table and shall show feeds without a folder assignment in an `Uncategorized` group.
 - `FEEDS-008`: Feed groups and feed rows shall be ordered alphabetically by displayed name.
-- `FEEDS-009`: Each feed row shall display the feed ID, feed name, last article date relative to the current time, and next scheduled update time relative to the current time.
-- `FEEDS-010`: The page shall show feed update failures as a warning icon beside the feed name and expose the concrete error text on hover.
+- `FEEDS-009`: Each feed row shall display the feed ID, feed name, last article date relative to the current time, next scheduled update time relative to the current time, a dedicated status indicator, and row actions in separate table columns.
+- `FEEDS-009a`: Hovering the `Last Article` or `Next Update` value shall expose the exact timestamp in the viewer's local timezone formatted as `YYYY-MM-DD HH:mm:ss`.
+- `FEEDS-010`: The page shall show feed update status as a centered icon in the `Status` column, using hover text to expose the concrete error message when the last update failed.
 - `FEEDS-011`: The page shall provide a control to reassign a feed to a different folder, including moving it back to the uncategorized group, from a modal opened by a row action.
 - `FEEDS-012`: The page shall allow deleting an individual feed only after explicit user confirmation.
 - `FEEDS-013`: The page shall provide a dialog for creating a new folder.

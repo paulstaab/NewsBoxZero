@@ -1,6 +1,19 @@
 'use client';
 
 import {
+  faArrowLeft,
+  faCircleCheck,
+  faCircleExclamation,
+  faFolderOpen,
+  faFolderPlus,
+  faPen,
+  faPlus,
+  faRotate,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  Fragment,
   Suspense,
   useCallback,
   useEffect,
@@ -21,6 +34,7 @@ import { formatError } from '@/lib/utils/errorFormatter';
 import { ItemFilterType, type Feed, type Folder } from '@/types';
 import {
   buildFeedManagementGroups,
+  formatExactLocalDateTime,
   compareLabels,
   formatRelativeDateTime,
   type FeedManagementGroup,
@@ -41,10 +55,6 @@ function omitLatestArticleDate(
   return Object.fromEntries(
     Object.entries(entries).filter(([entryId]) => Number(entryId) !== feedId),
   ) as Record<number, number | null>;
-}
-
-interface IconProps {
-  className?: string;
 }
 
 interface FeedActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -70,7 +80,7 @@ function FeedActionButton({
       : variant === 'danger'
         ? 'border-red-400/30 bg-red-950/20 text-red-200 hover:bg-red-950/35 focus:ring-red-300/60'
         : 'border-white/10 bg-white/6 text-[hsl(var(--color-text))] hover:bg-white/10 focus:ring-[hsl(var(--color-accent-strong))]';
-  const sizing = size === 'lg' ? 'h-11 w-11' : 'h-10 w-10';
+  const sizing = size === 'lg' ? 'h-11 w-11' : 'h-9 w-9';
 
   return (
     <button
@@ -82,132 +92,6 @@ function FeedActionButton({
     >
       {children}
     </button>
-  );
-}
-
-function PlusIcon({ className = 'h-5 w-5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path d="M12 5v14" strokeLinecap="round" />
-      <path d="M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function RefreshIcon({ className = 'h-5 w-5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path d="M20 11a8 8 0 0 0-14.9-4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 4v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 13a8 8 0 0 0 14.9 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function FolderPlusIcon({ className = 'h-5 w-5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path
-        d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"
-        strokeLinejoin="round"
-      />
-      <path d="M12 10.5v5" strokeLinecap="round" />
-      <path d="M9.5 13h5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PencilIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path d="M4 20l4.5-1 9-9a2.1 2.1 0 1 0-3-3l-9 9z" strokeLinejoin="round" />
-      <path d="M13.5 6.5l3 3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TrashIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path d="M4 7h16" strokeLinecap="round" />
-      <path d="M9 7V5h6v2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 7l1 12h6l1-12" strokeLinejoin="round" />
-      <path d="M10 11v5" strokeLinecap="round" />
-      <path d="M14 11v5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MoveIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path
-        d="M4 8.5A2.5 2.5 0 0 1 6.5 6H11l2 2h4.5A2.5 2.5 0 0 1 20 10.5V11"
-        strokeLinejoin="round"
-      />
-      <path d="M13 15h7" strokeLinecap="round" />
-      <path d="m17 11 4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 10.5V17a2 2 0 0 0 2 2h7" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function BackIcon({ className = 'h-5 w-5' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.9"
-      className={className}
-    >
-      <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function WarningIcon({ className = 'h-4.5 w-4.5' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 3.75c.43 0 .83.23 1.04.61l8 14A1.2 1.2 0 0 1 20 20.25H4a1.2 1.2 0 0 1-1.04-1.89l8-14c.21-.38.61-.61 1.04-.61Zm0 4.5a.75.75 0 0 0-.75.75v4.5a.75.75 0 0 0 1.5 0V9a.75.75 0 0 0-.75-.75Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
-    </svg>
   );
 }
 
@@ -593,10 +477,10 @@ function FeedManagementContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--color-accent)_/_0.18),_transparent_26%),linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_18%,hsl(var(--color-surface))_100%)] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <header className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] p-6 shadow-[0_18px_40px_rgba(5,10,25,0.2)] sm:p-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+    <div className="min-h-screen bg-[linear-gradient(180deg,hsl(var(--color-surface))_0%,hsl(var(--color-surface-muted))_100%)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <header className="rounded-[1.5rem] bg-[hsl(var(--color-surface))]/92 p-6 shadow-[0_20px_48px_rgba(5,10,25,0.18)] backdrop-blur sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-2">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--color-text-muted))]">
                 Feed Management
@@ -604,13 +488,9 @@ function FeedManagementContent() {
               <h1 className="text-3xl font-semibold tracking-tight text-[hsl(var(--color-text))] sm:text-4xl">
                 Manage subscriptions and folders
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-[hsl(var(--color-text-muted))] sm:text-base">
-                Review each subscription at a glance, then rename, move, or remove it from a compact
-                control surface.
-              </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:justify-end">
+            <div className="flex flex-wrap gap-2 lg:justify-end">
               <FeedActionButton
                 label="New folder"
                 onClick={() => {
@@ -619,7 +499,7 @@ function FeedManagementContent() {
                 variant="accent"
                 size="lg"
               >
-                <FolderPlusIcon />
+                <FontAwesomeIcon icon={faFolderPlus} className="h-5 w-5" aria-hidden="true" />
               </FeedActionButton>
               <FeedActionButton
                 disabled={isRefreshing || busyLabel !== null}
@@ -629,7 +509,7 @@ function FeedManagementContent() {
                 }}
                 size="lg"
               >
-                <RefreshIcon />
+                <FontAwesomeIcon icon={faRotate} className="h-5 w-5" aria-hidden="true" />
               </FeedActionButton>
               <Link
                 href="/timeline"
@@ -637,7 +517,7 @@ function FeedManagementContent() {
                 title="Back to timeline"
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/6 text-[hsl(var(--color-text))] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))] focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface-muted))]"
               >
-                <BackIcon />
+                <FontAwesomeIcon icon={faArrowLeft} className="h-5 w-5" aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -669,125 +549,64 @@ function FeedManagementContent() {
             </p>
           </section>
         ) : (
-          <div className="grid gap-6">
-            {groups.map((group) => {
-              const isEditingFolder = editingFolderId === group.id && group.id !== null;
+          <section className="overflow-hidden bg-[hsl(var(--color-surface))]/94 shadow-[0_20px_48px_rgba(7,10,24,0.16)] backdrop-blur">
+            <div className="overflow-x-auto">
+              <table
+                aria-label="Feed management table"
+                className="w-full table-fixed border-collapse"
+              >
+                <colgroup>
+                  <col className="w-[42%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.03] text-left">
+                    <th className="px-5 py-4 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
+                      Feed Name
+                    </th>
+                    <th className="px-4 py-4 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
+                      Last Article
+                    </th>
+                    <th className="px-4 py-4 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
+                      Next Update
+                    </th>
+                    <th className="px-4 py-4 text-center text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
+                      Status
+                    </th>
+                    <th className="px-5 py-4 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--color-text-muted))]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.map((group) => {
+                    const isEditingFolder = editingFolderId === group.id && group.id !== null;
 
-              return (
-                <section
-                  key={group.isUncategorized ? 'uncategorized' : String(group.id)}
-                  className="overflow-hidden rounded-[1.5rem] border border-white/8 bg-[linear-gradient(180deg,hsl(var(--color-surface-muted))_0%,hsl(var(--color-surface))_100%)] shadow-[0_14px_32px_rgba(7,10,24,0.16)]"
-                >
-                  <div className="flex flex-col gap-4 border-b border-white/8 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
-                      {isEditingFolder ? (
-                        <form
-                          onSubmit={(event) => {
-                            event.preventDefault();
-                            if (group.id !== null) {
-                              void handleRenameFolder(group.id);
-                            }
-                          }}
-                          className="flex flex-wrap items-center gap-3"
-                        >
-                          <input
-                            type="text"
-                            value={editingFolderName}
-                            onChange={(event) => {
-                              setEditingFolderName(event.target.value);
-                            }}
-                            className="min-w-[240px] rounded-2xl border border-white/10 bg-black/10 px-4 py-2 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
-                            aria-label="Folder name"
-                          />
-                          <button
-                            type="submit"
-                            className="rounded-full bg-[hsl(var(--color-accent-strong))] px-4 py-2 text-sm font-semibold text-slate-950"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))]"
-                            onClick={() => {
-                              setEditingFolderId(null);
-                              setEditingFolderName('');
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </form>
-                      ) : (
-                        <>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h2 className="text-xl font-semibold text-[hsl(var(--color-text))] sm:text-2xl">
-                              {group.name}
-                            </h2>
-                            <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[hsl(var(--color-text-muted))]">
-                              {group.feeds.length} subscription
-                              {group.feeds.length === 1 ? '' : 's'}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {group.id !== null ? (
-                      <div className="flex flex-wrap gap-2">
-                        <FeedActionButton
-                          label={`Rename folder ${group.name}`}
-                          onClick={() => {
-                            setEditingFolderId(group.id);
-                            setEditingFolderName(group.name);
-                          }}
-                        >
-                          <PencilIcon />
-                        </FeedActionButton>
-                        <FeedActionButton
-                          label={`Delete folder ${group.name}`}
-                          onClick={() => {
-                            const folder = data.folders.find((entry) => entry.id === group.id);
-                            if (folder) {
-                              void handleDeleteFolder(folder);
-                            }
-                          }}
-                          variant="danger"
-                        >
-                          <TrashIcon />
-                        </FeedActionButton>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="divide-y divide-white/8">
-                    {group.feeds.map(({ feed, lastArticleDate }) => {
-                      const isEditingFeed = editingFeedId === feed.id;
-
-                      return (
-                        <article
-                          key={feed.id}
-                          className="grid gap-4 px-5 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
-                        >
-                          <div className="min-w-0 space-y-3">
-                            <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))] w-fit">
-                              Feed #{feed.id}
-                            </div>
-
-                            {isEditingFeed ? (
+                    return (
+                      <Fragment key={group.isUncategorized ? 'uncategorized' : String(group.id)}>
+                        <tr className="border-b border-white/10 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))]">
+                          {isEditingFolder ? (
+                            <td colSpan={5} className="px-5 py-4">
                               <form
                                 onSubmit={(event) => {
                                   event.preventDefault();
-                                  void handleRenameFeed(feed.id);
+                                  if (group.id !== null) {
+                                    void handleRenameFolder(group.id);
+                                  }
                                 }}
                                 className="flex flex-wrap items-center gap-3"
                               >
                                 <input
                                   type="text"
-                                  value={editingFeedTitle}
+                                  value={editingFolderName}
                                   onChange={(event) => {
-                                    setEditingFeedTitle(event.target.value);
+                                    setEditingFolderName(event.target.value);
                                   }}
-                                  className="min-w-[240px] rounded-2xl border border-white/10 bg-black/10 px-4 py-2 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
-                                  aria-label={`Feed name for ${feed.title}`}
+                                  className="min-w-[240px] rounded-xl border border-white/10 bg-black/10 px-4 py-2 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
+                                  aria-label="Folder name"
                                 />
                                 <button
                                   type="submit"
@@ -799,91 +618,229 @@ function FeedManagementContent() {
                                   type="button"
                                   className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))]"
                                   onClick={() => {
-                                    setEditingFeedId(null);
-                                    setEditingFeedTitle('');
+                                    setEditingFolderId(null);
+                                    setEditingFolderName('');
                                   }}
                                 >
                                   Cancel
                                 </button>
                               </form>
-                            ) : (
-                              <div className="flex items-start gap-2">
-                                <h3
-                                  className="truncate text-lg font-semibold leading-tight text-[hsl(var(--color-text))] sm:text-xl"
-                                  title={feed.url}
-                                >
-                                  {feed.title}
-                                </h3>
-                                {feed.lastUpdateError ? (
-                                  <span
-                                    aria-label={`Update error: ${feed.lastUpdateError}`}
-                                    className="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center text-amber-400"
-                                    title={feed.lastUpdateError}
-                                  >
-                                    <WarningIcon className="h-4.5 w-4.5" />
-                                  </span>
+                            </td>
+                          ) : (
+                            <>
+                              <td colSpan={4} className="px-5 py-4 align-middle">
+                                <h2 className="text-lg font-semibold tracking-tight text-[hsl(var(--color-text))] sm:text-xl">
+                                  {group.name}
+                                </h2>
+                              </td>
+                              <td className="px-5 py-4 align-middle">
+                                {group.id !== null ? (
+                                  <div className="flex items-center gap-3">
+                                    <FeedActionButton
+                                      label={`Rename folder ${group.name}`}
+                                      onClick={() => {
+                                        setEditingFolderId(group.id);
+                                        setEditingFolderName(group.name);
+                                      }}
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={faPen}
+                                        className="h-4.5 w-4.5"
+                                        aria-hidden="true"
+                                      />
+                                    </FeedActionButton>
+                                    <FeedActionButton
+                                      label={`Delete folder ${group.name}`}
+                                      onClick={() => {
+                                        const folder = data.folders.find(
+                                          (entry) => entry.id === group.id,
+                                        );
+                                        if (folder) {
+                                          void handleDeleteFolder(folder);
+                                        }
+                                      }}
+                                      variant="danger"
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={faTrash}
+                                        className="h-4.5 w-4.5"
+                                        aria-hidden="true"
+                                      />
+                                    </FeedActionButton>
+                                  </div>
                                 ) : null}
-                              </div>
-                            )}
-
-                            <dl className="grid gap-2 sm:grid-cols-2">
-                              <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
-                                <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                                  Last article
-                                </dt>
-                                <dd className="mt-1 text-sm font-medium text-[hsl(var(--color-text))]">
-                                  {formatRelativeDateTime(lastArticleDate)}
-                                </dd>
-                              </div>
-                              <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
-                                <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--color-text-muted))]">
-                                  Next update
-                                </dt>
-                                <dd className="mt-1 text-sm font-medium text-[hsl(var(--color-text))]">
-                                  {formatRelativeDateTime(feed.nextUpdateTime)}
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-
-                          {isEditingFeed ? null : (
-                            <div className="flex items-center gap-2 md:justify-self-end">
-                              <FeedActionButton
-                                label={`Rename feed ${feed.title}`}
-                                onClick={() => {
-                                  setEditingFeedId(feed.id);
-                                  setEditingFeedTitle(feed.title);
-                                }}
-                              >
-                                <PencilIcon />
-                              </FeedActionButton>
-                              <FeedActionButton
-                                label={`Move ${feed.title} to another folder`}
-                                onClick={() => {
-                                  openMoveFeedDialog(feed);
-                                }}
-                              >
-                                <MoveIcon />
-                              </FeedActionButton>
-                              <FeedActionButton
-                                label={`Delete feed ${feed.title}`}
-                                onClick={() => {
-                                  void handleDeleteFeed(feed);
-                                }}
-                                variant="danger"
-                              >
-                                <TrashIcon />
-                              </FeedActionButton>
-                            </div>
+                              </td>
+                            </>
                           )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+                        </tr>
+
+                        {group.feeds.map(({ feed, lastArticleDate }) => {
+                          const isEditingFeed = editingFeedId === feed.id;
+
+                          return (
+                            <tr
+                              key={feed.id}
+                              className="border-b border-white/8 align-middle transition last:border-b-0 hover:bg-white/[0.025]"
+                            >
+                              <td className="px-5 py-4">
+                                <div className="flex min-h-20 flex-col justify-center gap-2">
+                                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-[hsl(var(--color-text-muted))]">
+                                    Feed #{feed.id}
+                                  </p>
+
+                                  {isEditingFeed ? (
+                                    <form
+                                      onSubmit={(event) => {
+                                        event.preventDefault();
+                                        void handleRenameFeed(feed.id);
+                                      }}
+                                      className="flex flex-wrap items-center gap-3"
+                                    >
+                                      <input
+                                        type="text"
+                                        value={editingFeedTitle}
+                                        onChange={(event) => {
+                                          setEditingFeedTitle(event.target.value);
+                                        }}
+                                        className="min-w-[260px] rounded-xl border border-white/10 bg-black/10 px-4 py-2 text-sm outline-none transition focus:border-[hsl(var(--color-accent-strong))] focus:ring-2 focus:ring-[hsl(var(--color-accent-strong))]"
+                                        aria-label={`Feed name for ${feed.title}`}
+                                      />
+                                      <button
+                                        type="submit"
+                                        className="rounded-full bg-[hsl(var(--color-accent-strong))] px-4 py-2 text-sm font-semibold text-slate-950"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-[hsl(var(--color-text))]"
+                                        onClick={() => {
+                                          setEditingFeedId(null);
+                                          setEditingFeedTitle('');
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </form>
+                                  ) : (
+                                    <div className="grid gap-1">
+                                      <h3
+                                        className="truncate text-base font-semibold leading-[1.25] text-[hsl(var(--color-text))] sm:text-lg"
+                                        title={feed.url}
+                                      >
+                                        {feed.title}
+                                      </h3>
+                                      <p
+                                        className="truncate text-sm text-[hsl(var(--color-text-muted))]"
+                                        title={feed.url}
+                                      >
+                                        {feed.url}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 align-middle">
+                                <p
+                                  className="text-sm font-medium text-[hsl(var(--color-text))]"
+                                  title={formatExactLocalDateTime(lastArticleDate)}
+                                >
+                                  {formatRelativeDateTime(lastArticleDate)}
+                                </p>
+                              </td>
+                              <td className="px-4 py-4 align-middle">
+                                <p
+                                  className="text-sm font-medium text-[hsl(var(--color-text))]"
+                                  title={formatExactLocalDateTime(feed.nextUpdateTime)}
+                                >
+                                  {formatRelativeDateTime(feed.nextUpdateTime)}
+                                </p>
+                              </td>
+                              <td className="px-4 py-4 text-center align-middle">
+                                <div className="flex items-center justify-center">
+                                  {feed.lastUpdateError ? (
+                                    <span
+                                      aria-label={`Update error: ${feed.lastUpdateError}`}
+                                      className="inline-flex h-9 w-9 items-center justify-center text-amber-300"
+                                      title={feed.lastUpdateError}
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={faCircleExclamation}
+                                        className="h-9 w-9"
+                                        aria-hidden="true"
+                                      />
+                                    </span>
+                                  ) : (
+                                    <span
+                                      aria-label="Feed healthy"
+                                      className="inline-flex h-9 w-9 items-center justify-center text-emerald-300"
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={faCircleCheck}
+                                        className="h-9 w-9"
+                                        aria-hidden="true"
+                                      />
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="px-5 py-4 align-middle">
+                                <div className="flex items-center">
+                                  {isEditingFeed ? null : (
+                                    <div className="flex flex-wrap items-center gap-3">
+                                      <FeedActionButton
+                                        label={`Rename feed ${feed.title}`}
+                                        onClick={() => {
+                                          setEditingFeedId(feed.id);
+                                          setEditingFeedTitle(feed.title);
+                                        }}
+                                      >
+                                        <FontAwesomeIcon
+                                          icon={faPen}
+                                          className="h-4.5 w-4.5"
+                                          aria-hidden="true"
+                                        />
+                                      </FeedActionButton>
+                                      <FeedActionButton
+                                        label={`Delete feed ${feed.title}`}
+                                        variant="danger"
+                                        onClick={() => {
+                                          void handleDeleteFeed(feed);
+                                        }}
+                                      >
+                                        <FontAwesomeIcon
+                                          icon={faTrash}
+                                          className="h-4.5 w-4.5"
+                                          aria-hidden="true"
+                                        />
+                                      </FeedActionButton>
+                                      <FeedActionButton
+                                        label={`Move ${feed.title} to another folder`}
+                                        onClick={() => {
+                                          openMoveFeedDialog(feed);
+                                        }}
+                                      >
+                                        <FontAwesomeIcon
+                                          icon={faFolderOpen}
+                                          className="h-4.5 w-4.5"
+                                          aria-hidden="true"
+                                        />
+                                      </FeedActionButton>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
 
         <button
@@ -900,7 +857,7 @@ function FeedManagementContent() {
             height: '4.5rem',
           }}
         >
-          <PlusIcon className="h-7 w-7" />
+          <FontAwesomeIcon icon={faPlus} className="h-7 w-7" aria-hidden="true" />
         </button>
 
         <dialog
