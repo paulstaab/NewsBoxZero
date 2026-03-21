@@ -20,6 +20,9 @@ export interface Feed {
   /** Unix timestamp (seconds) of when the feed was added */
   added: number;
 
+  /** Unix timestamp (seconds) for the next scheduled refresh */
+  nextUpdateTime: number | null;
+
   /** Parent folder ID, null for root-level feeds */
   folderId: number | null;
 
@@ -71,6 +74,7 @@ export function normalizeFeed(api: ApiFeed): Feed {
     link: api.link ?? '',
     faviconLink: api.faviconLink,
     added: api.added,
+    nextUpdateTime: api.nextUpdateTime,
     folderId: api.folderId,
     unreadCount: 0, // computed client-side
     ordering: api.ordering,

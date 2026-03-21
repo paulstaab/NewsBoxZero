@@ -108,12 +108,10 @@ test.describe('PWA Install Flow', () => {
     }
   });
 
-  test('should provide manual install option in settings', async ({ page }) => {
+  test('should provide manual install option in the burger menu', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Navigate to a page that might have settings/menu
-    // (Adjust selector based on actual implementation)
-    const menuButton = page.getByRole('button', { name: /settings/i });
+    const menuButton = page.getByRole('button', { name: /burger menu/i });
     const hasMenu = await menuButton.isVisible().catch(() => false);
 
     if (hasMenu) {
@@ -138,7 +136,7 @@ test.describe('PWA Install Flow', () => {
             .first();
           const hasInstallOption = (await installButton.count()) > 0;
 
-          // The install option should exist in settings, even if disabled
+          // The install option should exist in the burger menu, even if disabled
           expect(hasInstallOption).toBe(true);
         }
       }
