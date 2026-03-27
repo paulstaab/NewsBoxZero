@@ -10,14 +10,20 @@ updates:
     directory: '/'
     schedule:
       interval: weekly
+    assignees:
+      - paulstaab
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: weekly
+    assignees:
+      - paulstaab
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: weekly
+    assignees:
+      - paulstaab
     groups:
       everything:
         patterns:
