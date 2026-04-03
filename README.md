@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This project has been archived.** Development continues at [paulstaab/newsboxone](https://github.com/paulstaab/newsboxone).
+
 [![CI](https://github.com/paulstaab/newsboxzero/actions/workflows/ci.yml/badge.svg)](https://github.com/paulstaab/newsboxzero/actions/workflows/ci.yml)
 [![GHCR](https://img.shields.io/badge/ghcr.io%2Fpaulstaab%2Fnewsboxzero-latest-blue)](https://ghcr.io/paulstaab/newsboxzero)
 
